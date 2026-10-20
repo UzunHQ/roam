@@ -1,0 +1,16 @@
+{
+  "name": "Roam · Roehampton campus map",
+  "short_name": "Roam",
+  "description": "Unofficial game-style campus map for the University of Roehampton.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#cfe9b8",
+  "theme_color": "#cfe9b8",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

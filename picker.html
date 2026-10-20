@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Roam · coordinate picker (dev)</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body class="picker">
+    <div id="map"></div>
+    <div class="picker-panel">
+      <b>Coordinate picker</b> · click the map to copy <code>[lng, lat]</code>
+      <div id="out">Click anywhere…</div>
+      <label><input type="checkbox" id="tilt" /> 3D view</label>
+      <label><input type="checkbox" id="pending" checked /> show pending places</label>
+    </div>
+    <script type="module" src="/src/picker.ts"></script>
+  </body>
+</html>

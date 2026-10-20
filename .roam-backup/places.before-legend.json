@@ -1,0 +1,1394 @@
+{
+  "site": "Roehampton Lane Site (Digby Stuart, Froebel, Southlands)",
+  "generated": "2026-10-20",
+  "bounds": [
+    -0.25137,
+    51.45388,
+    -0.24174,
+    51.46021
+  ],
+  "sources": [
+    "Official campus map, September 2025",
+    "Google Maps",
+    "Apple Maps",
+    "lifestylefitness.co.uk"
+  ],
+  "positionNote": "Approximate building points, not entrances. google-maps points are within about 5-12 m; official-map points about 15-25 m. Snap to OSM footprints and verify on site.",
+  "places": [
+    {
+      "id": "epworth-court",
+      "code": "A",
+      "name": "Epworth Court",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "southlands",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.245168,
+        51.459375
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629207323",
+      "photo": null
+    },
+    {
+      "id": "wesley-court",
+      "code": "B",
+      "name": "Wesley Court",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "southlands",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244667,
+        51.459486
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629207326",
+      "photo": null
+    },
+    {
+      "id": "aldersgate-court",
+      "code": "C",
+      "name": "Aldersgate Court",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "southlands",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.245066,
+        51.458982
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/1339072173",
+      "photo": null
+    },
+    {
+      "id": "shaw-house",
+      "code": "D",
+      "name": "Shaw House",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "digby-stuart",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.245335,
+        51.458675
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 12,
+      "entrance": null,
+      "footprintId": "way/629613442",
+      "photo": null
+    },
+    {
+      "id": "elm-grove-hall",
+      "code": "E",
+      "name": "Elm Grove Hall",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "digby-stuart",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.24424,
+        51.457464
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 12,
+      "entrance": null,
+      "footprintId": "relation/8673532",
+      "photo": null
+    },
+    {
+      "id": "bede-house",
+      "code": "F",
+      "name": "Bede House",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "digby-stuart",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243578,
+        51.456825
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/653472807",
+      "photo": null
+    },
+    {
+      "id": "newman-house",
+      "code": "G",
+      "name": "Newman House",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "digby-stuart",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244057,
+        51.456589
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613445",
+      "photo": null
+    },
+    {
+      "id": "new-old-garden-court",
+      "code": "H",
+      "name": "New, Old and Garden Court",
+      "aliases": [
+        "New Court",
+        "Old Court",
+        "Garden Court"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "froebel",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.24355,
+        51.45587
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/623519883",
+      "photo": null
+    },
+    {
+      "id": "willow-house",
+      "code": "I",
+      "name": "Willow House",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "froebel",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.250222,
+        51.455245
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613428",
+      "photo": null
+    },
+    {
+      "id": "aspen-house",
+      "code": "J",
+      "name": "Aspen House",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "froebel",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.249769,
+        51.455199
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613430",
+      "photo": null
+    },
+    {
+      "id": "linden-house",
+      "code": "K",
+      "name": "Linden House",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "froebel",
+      "description": "Student halls",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.249985,
+        51.454844
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 6,
+      "entrance": null,
+      "footprintId": "way/629613424",
+      "photo": null
+    },
+    {
+      "id": "mandela-building",
+      "code": "D1",
+      "name": "Mandela Building",
+      "aliases": [
+        "Mandela",
+        "Law School"
+      ],
+      "roomCodePrefixes": [
+        "Ma"
+      ],
+      "category": "building",
+      "kind": "academic",
+      "college": "digby-stuart",
+      "description": "Law School",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.245421,
+        51.458261
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 6,
+      "entrance": null,
+      "footprintId": "way/653472801",
+      "photo": null
+    },
+    {
+      "id": "mary-seacole",
+      "code": "D2",
+      "name": "Mary Seacole Health Innovation Centre",
+      "aliases": [
+        "Mary Seacole",
+        "MS"
+      ],
+      "roomCodePrefixes": [
+        "MS"
+      ],
+      "category": "building",
+      "kind": "academic",
+      "college": "digby-stuart",
+      "description": "Health and nursing teaching",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.245348,
+        51.457915
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 6,
+      "entrance": null,
+      "footprintId": "way/653483620",
+      "photo": null
+    },
+    {
+      "id": "fincham-building",
+      "code": "D3",
+      "name": "Fincham Building",
+      "aliases": [
+        "Fincham"
+      ],
+      "roomCodePrefixes": [
+        "Fi"
+      ],
+      "category": "building",
+      "kind": "academic",
+      "college": "digby-stuart",
+      "description": "Teaching rooms; The Coexist Café inside. Google label and official map disagree by about 40 m: check on site",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244916,
+        51.457339
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 40,
+      "entrance": null,
+      "footprintId": "way/1339072171",
+      "photo": null
+    },
+    {
+      "id": "d4-pending",
+      "code": "D4",
+      "name": "D4 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244864,
+        51.457472
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/624679293",
+      "photo": null
+    },
+    {
+      "id": "d5-pending",
+      "code": "D5",
+      "name": "D5 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244805,
+        51.456904
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/653472802",
+      "photo": null
+    },
+    {
+      "id": "d6-pending",
+      "code": "D6",
+      "name": "D6 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244668,
+        51.456572
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/653472802",
+      "photo": null
+    },
+    {
+      "id": "f1-pending",
+      "code": "F1",
+      "name": "F1 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.247267,
+        51.456235
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613417",
+      "photo": null
+    },
+    {
+      "id": "f3-pending",
+      "code": "F3",
+      "name": "F3 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.24653,
+        51.455636
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/294029614",
+      "photo": null
+    },
+    {
+      "id": "f4-pending",
+      "code": "F4",
+      "name": "F4 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.247011,
+        51.455567
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/821830635",
+      "photo": null
+    },
+    {
+      "id": "f5-pending",
+      "code": "F5",
+      "name": "F5 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.248044,
+        51.454603
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/636497041",
+      "photo": null
+    },
+    {
+      "id": "f6-pending",
+      "code": "F6",
+      "name": "F6 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.24717,
+        51.454601
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/636968856",
+      "photo": null
+    },
+    {
+      "id": "f7-pending",
+      "code": "F7",
+      "name": "F7 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.246049,
+        51.455094
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/294029608",
+      "photo": null
+    },
+    {
+      "id": "f8-pending",
+      "code": "F8",
+      "name": "F8 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.249761,
+        51.45535
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613432",
+      "photo": null
+    },
+    {
+      "id": "s1-pending",
+      "code": "S1",
+      "name": "S1 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "southlands",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.24398,
+        51.45933
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "relation/8758398",
+      "photo": null
+    },
+    {
+      "id": "library",
+      "code": "3",
+      "name": "Library",
+      "aliases": [
+        "University Library",
+        "Nest"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "digby-stuart",
+      "description": "University Library with café; Nest student support desk in the foyer",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244779,
+        51.458176
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 6,
+      "entrance": null,
+      "footprintId": "way/624430550",
+      "photo": null
+    },
+    {
+      "id": "elm-grove",
+      "code": "4",
+      "name": "Elm Grove",
+      "aliases": [
+        "Careers",
+        "The Hub",
+        "Roehampton Venues",
+        "Elm Grove Conference Centre"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "digby-stuart",
+      "description": "Roehampton Venues; Careers and Placements Hub",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244068,
+        51.457925
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "relation/8673531",
+      "photo": null
+    },
+    {
+      "id": "campus-safety",
+      "code": "5",
+      "name": "Campus Safety and Security",
+      "aliases": [
+        "Security"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "digby-stuart",
+      "description": "Campus security office",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243075,
+        51.457227
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/628917102",
+      "photo": null
+    },
+    {
+      "id": "laundry",
+      "code": "6",
+      "name": "Laundry",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "digby-stuart",
+      "description": "Student laundry",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243322,
+        51.457086
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/624435278",
+      "photo": null
+    },
+    {
+      "id": "the-base",
+      "code": "7",
+      "name": "The Base",
+      "aliases": [
+        "Chaplaincy"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "digby-stuart",
+      "description": "Chaplaincy social area",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243133,
+        51.456847
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/653472808",
+      "photo": null
+    },
+    {
+      "id": "richardson",
+      "code": "8",
+      "name": "Richardson Building",
+      "aliases": [
+        "Richardson",
+        "Wellbeing",
+        "Post Room",
+        "Student Finance"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "digby-stuart",
+      "description": "Disabilities and Dyslexia, Post Room, Student Finance Office, Wellbeing",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244121,
+        51.456928
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/653472791",
+      "photo": null
+    },
+    {
+      "id": "student-medical-centre",
+      "code": "12",
+      "name": "Student Medical Centre",
+      "aliases": [
+        "SMC",
+        "GP",
+        "Doctor"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "froebel",
+      "description": "NHS GP surgery for students",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243678,
+        51.455355
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 6,
+      "entrance": null,
+      "footprintId": "way/623548451",
+      "photo": null
+    },
+    {
+      "id": "students-union",
+      "code": "13",
+      "name": "Students’ Union",
+      "aliases": [
+        "SU",
+        "RSU",
+        "Union"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "froebel",
+      "description": "Roehampton Students’ Union",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.246698,
+        51.455433
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 6,
+      "entrance": null,
+      "footprintId": "way/821830635",
+      "photo": null
+    },
+    {
+      "id": "gym",
+      "code": "14",
+      "name": "Gym (Lifestyle Fitness)",
+      "aliases": [
+        "Gym Roehampton",
+        "Lifestyle Fitness",
+        "Gym"
+      ],
+      "roomCodePrefixes": [],
+      "category": "sport",
+      "kind": "gym",
+      "college": "froebel",
+      "description": "Campus gym run by Lifestyle Fitness; the 2025 map calls it Gym Roehampton",
+      "hours": {
+        "mon": [
+          [
+            "06:00",
+            "22:00"
+          ]
+        ],
+        "tue": [
+          [
+            "06:00",
+            "22:00"
+          ]
+        ],
+        "wed": [
+          [
+            "06:00",
+            "22:00"
+          ]
+        ],
+        "thu": [
+          [
+            "06:00",
+            "22:00"
+          ]
+        ],
+        "fri": [
+          [
+            "06:00",
+            "22:00"
+          ]
+        ],
+        "notes": "Mon-Fri from lifestylefitness.co.uk/club/roehampton on 2026-10-20; weekend hours not listed"
+      },
+      "lastVerified": "2026-10-20",
+      "status": "confirmed",
+      "position": [
+        -0.247487,
+        51.455798
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 6,
+      "entrance": null,
+      "footprintId": "way/629613419",
+      "photo": null
+    },
+    {
+      "id": "muga",
+      "code": "15",
+      "name": "Multi-Use Games Area (MUGA)",
+      "aliases": [
+        "MUGA",
+        "Courts",
+        "Basketball",
+        "Tennis"
+      ],
+      "roomCodePrefixes": [],
+      "category": "sport",
+      "kind": "court",
+      "college": "froebel",
+      "description": "Outdoor hard court: basketball, tennis, football, netball",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.247841,
+        51.455286
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null
+    },
+    {
+      "id": "sport-active-communities",
+      "code": "F2",
+      "name": "Sport and Active Communities",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "sport",
+      "kind": "office",
+      "college": "froebel",
+      "description": "Sport team office (F2 building)",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.247873,
+        51.455865
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "relation/8763239",
+      "photo": null
+    },
+    {
+      "id": "poi-1-pending",
+      "code": "1",
+      "name": "1 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "faith",
+      "college": "southlands",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244272,
+        51.458802
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613410",
+      "photo": null
+    },
+    {
+      "id": "poi-2-pending",
+      "code": "2",
+      "name": "2 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "faith",
+      "college": "southlands",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.243901,
+        51.459062
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/1339072172",
+      "photo": null
+    },
+    {
+      "id": "poi-9-pending",
+      "code": "9",
+      "name": "9 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "faith",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.243516,
+        51.456523
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/653472807",
+      "photo": null
+    },
+    {
+      "id": "poi-10-pending",
+      "code": "10",
+      "name": "10 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "faith",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.243676,
+        51.455789
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/623519883",
+      "photo": null
+    },
+    {
+      "id": "poi-11-pending",
+      "code": "11",
+      "name": "11 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "faith",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.243574,
+        51.455415
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/623548451",
+      "photo": null
+    },
+    {
+      "id": "food1-pending",
+      "code": "",
+      "name": "food1 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "southlands",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244579,
+        51.458996
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613413",
+      "photo": null
+    },
+    {
+      "id": "food2-pending",
+      "code": "",
+      "name": "food2 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.243989,
+        51.456386
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613445",
+      "photo": null
+    },
+    {
+      "id": "food3-pending",
+      "code": "",
+      "name": "food3 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.243992,
+        51.456121
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/653472809",
+      "photo": null
+    },
+    {
+      "id": "food4-pending",
+      "code": "",
+      "name": "food4 (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.24718,
+        51.45519
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/294029609",
+      "photo": null
+    },
+    {
+      "id": "cafe-southlands-pending",
+      "code": "",
+      "name": "cafe_southlands (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "southlands",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244773,
+        51.45891
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/629613442",
+      "photo": null
+    },
+    {
+      "id": "cafe-library-pending",
+      "code": "",
+      "name": "cafe_library (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244864,
+        51.458535
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/624430550",
+      "photo": null
+    },
+    {
+      "id": "cafe-digby-pending",
+      "code": "",
+      "name": "cafe_digby (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244335,
+        51.456537
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/624679297",
+      "photo": null
+    },
+    {
+      "id": "cafe-froebel-pending",
+      "code": "",
+      "name": "cafe_froebel (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.246696,
+        51.455042
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/294029609",
+      "photo": null
+    },
+    {
+      "id": "bar-froebel-pending",
+      "code": "",
+      "name": "bar_froebel (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "froebel",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.246848,
+        51.455297
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/294029609",
+      "photo": null
+    },
+    {
+      "id": "shop-digby-pending",
+      "code": "",
+      "name": "shop_digby (name pending)",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "digby-stuart",
+      "description": "",
+      "hours": null,
+      "lastVerified": null,
+      "status": "pending-legend",
+      "position": [
+        -0.244305,
+        51.456344
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/624679297",
+      "photo": null
+    },
+    {
+      "id": "gate-main",
+      "code": "",
+      "name": "Main entrance",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "entrance",
+      "kind": "entrance",
+      "college": null,
+      "description": "Vehicle and pedestrian entrance on Roehampton Lane",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243151,
+        51.457993
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null
+    },
+    {
+      "id": "gate-southlands",
+      "code": "",
+      "name": "Southlands Gate",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "entrance",
+      "kind": "entrance",
+      "college": null,
+      "description": "Pedestrian entrance",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243341,
+        51.458747
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null
+    },
+    {
+      "id": "gate-stuart-lodge",
+      "code": "",
+      "name": "Stuart Lodge Gate",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "entrance",
+      "kind": "entrance",
+      "college": null,
+      "description": "Pedestrian entrance",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.242894,
+        51.45719
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null
+    },
+    {
+      "id": "gate-clarence-lane",
+      "code": "",
+      "name": "Clarence Lane entrance",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "entrance",
+      "kind": "entrance",
+      "college": null,
+      "description": "Entrance from Clarence Lane",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.249442,
+        51.454595
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null
+    },
+    {
+      "id": "coexist-cafe",
+      "code": "",
+      "name": "The Coexist Café",
+      "aliases": [
+        "Coexist",
+        "D3"
+      ],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "cafe",
+      "college": "digby-stuart",
+      "description": "Café inside the Fincham Building (D3)",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244916,
+        51.457339
+      ],
+      "positionSource": "google-maps",
+      "positionAccuracyM": 40,
+      "entrance": null,
+      "footprintId": "way/624679293",
+      "photo": null
+    }
+  ]
+}

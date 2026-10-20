@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Roam · Roehampton campus map</title>
+    <meta name="description" content="Unofficial game-style campus map for the University of Roehampton, Roehampton Lane site." />
+    <meta name="theme-color" content="#cfe9b8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#22303a" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Roam" />
+  </head>
+  <body>
+    <div id="map" aria-label="Campus map"></div>
+
+    <header class="top">
+      <form class="search" role="search" autocomplete="off">
+        <span class="search-icon" data-icon="search"></span>
+        <input id="q" type="search" inputmode="search" enterkeyhint="search"
+          placeholder="Search place, code or room (Ma101)" aria-label="Search places" />
+        <button type="button" class="icon-btn clear" aria-label="Clear search" hidden data-icon="close"></button>
+      </form>
+      <ul id="results" class="results" role="listbox" hidden></ul>
+      <nav class="chips" aria-label="Filter places">
+        <button class="chip" aria-pressed="true" data-filter="all">All</button>
+        <button class="chip" aria-pressed="false" data-filter="building">Buildings</button>
+        <button class="chip" aria-pressed="false" data-filter="food">Food</button>
+        <button class="chip" aria-pressed="false" data-filter="sport">Sport</button>
+      </nav>
+      <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    </header>
+
+    <div class="fabs">
+      <button id="north" class="fab small" aria-label="Reset view" data-icon="compass"></button>
+      <button id="findme" class="fab" aria-label="Find me"><span data-icon="locate"></span><span class="fab-label">Find me</span></button>
+    </div>
+
+    <div id="ask" class="ask" role="dialog" aria-labelledby="ask-text" hidden>
+      <p id="ask-text">Roam uses your location only on this phone, to show where you are on the map.</p>
+      <div class="ask-actions">
+        <button class="btn ghost" data-ask="no">Not now</button>
+        <button class="btn primary" data-ask="yes">Use my location</button>
+      </div>
+    </div>
+
+    <section id="sheet" class="sheet" aria-hidden="true" aria-labelledby="sheet-name">
+      <div class="handle" aria-hidden="true"></div>
+      <div id="sheet-body"></div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-row">
+        <span>Made by <span id="author"></span></span>
+        <a id="ig" class="icon-link" target="_blank" rel="noopener" aria-label="Instagram" data-icon="instagram"></a>
+        <a id="li" class="icon-link" target="_blank" rel="noopener" aria-label="LinkedIn" data-icon="linkedin"></a>
+      </div>
+      <p>Unofficial student project - not affiliated with the University of Roehampton · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</p>
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
