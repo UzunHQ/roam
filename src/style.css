@@ -715,4 +715,7 @@ body.navigating .top > :not(.toast), body.navigating .key-btn, body.navigating .
 .nav-left.arrived { color: var(--primary); }
 .btn.nav-end { min-height: 46px; padding: 0 20px; border: 0; background: #e5484d; color: #fff; box-shadow: 0 3px 0 #a82d31; }
 .btn.nav-end:active { transform: translateY(2px); box-shadow: 0 1px 0 #a82d31; }
-@media (min-width: 900px) { body.navigating .panel { top: 16px; } }
+@media (min-width: 900px) {
+  body.navigating .panel { top: 16px; }
+  body.navigating .top { top: 104px; } /* its toasts show under the walking card, not over it */
+}

@@ -148,8 +148,12 @@ async function main() {
   const groupCount = new Map<GroupId, number>();
   for (const p of places) groupCount.set(groupOf(p), (groupCount.get(groupOf(p)) ?? 0) + 1);
   const footprints = new Map<string, LngLat[]>();
+  const outlines = new Map<string, LngLat[][]>(); // all parts of a building (Davies has three)
   for (const f of campus.features) {
-    if (f.properties?.layer === 'building' && f.geometry.type === 'Polygon') footprints.set(f.properties.osmId, f.geometry.coordinates[0] as LngLat[]);
+    if (f.properties?.layer !== 'building' || f.geometry.type !== 'Polygon') continue;
+    const ring = f.geometry.coordinates[0] as LngLat[];
+    footprints.set(f.properties.osmId, ring);
+    outlines.set(f.properties.osmId, [...(outlines.get(f.properties.osmId) ?? []), ring]);
   }
   const router = new Router(paths);
   // Which place a building tap opens when several share one building: the building itself (named
@@ -196,6 +200,10 @@ async function main() {
   })();
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
   map?.jumpTo({ center: campusCenter, zoom: homeZoom() });
+  // Every deliberate camera move goes through here: live GPS following waits for it to finish
+  // instead of cutting it short (MapLibre's easeTo stops whatever move is running).
+  let camBusyUntil = 0;
+  const camMove = (opts: EaseToOptions) => { camBusyUntil = Date.now() + (opts.duration ?? 0) + 80; map?.easeTo(opts); };
   // the overview frames every campus building (its footprint's corners), not just the pins
   const campusPoints: LngLat[] = places.filter((p) => p.category !== 'entrance').map((p) => p.position);
   for (const f of campus.features) {
@@ -211,6 +219,7 @@ async function main() {
   let routeShown = false;
   let routeFrom: Place | null = null;
   let navigating = false; // after Start: the directions fold into a slim bar and the map follows you
+  let navId = 0; // counts walks, so a timer from an earlier one can't end the next
   let lastRoute: Route | null = null;
   let routeLine: LngLat[] = []; // the whole route, start hop included (for see-through buildings)
   let filter: Filter = 'all';
@@ -262,7 +271,7 @@ async function main() {
     el.innerHTML = `<span class="area-icon">${icons.campus}</span><span>${COLLEGE[college]}</span>`;
     el.setAttribute('aria-label', `${COLLEGE[college]} college: zoom in`);
     // straight to the college at street level (where building names take over)
-    el.addEventListener('click', (e) => { e.stopPropagation(); map?.easeTo({ center: c, zoom: 16.9, pitch: tilt(50), duration: ms(600) }); });
+    el.addEventListener('click', (e) => { e.stopPropagation(); setFollowing(false); camMove({ center: c, zoom: 16.9, pitch: tilt(50), duration: ms(600) }); });
     const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(c);
     if (map) marker.addTo(map);
     return { el, c };
@@ -419,16 +428,16 @@ async function main() {
   keyBtn.addEventListener('click', () => toggleKey());
 
   // ---------- map controls ----------
-  $('#zoom-in').addEventListener('click', () => map?.zoomIn({ duration: ms(250) }));
-  $('#zoom-out').addEventListener('click', () => map?.zoomOut({ duration: ms(250) }));
+  $('#zoom-in').addEventListener('click', () => map && camMove({ zoom: Math.min(map.getMaxZoom(), map.getZoom() + 1), duration: ms(250) }));
+  $('#zoom-out').addEventListener('click', () => map && camMove({ zoom: Math.max(map.getMinZoom(), map.getZoom() - 1), duration: ms(250) }));
   let flat = false; // 2D: looking straight down
   const tilt = (pitch: number) => (flat ? 0 : pitch);
-  $('#north').addEventListener('click', () => map?.easeTo({ bearing: 0, pitch: tilt(55), duration: ms(400) }));
+  $('#north').addEventListener('click', () => camMove({ bearing: 0, pitch: tilt(55), duration: ms(400) }));
   $('#whole').addEventListener('click', () => showWholeCampus());
   const dimBtn = $('#dim');
   dimBtn.addEventListener('click', () => {
     flat = !flat;
-    map?.easeTo({ pitch: tilt(55), duration: ms(450) });
+    camMove({ pitch: tilt(55), duration: ms(450) });
     dimBtn.textContent = flat ? '2D' : '3D';
     dimBtn.setAttribute('aria-pressed', String(!flat));
     dimBtn.setAttribute('aria-label', flat ? 'Switch to a 3D map' : 'Switch to a flat 2D map');
@@ -476,8 +485,6 @@ async function main() {
   let glide = 0;
   let walkTimer = 0;
   let following = false; // camera keeps you in view
-  let camBusyUntil = 0; // a bigger camera move is under way; following waits for it instead of cutting it short
-  const camMove = (opts: EaseToOptions) => { camBusyUntil = Date.now() + (opts.duration ?? 0) + 80; map?.easeTo(opts); };
   let stale = false;
   let lastFixAt = 0;
   let greeted = false;
@@ -560,7 +567,8 @@ async function main() {
       if (navigating) {
         const left = document.querySelector('#nav-left');
         if (left) { left.textContent = "You've arrived"; left.classList.add('arrived'); }
-        setTimeout(() => { if (navigating) endNavigation(); }, 4000);
+        const walk = navId;
+        setTimeout(() => { if (navigating && navId === walk) endNavigation(); }, 4000);
       }
     }
   }
@@ -734,7 +742,8 @@ async function main() {
     }
     const after = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
     map.jumpTo(before);
-    map.easeTo({ ...after, padding: zero, duration: ms(opts.duration ?? 600) });
+    setFollowing(false); // the view goes somewhere else; the locate button follows you again
+    camMove({ ...after, padding: zero, duration: ms(opts.duration ?? 600) });
   }
   const pad = (top: number, bottom: number, left: number, right: number) => {
     const c = (v: number) => Math.max(0, Math.round(v));
@@ -748,7 +757,8 @@ async function main() {
     const zoom = zoomIn && map.getZoom() < 16.8 ? 17 : map.getZoom();
     const inside = pt.x > a.left && pt.x < a.right && pt.y > a.top && pt.y < a.bottom;
     if (inside && zoom === map.getZoom()) return;
-    map.easeTo({
+    setFollowing(false);
+    camMove({
       center: p.position, zoom,
       padding: pad(a.top, a.mapH - a.bottom, a.left, innerWidth - a.right),
       duration: ms(450),
@@ -912,6 +922,7 @@ async function main() {
 
   function select(p: Place, opts: { source: 'marker' | 'building' | 'search' | 'link' | 'list' }) {
     if (!welcome.hidden) dismissWelcome();
+    if (navigating && p.id === current?.id) return; // your own destination: keep walking
     if (navigating) { leaveNavMode(); clearRoute(); }
     if (current?.id !== p.id) clearRoute();
     current = p;
@@ -998,13 +1009,14 @@ async function main() {
       out.innerHTML = `<p>Choose where you're starting from, or use your location.</p>
         <button class="btn ghost use-me">${icons.locate}<span>Use my location</span></button>`;
       out.querySelector('.use-me')!.addEventListener('click', async () => {
-        if (await requestLocation()) { fromValue = 'me'; panelBody.querySelector<HTMLSelectElement>('#from')!.value = 'me'; planRoute(); }
+        if ((await requestLocation()) && current === to && out.isConnected) { fromValue = 'me'; panelBody.querySelector<HTMLSelectElement>('#from')!.value = 'me'; planRoute(); }
       });
       return;
     }
     let from: LngLat | Place;
     if (fromValue === 'me') {
-      if (!fix && !(await requestLocation())) { out.innerHTML = '<p>Choose a starting point from the list instead.</p>'; return; }
+      if (!fix && !(await requestLocation())) { if (out.isConnected) out.innerHTML = '<p>Choose a starting point from the list instead.</p>'; return; }
+      if (current !== to || !out.isConnected) return; // you moved on while the location prompt was up
       const f = fix!;
       const off = distanceToBounds(f.pos, doc.bounds);
       if (off > 0) {
@@ -1030,10 +1042,10 @@ async function main() {
       fromValue === 'me' && fix && fix.accuracy > config.weakGpsM ? `Your location is approximate (about ${Math.round(fix.accuracy)} m).` : '',
     ].filter(Boolean);
     out.innerHTML = `<p class="route-sum">${icons.walk}<span><b>About ${r.minutes} min</b> · ${formatDistance(r.distanceM)} along paths</span></p>
-      <div class="route-go"><button class="btn primary start">${icons.directions}<span>Start</span></button></div>
+      ${map ? `<div class="route-go"><button class="btn primary nav-start">${icons.directions}<span>Start</span></button></div>` : ''}
       <ul class="route-notes">${notes.map((n) => `<li>${n}</li>`).join('')}</ul>
       <p class="small">Follows footpaths and campus roads mapped on OpenStreetMap. Step-free routes aren't available yet.</p>`;
-    out.querySelector('.start')!.addEventListener('click', startNavigation);
+    out.querySelector('.nav-start')?.addEventListener('click', startNavigation);
   }
 
   // ---------- route motion: the line draws itself in, then light dashes drift towards the destination ----------
@@ -1173,8 +1185,8 @@ async function main() {
       for (const f of map.queryRenderedFeatures(s, { layers: XRAY_LAYERS })) {
         const id = f.properties?.osmId as string | undefined;
         if (!id || hit.has(id)) continue;
-        const ring = footprints.get(id);
-        if (ring && touches(p, ring, 3)) continue; // the route runs along or into this one: it isn't in the way
+        if (id === current?.footprintId || id === routeFrom?.footprintId) continue; // where you're going (and from) stay solid
+        if ((outlines.get(id) ?? []).some((ring) => touches(p, ring, 3))) continue; // the route runs along or into this one: it isn't in the way
         hit.add(id);
       }
     }
@@ -1236,6 +1248,8 @@ async function main() {
   function startNavigation() {
     if (!map || !current || !routeShown || !lastRoute) return;
     navigating = true;
+    navId++;
+    hideList();
     lastReroute = Date.now() - 9000; // a first new route is allowed a few seconds after Start
     offCount = 0;
     if (!welcome.hidden) dismissWelcome();
@@ -1272,7 +1286,7 @@ async function main() {
   /** each new fix while walking: time left, and a fresh route if you've clearly left this one */
   function onNavFix(f: Fix) {
     if (!lastRoute || !current) return;
-    const a = along(f.pos, lastRoute.coordinates);
+    const a = along(f.pos, routeLine);
     const out = document.querySelector('#nav-left');
     const off = a.off > 35 && f.accuracy <= 25;
     offCount = off ? offCount + 1 : 0;
@@ -1282,7 +1296,9 @@ async function main() {
       lastReroute = Date.now();
       offCount = 0;
       const r = router.route(f.pos, routeTarget(current), footprints);
-      if (r) { drawRoute(r, f.pos, true); renderNav(); toast('New route from where you are', 2500); }
+      // only when it really is a different way (not the same path from the same first node)
+      const same = r && lastRoute.coordinates.length === r.coordinates.length && distanceM(lastRoute.coordinates[0], r.coordinates[0]) < 1;
+      if (r && !same) { drawRoute(r, f.pos, true); renderNav(); toast('New route from where you are', 2500); }
     }
   }
 
@@ -1424,8 +1440,8 @@ async function main() {
   // ---------- keyboard: Esc closes the top-most layer ----------
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!welcome.hidden) dismissWelcome();
-    else if (!about.hidden) closeDialog(about);
+    if (!about.hidden) closeDialog(about);
+    else if (!welcome.hidden) dismissWelcome();
     else if (navigating) endNavigation();
     else if (!$('#ask').hidden) { $('#ask').hidden = true; pendingLocate?.(false); pendingLocate = null; }
     else if (!key.hidden) { toggleKey(false); keyBtn.focus(); }

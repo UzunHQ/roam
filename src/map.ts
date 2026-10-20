@@ -476,7 +476,8 @@ export function createMap(opts: {
 let currentTheme: Theme = 'light';
 export function applyTheme(map: MLMap, theme: Theme) {
   currentTheme = theme;
-  if (map.loaded()) setWindowImages(map, PALETTE[theme]);
+  // (map.loaded() reads false while the route dashes animate, so check for the images instead)
+  if (map.hasImage('win') || map.hasImage('solar-cells')) setWindowImages(map, PALETTE[theme]);
   const paints = themedPaint(PALETTE[theme]);
   for (const [layer, props] of Object.entries(paints)) {
     if (!map.getLayer(layer)) continue;
