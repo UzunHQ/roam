@@ -94,6 +94,10 @@ export function search(raw: string, places: Place[], limit = 8): Hit[] {
       const s = norm(a) === q && q.length >= 4 ? 1.25 : textScore(q, a) * 0.95;
       if (s) add({ place: p, score: s, via: a });
     }
+    for (const sv of p.services ?? []) {
+      const s = textScore(q, sv) * 0.7;
+      if (s) add({ place: p, score: s, via: sv });
+    }
     const d = textScore(q, p.description) * 0.6;
     if (d) add({ place: p, score: d });
   }
@@ -103,4 +107,23 @@ export function search(raw: string, places: Place[], limit = 8): Hit[] {
       || Number(a.place.category === 'entrance') - Number(b.place.category === 'entrance')
       || a.place.name.length - b.place.name.length)
     .slice(0, limit);
+}
+
+/** Words that should offer "show all …" for a category. */
+const GROUP_WORDS: Record<string, string[]> = {
+  academic: ['academic', 'teaching', 'lecture', 'classroom', 'school'],
+  library: ['library', 'study', 'books', 'study space', 'revision'],
+  food: ['food', 'drink', 'cafe', 'cafes', 'coffee', 'restaurant', 'eat', 'lunch', 'breakfast', 'dinner', 'bar', 'diner', 'snack', 'shop'],
+  accommodation: ['accommodation', 'halls', 'hall', 'residence', 'housing'],
+  sport: ['sport', 'sports', 'gym', 'fitness', 'exercise', 'court'],
+  services: ['services', 'support', 'help', 'wellbeing', 'careers', 'security', 'health', 'doctor', 'gp', 'laundry', 'union', 'finance'],
+  faith: ['faith', 'prayer', 'pray', 'chapel', 'chaplaincy', 'mosque', 'wudu', 'multifaith'],
+};
+
+export function matchingGroups(raw: string): string[] {
+  const q = norm(raw);
+  if (q.length < 2) return [];
+  return Object.entries(GROUP_WORDS)
+    .filter(([, words]) => words.some((w) => w === q || (q.length >= 3 && w.startsWith(q))))
+    .map(([g]) => g);
 }

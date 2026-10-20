@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --host",
     "build:campus": "node scripts/build-campus.mjs",
+    "build:paths": "node scripts/build-paths.mjs",
     "icons": "node scripts/make-icons.mjs",
     "photos": "node scripts/make-photos.mjs"
   },

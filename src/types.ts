@@ -24,6 +24,11 @@ export interface Place {
   photo: string | null;
   lastVerified: string | null;
   status: 'confirmed' | 'pending-legend';
+  // verified content (optional; only filled from official sources)
+  officialUrl?: string | null;
+  services?: string[];
+  accessibility?: { url: string; summary: string } | null;
+  sources?: { url: string; title: string; checked: string }[];
 }
 
 export interface PlacesDoc {

@@ -3,35 +3,39 @@ import type { LngLat } from './types';
 
 export type Theme = 'light' | 'dark';
 
-// College colours follow the official campus map: Digby Stuart light blue, Froebel yellow, Southlands navy.
+// Buildings: warm neutral walls; roofs carry the official college colours
+// (Digby Stuart light blue, Froebel yellow, Southlands navy) so zones stay recognisable.
 const PALETTE = {
   light: {
-    bg: '#cfe9b8', green: '#b6df98', wood: '#a3d487', pitch: '#9fd889', pitchLine: '#e9f7dd',
-    water: '#9fd8f2', road: '#fbf3e4', roadEdge: '#e4d6bb', footpath: '#fffaf0', service: '#f6eedd',
-    digby: '#a8d8f5', digbyRoof: '#6aaed8', froebel: '#ffe08a', froebelRoof: '#e6b43c',
-    southlands: '#5c74b8', southlandsRoof: '#2d3f78', other: '#eae3d6', otherRoof: '#c9bca6',
-    selected: '#ff9fb2', trunk: '#a87a55', leaf: '#7cc56a', leafDark: '#5aa84f', accuracy: '#4b8df8',
-    route: '#ff6b8b', outside: '#bcd9a6',
+    bg: '#c4e6a5', green: '#b2df8f', wood: '#93cf77', pitch: '#a5d985', pitchLine: '#effbe6',
+    water: '#7fcbed', shore: '#c4ebf8', road: '#ffffff', roadEdge: '#d8d0c0', footpath: '#f6e3bb', footpathEdge: '#e2c995',
+    wall: '#f7eedf', wallOff: '#ebe6dc',
+    digbyRoof: '#86c3ea', froebelRoof: '#f4c84f', southlandsRoof: '#3a5598', otherRoof: '#d7c6a8', offRoof: '#d3cdc2',
+    selected: '#ff6b6b', selectedWall: '#ffd9d3', trunk: '#a77b56', leaf: '#76c35f', leafDark: '#58a94a', accuracy: '#3b82f6',
+    route: '#ff4f7b', routeCase: '#ffffff', outside: '#b3d79a',
   },
   dark: {
-    bg: '#22303a', green: '#2b4237', wood: '#2f4a3a', pitch: '#2e4a37', pitchLine: '#46664f',
-    water: '#28506a', road: '#3a4652', roadEdge: '#2a333c', footpath: '#4a5866', service: '#36424d',
-    digby: '#5a90b8', digbyRoof: '#3c6a8e', froebel: '#c9a64a', froebelRoof: '#8f7228',
-    southlands: '#4b5f9e', southlandsRoof: '#2c3a6a', other: '#4a525c', otherRoof: '#363d45',
-    selected: '#ff8aa3', trunk: '#6e5340', leaf: '#3f7a4c', leafDark: '#2f6140', accuracy: '#6ea6ff',
-    route: '#ff7f9c', outside: '#1c2830',
+    bg: '#203029', green: '#284235', wood: '#2c4a38', pitch: '#2b4a35', pitchLine: '#46664f',
+    water: '#285a78', shore: '#3d7595', road: '#4a5560', roadEdge: '#2a333c', footpath: '#6a5f48', footpathEdge: '#4d4535',
+    wall: '#59606a', wallOff: '#3d434b',
+    digbyRoof: '#4f88b3', froebelRoof: '#b9953a', southlandsRoof: '#3f5594', otherRoof: '#6e6656', offRoof: '#454a52',
+    selected: '#ff7b7b', selectedWall: '#8a5a5a', trunk: '#6e5340', leaf: '#3f7a4c', leafDark: '#2f6140', accuracy: '#6ea6ff',
+    route: '#ff7f9c', routeCase: '#1b2228', outside: '#1a2722',
   },
 } as const;
 
 type Pal = (typeof PALETTE)[Theme];
 
-const collegeColor = (p: Pal, roof: boolean): Expr => [
-  'match', ['get', 'college'],
-  'digby-stuart', roof ? p.digbyRoof : p.digby,
-  'froebel', roof ? p.froebelRoof : p.froebel,
-  'southlands', roof ? p.southlandsRoof : p.southlands,
-  roof ? p.otherRoof : p.other,
+const roofColor = (p: Pal): Expr => [
+  'case', ['!', ['coalesce', ['get', 'campus'], true]], p.offRoof,
+  ['match', ['get', 'college'],
+    'digby-stuart', p.digbyRoof,
+    'froebel', p.froebelRoof,
+    'southlands', p.southlandsRoof,
+    p.otherRoof],
 ];
+const wallColor = (p: Pal): Expr => ['case', ['coalesce', ['get', 'campus'], true], p.wall, p.wallOff];
+const SELECTED: Expr = ['boolean', ['feature-state', 'selected'], false];
 
 // chunky: unknown heights become 2-3 storeys; known ones are kept
 const HEIGHT: Expr = ['coalesce', ['get', 'height'], ['match', ['get', 'building'], ['house', 'detached', 'shed', 'garage'], 6, 9]];
@@ -46,20 +50,19 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     green: { 'fill-color': ['case', ['get', 'wooded'], p.wood, p.green] },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
     water: { 'fill-color': p.water },
+    shore: { 'line-color': p.shore },
     waterway: { 'line-color': p.water },
-    'road-edge': { 'line-color': p.roadEdge },
-    road: { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpath, 'service', p.service, p.road] },
-    'building-walls': {
-      'fill-extrusion-color': ['case', ['boolean', ['feature-state', 'selected'], false], p.selected, collegeColor(p, false)],
-    },
-    'building-roof': {
-      'fill-extrusion-color': ['case', ['boolean', ['feature-state', 'selected'], false], p.selected, collegeColor(p, true)],
-    },
+    'road-edge': { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpathEdge, p.roadEdge] },
+    road: { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpath, p.road] },
+    'building-walls': { 'fill-extrusion-color': ['case', SELECTED, p.selectedWall, wallColor(p)] },
+    'building-roof': { 'fill-extrusion-color': ['case', SELECTED, p.selected, roofColor(p)] },
     'tree-trunk': { 'fill-extrusion-color': p.trunk },
     'tree-leaf': { 'fill-extrusion-color': ['case', ['==', ['get', 'tier'], 0], p.leafDark, p.leaf] },
     accuracy: { 'fill-color': p.accuracy },
     'accuracy-line': { 'line-color': p.accuracy },
     route: { 'line-color': p.route },
+    'route-case': { 'line-color': p.routeCase },
+    'route-hop': { 'line-color': p.route },
   };
 }
 
@@ -114,18 +117,24 @@ export function createMap(opts: {
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       route: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
+      hop: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
     },
     layers: [
       { id: 'background', type: 'background', paint: {} },
       { id: 'green', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'green'], paint: {} },
       { id: 'pitch', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'pitch'], paint: {} },
       { id: 'water', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'water'], paint: {} },
+      { id: 'shore', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'water'], paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 1, 19, 5], 'line-blur': 1 } },
       { id: 'waterway', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'waterway'], paint: { 'line-width': 3 } },
       {
         id: 'road-edge', type: 'line', source: 'campus',
-        filter: ['all', ['==', ['get', 'layer'], 'path'], ['!=', ['get', 'kind'], 'footpath']],
+        filter: ['==', ['get', 'layer'], 'path'],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': ['interpolate', ['exponential', 2], ['zoom'], 15, 4, 19, 30] },
+        paint: {
+          'line-width': ['interpolate', ['exponential', 2], ['zoom'], 15,
+            ['match', ['get', 'kind'], 'footpath', 2.4, 'service', 3.5, 4.5], 19,
+            ['match', ['get', 'kind'], 'footpath', 15, 'service', 21, 30]],
+        },
       },
       {
         id: 'road', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'path'],
@@ -137,7 +146,9 @@ export function createMap(opts: {
         },
       },
       { id: 'outside', type: 'fill', source: 'outside', paint: { 'fill-opacity': 0.85 } },
-      { id: 'route', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': 6, 'line-dasharray': [0.1, 2] } },
+      { id: 'route-hop', type: 'line', source: 'hop', layout: { 'line-cap': 'round' }, paint: { 'line-width': 3, 'line-opacity': 0.6, 'line-dasharray': [0.5, 2] } },
+      { id: 'route-case', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 6, 19, 13] } },
+      { id: 'route', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 3.5, 19, 8] } },
       { id: 'accuracy', type: 'fill', source: 'user', paint: { 'fill-opacity': 0.14 } },
       { id: 'accuracy-line', type: 'line', source: 'user', paint: { 'line-width': 1.5, 'line-opacity': 0.5 } },
       {
@@ -157,7 +168,7 @@ export function createMap(opts: {
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'] },
       },
     ],
-    light: { anchor: 'map', position: [1.3, 210, 40], intensity: 0.35, color: '#ffffff' },
+    light: { anchor: 'map', position: [1.4, 200, 35], intensity: 0.4, color: '#fff8ec' },
   };
   // fill in theme colours before the first render
   const paints = themedPaint(PALETTE[theme]);
@@ -178,6 +189,7 @@ export function createMap(opts: {
     pitchWithRotate: false,
     interactive: opts.interactive ?? true,
     fadeDuration: 0,
+    pixelRatio: Math.min(devicePixelRatio || 1, 2), // sharp enough, cheaper on 3x phones
   });
   map.touchPitch.disable();
   return map;
@@ -210,7 +222,7 @@ export function selectBuilding(map: MLMap, osmId: string | null) {
   if (osmId) map.setFeatureState({ source: 'buildings', id: osmId }, { selected: true });
 }
 
-export function setGeoJSON(map: MLMap, source: 'user' | 'route', data: GeoJSON.Feature | GeoJSON.FeatureCollection) {
+export function setGeoJSON(map: MLMap, source: 'user' | 'route' | 'hop', data: GeoJSON.Feature | GeoJSON.FeatureCollection) {
   (map.getSource(source) as maplibregl.GeoJSONSource | undefined)?.setData(data);
 }
 

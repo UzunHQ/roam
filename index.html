@@ -3,65 +3,102 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Roam · Roehampton campus map</title>
-    <meta name="description" content="Unofficial game-style campus map for the University of Roehampton, Roehampton Lane site." />
-    <meta name="theme-color" content="#cfe9b8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#22303a" media="(prefers-color-scheme: dark)" />
+    <title>Roam · University of Roehampton campus map</title>
+    <meta name="description" content="Find your way around the University of Roehampton's Roehampton Lane campus. An independent student project." />
+    <meta name="theme-color" content="#c4e6a5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#203029" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Roam" />
   </head>
   <body>
-    <div id="map" aria-label="Campus map"></div>
+    <div id="map" role="application" aria-label="Campus map. Use the list view for a text version."></div>
+    <div id="loading" class="loading" role="status"><span class="spinner" aria-hidden="true"></span>Loading the campus map…</div>
 
     <header class="top">
+      <div class="brand"><b>Roam</b><span>University of Roehampton campus map</span></div>
       <form class="search" role="search" autocomplete="off">
         <span class="search-icon" data-icon="search"></span>
         <input id="q" type="search" inputmode="search" enterkeyhint="search"
-          placeholder="Search place, code or room (Ma101)" aria-label="Search places" />
+          placeholder="Search buildings, cafés, services…" aria-label="Search buildings, cafés and services"
+          aria-controls="results" aria-autocomplete="list" />
         <button type="button" class="icon-btn clear" aria-label="Clear search" hidden data-icon="close"></button>
+        <button type="button" id="list-btn" class="icon-btn list-btn" aria-label="Show list of places" aria-pressed="false" data-icon="list"></button>
       </form>
-      <ul id="results" class="results" role="listbox" hidden></ul>
-      <nav class="chips" aria-label="Filter places">
-        <button class="chip" aria-pressed="true" data-filter="all">All</button>
-        <button class="chip" aria-pressed="false" data-filter="building">Buildings</button>
-        <button class="chip" aria-pressed="false" data-filter="food">Food</button>
-        <button class="chip" aria-pressed="false" data-filter="sport">Sport</button>
-      </nav>
+      <ul id="results" class="results" role="listbox" aria-label="Search suggestions" hidden></ul>
+      <nav id="chips" class="chips" aria-label="Filter by category"></nav>
       <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     </header>
 
-    <div class="fabs">
-      <button id="north" class="fab small" aria-label="Reset view" data-icon="compass"></button>
-      <button id="findme" class="fab" aria-label="Find me"><span data-icon="locate"></span><span class="fab-label">Find me</span></button>
+    <div class="controls" aria-label="Map controls">
+      <button id="zoom-in" class="ctl" aria-label="Zoom in" data-icon="plus"></button>
+      <button id="zoom-out" class="ctl" aria-label="Zoom out" data-icon="minus"></button>
+      <button id="north" class="ctl" aria-label="Reset rotation to north" data-icon="compass"></button>
+      <button id="whole" class="ctl" aria-label="Show entire campus" data-icon="expand"></button>
+      <button id="findme" class="ctl locate" aria-label="Use my location" data-icon="locate"></button>
     </div>
 
+    <button id="key-btn" class="key-btn" aria-expanded="false" aria-controls="key">Key</button>
+    <section id="key" class="key" aria-label="Map key" hidden></section>
+
+    <section id="list" class="list" aria-label="List of places" hidden>
+      <p id="list-note" class="list-note" hidden></p>
+      <div id="list-body"></div>
+    </section>
+
+    <section id="panel" class="panel" aria-labelledby="panel-name" hidden>
+      <div class="handle" aria-hidden="true"></div>
+      <div id="panel-body"></div>
+    </section>
+
     <div id="ask" class="ask" role="dialog" aria-labelledby="ask-text" hidden>
-      <p id="ask-text">Roam uses your location only on this phone, to show where you are on the map.</p>
+      <p id="ask-text">Your location is used only on this phone, to show where you are and plan a walk.</p>
       <div class="ask-actions">
         <button class="btn ghost" data-ask="no">Not now</button>
         <button class="btn primary" data-ask="yes">Use my location</button>
       </div>
     </div>
 
-    <section id="sheet" class="sheet" aria-hidden="true" aria-labelledby="sheet-name">
-      <div class="handle" aria-hidden="true"></div>
-      <div id="sheet-body"></div>
-    </section>
+    <div id="welcome" class="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title" hidden>
+      <div class="welcome-card">
+        <p class="welcome-kicker">Roam</p>
+        <h1 id="welcome-title">Welcome to the University of Roehampton</h1>
+        <p class="welcome-sub">Find your way. Discover your campus.</p>
+        <button class="btn primary big" id="welcome-go">Explore the map</button>
+        <p class="welcome-note">An independent student project</p>
+      </div>
+    </div>
+
+    <div id="about" class="about" role="dialog" aria-modal="true" aria-labelledby="about-title" hidden>
+      <div class="about-card">
+        <button class="icon-btn about-close" aria-label="Close" data-icon="close"></button>
+        <h2 id="about-title">About Roam</h2>
+        <p>Roam is an independent student project. It is not affiliated with, or endorsed by, the University of Roehampton.</p>
+        <p>Place details come from the university's own web pages and campus map, with the date each was checked. Opening hours change, so check the linked official page before you travel.</p>
+        <p>Walking routes follow paths mapped on OpenStreetMap. Entrances have not all been mapped yet, so a route may end at the path beside a building.</p>
+        <p>Your location stays on your phone. There are no accounts and no cookies.</p>
+        <p class="about-by">Made by <span class="author"></span>
+          <a class="icon-link ig" target="_blank" rel="noopener" aria-label="Instagram" data-icon="instagram"></a>
+          <a class="icon-link li" target="_blank" rel="noopener" aria-label="LinkedIn" data-icon="linkedin"></a>
+        </p>
+        <p class="small">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
+      </div>
+    </div>
 
     <footer class="footer">
       <div class="footer-row">
-        <span>Made by <span id="author"></span></span>
-        <a id="ig" class="icon-link" target="_blank" rel="noopener" aria-label="Instagram" data-icon="instagram"></a>
-        <a id="li" class="icon-link" target="_blank" rel="noopener" aria-label="LinkedIn" data-icon="linkedin"></a>
+        <span>Made by <span class="author"></span></span>
+        <a class="icon-link ig" target="_blank" rel="noopener" aria-label="Instagram" data-icon="instagram"></a>
+        <a class="icon-link li" target="_blank" rel="noopener" aria-label="LinkedIn" data-icon="linkedin"></a>
+        <button id="about-btn" class="link-btn">About</button>
       </div>
       <p>Unofficial student project - not affiliated with the University of Roehampton · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</p>
     </footer>
 
+    <noscript><p class="noscript">Roam needs JavaScript to show the campus map.</p></noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
