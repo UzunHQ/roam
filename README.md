@@ -8,9 +8,10 @@ An unofficial, game-style campus map for the University of Roehampton (Roehampto
 
 ```bash
 npm install
-npm run dev          # http://localhost:5173  (also on your phone via the LAN URL Vite prints)
+npm run dev          # http://localhost:5173 (this computer only)
+npm run dev:phone    # also on the LAN URL Vite prints; only on a network you trust
 npm run build        # type-check + production build into dist/
-npm run preview      # serve dist/ (service worker and offline only work in a build)
+npm run preview      # serve dist/ (service worker and offline only work in a build); preview:phone for the LAN
 ```
 
 GPS and the compass need HTTPS on a real phone. `localhost` is fine on your computer. To test on a phone, deploy a preview (see below) or use a tunnel.
@@ -102,7 +103,7 @@ Static hosting over HTTPS. Build command `npm run build`, output folder `dist`.
 
 There's no routing config to set up: deep links use a query string (`/?place=…`), so every URL is just `/`.
 
-`vercel.json` makes sure `sw.js` is never cached by the browser (so updates reach phones) and that hashed assets are cached for a year.
+`vercel.json` makes sure `sw.js` is never cached by the browser (so updates reach phones) and that hashed assets are cached for a year. It also sets the security headers (Content-Security-Policy, X-Frame-Options, nosniff, Referrer-Policy, HSTS, Permissions-Policy). If you turn on Umami analytics, its hosts are already allowed in the CSP; any other new outside script or API has to be added there too, or the browser will block it.
 
 ## QR codes for posters
 

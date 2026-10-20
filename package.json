@@ -4,9 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
+    "dev:phone": "vite --host",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host",
+    "preview": "vite preview",
+    "preview:phone": "vite preview --host",
     "build:campus": "node scripts/build-campus.mjs",
     "build:paths": "node scripts/build-paths.mjs",
     "icons": "node scripts/make-icons.mjs",

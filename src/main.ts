@@ -825,6 +825,7 @@ async function main() {
 
   function openDirections(p: Place) {
     directionsOpen = true;
+    setExpanded(false); // keep the map visible above the directions
     const gates = places.filter((x) => x.category === 'entrance');
     const others = places.filter((x) => x.category !== 'entrance' && x.id !== p.id).sort((a, b) => a.name.localeCompare(b.name));
     if (fromValue === p.id) fromValue = '';
