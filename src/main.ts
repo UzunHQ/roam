@@ -121,6 +121,7 @@ async function main() {
   })();
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
   map?.jumpTo({ center: campusCenter, zoom: homeZoom() });
+  const campusPoints = places.filter((p) => p.category !== 'entrance').map((p) => p.position);
 
   // ---------- state ----------
   let current: Place | null = null;
@@ -244,12 +245,16 @@ async function main() {
   $('#zoom-in').addEventListener('click', () => map?.zoomIn({ duration: ms(250) }));
   $('#zoom-out').addEventListener('click', () => map?.zoomOut({ duration: ms(250) }));
   $('#north').addEventListener('click', () => map?.easeTo({ bearing: 0, pitch: 55, duration: ms(400) }));
-  $('#whole').addEventListener('click', showWholeCampus);
-  function showWholeCampus() {
+  $('#whole').addEventListener('click', () => showWholeCampus());
+  // Phones are tall and the campus runs south-west to north-east, so the phone overview faces
+  // north-east (like the official campus map, turned to portrait). The compass button resets to north.
+  const PHONE_BEARING = 28;
+  function showWholeCampus(duration = 500) {
     if (!map) return;
-    map.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });
-    map.easeTo({ center: campusCenter, zoom: homeZoom(), bearing: 0, pitch: 55, duration: ms(500) });
+    const phone = !isDesktop();
+    fitPoints(campusPoints, { pitch: phone ? 45 : 55, bearing: phone ? PHONE_BEARING : 0, maxZoom: 17, fullWidth: phone, duration });
   }
+  if (!linkedId) map?.once('load', () => showWholeCampus(0));
   const northIcon = $('#north svg');
   map?.on('rotate', () => { northIcon.style.transform = `rotate(${-map!.getBearing()}deg)`; drawHeading(); });
 
@@ -367,6 +372,39 @@ async function main() {
     }
     const right = innerWidth - 68;
     return { top, bottom: Math.max(top + 60, bottom), left, right, mapH };
+  }
+  /**
+   * Fit points into the free part of the screen. Projects them at the target tilt, so tilted 3D
+   * views fit too (fitBounds ignores the tilt, which pushed routes behind the panel on phones).
+   */
+  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; fullWidth?: boolean; duration?: number } = {}) {
+    if (!map || !points.length) return;
+    const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
+    const a = freeArea();
+    // pins stand about 20 px either side of their point and 40 px above it
+    const box = opts.fullWidth
+      ? { l: 22, r: W - 22, t: a.top + 30, b: Math.min(a.bottom, H) - 8 }
+      : { l: a.left + 20, r: Math.min(a.right, W) - 20, t: a.top + 30, b: Math.min(a.bottom, H) - 8 };
+    const zero = { top: 0, bottom: 0, left: 0, right: 0 };
+    const before = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), padding: map.getPadding() };
+    const b = new maplibregl.LngLatBounds(points[0], points[0]);
+    for (const p of points) b.extend(p);
+    map.jumpTo({ center: b.getCenter(), zoom: opts.maxZoom ?? 18, pitch: opts.pitch ?? map.getPitch(), bearing: opts.bearing ?? map.getBearing(), padding: zero });
+    for (let i = 0; i < 40; i++) {
+      const xy = points.map((p) => map!.project(p));
+      const xs = xy.map((q) => q.x), ys = xy.map((q) => q.y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      const dx = (minX + maxX) / 2 - (box.l + box.r) / 2, dy = (minY + maxY) / 2 - (box.t + box.b) / 2;
+      map.jumpTo({ center: map.unproject([W / 2 + dx, H / 2 + dy]) });
+      const fits = maxX - minX <= box.r - box.l && maxY - minY <= box.b - box.t;
+      const centred = Math.abs(dx) < 2 && Math.abs(dy) < 2;
+      if (fits && centred) break;
+      if (!fits && map.getZoom() > map.getMinZoom()) map.jumpTo({ zoom: Math.max(map.getMinZoom(), map.getZoom() - 0.15) });
+      else if (centred) break;
+    }
+    const after = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
+    map.jumpTo(before);
+    map.easeTo({ ...after, padding: zero, duration: ms(opts.duration ?? 600) });
   }
   const pad = (top: number, bottom: number, left: number, right: number) => {
     const c = (v: number) => Math.max(0, Math.round(v));
@@ -565,17 +603,9 @@ async function main() {
     setGeoJSON(map, 'hop', lineFeature(r.startHop));
     startMarker.setLngLat(Array.isArray(from) ? from : from.position).addTo(map);
     endMarker.setLngLat(r.coordinates[r.coordinates.length - 1]).addTo(map);
-    const b = new maplibregl.LngLatBounds(r.coordinates[0], r.coordinates[0]);
-    for (const c of [...r.coordinates, ...r.startHop]) b.extend(c);
-    requestAnimationFrame(() => {
-      // fitBounds adds to any existing camera padding, so clear it first
-      map!.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });
-      const a = freeArea();
-      map!.fitBounds(b, {
-        padding: pad(a.top + 10, a.mapH - a.bottom + 20, a.left + 24, innerWidth - a.right + 24),
-        maxZoom: 18, duration: ms(600),
-      });
-    });
+    const all = [...r.coordinates, ...r.startHop, Array.isArray(from) ? from : from.position];
+    // a lower tilt for the overview, so the far end of a long route stays readable
+    requestAnimationFrame(() => fitPoints(all, { pitch: 40, maxZoom: 18 }));
   }
   function clearRoute() {
     routeShown = false;

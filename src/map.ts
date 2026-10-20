@@ -180,7 +180,8 @@ export function createMap(opts: {
     style,
     bounds: [w, s, e, n],
     fitBoundsOptions: { padding: 10 },
-    maxBounds: [w, s, e, n],
+    // room to pan a little past the edge, so places near it can sit mid-screen above a panel
+    maxBounds: [w - 0.006, s - 0.004, e + 0.006, n + 0.004],
     pitch: 55,
     maxPitch: 65,
     minZoom: 15,
