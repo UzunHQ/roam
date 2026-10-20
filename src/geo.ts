@@ -31,21 +31,34 @@ export interface Fix {
   accuracy: number;
   /** degrees from north, from GPS (only while moving) */
   heading: number | null;
+  /** m/s when the phone reports it, otherwise null */
+  speed: number | null;
+  /** ms timestamp of the reading */
+  time: number;
 }
+
+const toFix = (p: GeolocationPosition): Fix => {
+  const speed = p.coords.speed != null && p.coords.speed >= 0 && !Number.isNaN(p.coords.speed) ? p.coords.speed : null;
+  return {
+    pos: [p.coords.longitude, p.coords.latitude],
+    accuracy: p.coords.accuracy,
+    heading: p.coords.heading != null && !Number.isNaN(p.coords.heading) && (speed ?? 0) > 0.5 ? p.coords.heading : null,
+    speed,
+    time: p.timestamp || Date.now(),
+  };
+};
 
 /** One position fix, on request. Location stays on the device: nothing here is sent anywhere. */
 export function getFix(): Promise<Fix> {
   return new Promise((resolve, reject) =>
-    navigator.geolocation.getCurrentPosition(
-      (p) => resolve({
-        pos: [p.coords.longitude, p.coords.latitude],
-        accuracy: p.coords.accuracy,
-        heading: p.coords.heading != null && !Number.isNaN(p.coords.heading) && (p.coords.speed ?? 0) > 0.5 ? p.coords.heading : null,
-      }),
-      reject,
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
-    ),
+    navigator.geolocation.getCurrentPosition((p) => resolve(toFix(p)), reject, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }),
   );
+}
+
+/** Keeps reporting your position until the returned stop function is called. Also stays on the device. */
+export function watchFix(onFix: (f: Fix) => void, onError: (e: GeolocationPositionError) => void): () => void {
+  const id = navigator.geolocation.watchPosition((p) => onFix(toFix(p)), onError, { enableHighAccuracy: true, maximumAge: 3000, timeout: 30000 });
+  return () => navigator.geolocation.clearWatch(id);
 }
 
 type IOSOrientation = typeof DeviceOrientationEvent & { requestPermission?: () => Promise<'granted' | 'denied'> };

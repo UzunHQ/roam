@@ -267,15 +267,36 @@ svg { display: block; flex: none; }
 .route-pin.start { background: #1f9d55; }
 .route-pin.end { background: var(--primary); }
 
-/* ---------- avatar (static: no continuous bobbing) ---------- */
-.avatar { width: 40px; height: 40px; position: relative; pointer-events: none; }
-.avatar .body {
-  position: absolute; left: 11px; top: 11px; width: 18px; height: 18px;
-  border-radius: 50%; background: #3b82f6; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+/* ---------- avatar: the character standing on your GPS position ---------- */
+.avatar { width: 48px; height: 63px; position: relative; pointer-events: none; z-index: 3; } /* above place pins */
+.avatar .me {
+  position: relative; display: block; overflow: visible;
+  filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.9)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
+  animation: arrive 0.35s var(--ease);
 }
+.avatar .me * { transform-box: view-box; }
+.avatar .shadow { fill: rgba(0, 0, 0, 0.22); }
+.avatar .walk { display: none; }
+.avatar.walking .stand { display: none; }
+.avatar.walking .walk { display: inline; }
+.avatar.face-left .me { transform: scaleX(-1); }
+.avatar .leg { transform-origin: 32px 62px; }
+.avatar .arm { transform-origin: 32px 48px; }
+/* opposite arm and leg swing together */
+.avatar.walking .leg.front { animation: swing 0.52s ease-in-out infinite alternate; }
+.avatar.walking .leg.back { animation: swing 0.52s ease-in-out infinite alternate-reverse; }
+.avatar.walking .arm.front { animation: swing-arm 0.52s ease-in-out infinite alternate; }
+.avatar.walking .arm.back { animation: swing-arm 0.52s ease-in-out infinite alternate-reverse; }
+.avatar.walking .bob { animation: bob 0.26s ease-in-out infinite alternate; }
+@keyframes swing { from { transform: rotate(26deg); } to { transform: rotate(-26deg); } }
+@keyframes swing-arm { from { transform: rotate(-34deg); } to { transform: rotate(34deg); } }
+@keyframes bob { from { transform: translateY(0); } to { transform: translateY(-1.6px); } }
+@keyframes arrive { from { transform: translateY(-14px); opacity: 0; } }
+/* compass: a soft beam on the ground, pointing where the phone faces */
 .avatar .arrow {
-  position: absolute; inset: -6px; transform-origin: 50% 50%;
-  background: no-repeat top center / 18px 13px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 16'%3E%3Cpath d='M11 0l11 16H0z' fill='%233b82f6' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+  position: absolute; left: 50%; bottom: 3px; width: 116px; height: 116px; margin: 0 0 -58px -58px;
+  transform-origin: 50% 50%;
+  background: no-repeat center / 100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3CradialGradient id='g' cx='32' cy='32' r='32' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%233b82f6' stop-opacity='.6'/%3E%3Cstop offset='1' stop-color='%233b82f6' stop-opacity='0'/%3E%3C/radialGradient%3E%3Cpath d='M32 32L18 2Q32-3 46 2z' fill='url(%23g)'/%3E%3C/svg%3E");
 }
 @keyframes pop { from { transform: translateY(6px) scale(0.98); opacity: 0; } }
 

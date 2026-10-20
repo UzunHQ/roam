@@ -6,7 +6,8 @@ import { loadData } from './data';
 import { applyTheme, bounceBuilding, createMap, lineFeature, selectBuilding, setGeoJSON, type Theme } from './map';
 import { icons, placeIcon } from './icons';
 import { matchingGroups, search } from './search';
-import { circle, distanceToBounds, formatDistance, getFix, startCompass, type Fix } from './geo';
+import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
+import { avatarSvg } from './avatar';
 import { Router, type Route } from './route';
 import { londonNow, openState, todayText } from './hours';
 import { initAnalytics, track } from './analytics';
@@ -259,14 +260,16 @@ async function main() {
   const northIcon = $('#north svg');
   map?.on('rotate', () => { northIcon.style.transform = `rotate(${-map!.getBearing()}deg)`; drawHeading(); });
 
-  // ---------- location: one fix, only when asked ----------
+  // ---------- location: only after the person says yes, then live while the app is on screen ----------
   let fix: Fix | null = null;
   let compassHeading: number | null = null;
   let stopCompass: (() => void) | null = null;
   const avatarEl = document.createElement('div');
   avatarEl.className = 'avatar';
-  avatarEl.innerHTML = '<div class="arrow" hidden></div><div class="body"></div>';
-  const avatar = new maplibregl.Marker({ element: avatarEl, anchor: 'center' });
+  avatarEl.setAttribute('aria-hidden', 'true');
+  avatarEl.innerHTML = `<div class="arrow" hidden></div>${avatarSvg}`;
+  // feet on the spot: the SVG's ground line is 2 px above its bottom edge
+  const avatar = new maplibregl.Marker({ element: avatarEl, anchor: 'bottom', offset: [0, 2] });
 
   function drawHeading() {
     const arrow = avatarEl.querySelector<HTMLElement>('.arrow')!;
@@ -276,7 +279,62 @@ async function main() {
   }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { stopCompass?.(); stopCompass = null; compassHeading = null; drawHeading(); }
+    // GPS only runs while Roam is on screen
+    if (document.hidden) { stopWatch?.(); stopWatch = null; } else if (tracking) startTracking();
   });
+
+  let tracking = false;
+  let stopWatch: (() => void) | null = null;
+  let trail: Fix[] = []; // the last few seconds of fixes
+  let shownPos: LngLat | null = null;
+  let glide = 0;
+  let walkTimer = 0;
+
+  function startTracking() {
+    tracking = true;
+    if (stopWatch || document.hidden || !('geolocation' in navigator)) return;
+    stopWatch = watchFix(onLiveFix, (err) => { if (err.code === 1) { tracking = false; stopWatch?.(); stopWatch = null; } });
+  }
+
+  function onLiveFix(f: Fix) {
+    if (!map || !shownPos) return; // the first fix goes through showFix
+    fix = f;
+    setGeoJSON(map, 'user', { type: 'Feature', properties: {}, geometry: circle(f.pos, f.accuracy) });
+    trail = [...trail, f].filter((t) => f.time - t.time <= 6000);
+    const first = trail[0];
+    // GPS wanders a few metres even when you stand still, so only count a clear move over the last few seconds
+    const clearMove = distanceM(first.pos, f.pos) > Math.max(4, Math.min(f.accuracy * 0.6, 15));
+    const moving = f.speed != null ? f.speed > 0.6 : clearMove;
+    if (f.heading != null) faceLeft(Math.sin(((f.heading - map.getBearing()) * Math.PI) / 180) < 0);
+    else if (clearMove) {
+      const a = map.project(first.pos), b = map.project(f.pos);
+      if (Math.abs(b.x - a.x) > 2) faceLeft(b.x < a.x);
+    }
+    if (moving) {
+      avatarEl.classList.add('walking');
+      clearTimeout(walkTimer);
+      walkTimer = window.setTimeout(() => avatarEl.classList.remove('walking'), 2500);
+    }
+    glideTo(f.pos);
+    drawHeading();
+  }
+
+  const faceLeft = (left: boolean) => avatarEl.classList.toggle('face-left', left);
+
+  /** Slide the character to the new fix instead of jumping. */
+  function glideTo(to: LngLat) {
+    cancelAnimationFrame(glide);
+    const from = shownPos;
+    if (!from || reducedMotion.matches || distanceM(from, to) > 60) { shownPos = to; avatar.setLngLat(to); return; }
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const k = Math.min((now - t0) / 900, 1), e = k * (2 - k);
+      shownPos = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
+      avatar.setLngLat(shownPos);
+      if (k < 1) glide = requestAnimationFrame(step);
+    };
+    glide = requestAnimationFrame(step);
+  }
 
   let pendingLocate: ((ok: boolean) => void) | null = null;
   /** Ask with a one-line reason the first time; resolves true once we have a fix. */
@@ -305,6 +363,7 @@ async function main() {
     try {
       fix = await getFix();
       showFix(fix);
+      startTracking();
       pendingLocate?.(true);
     } catch (err) {
       toast((err as GeolocationPositionError).code === 1
@@ -320,6 +379,9 @@ async function main() {
 
   function showFix(f: Fix) {
     if (!map) return;
+    cancelAnimationFrame(glide);
+    shownPos = f.pos;
+    trail = [f];
     avatar.setLngLat(f.pos).addTo(map);
     setGeoJSON(map, 'user', { type: 'Feature', properties: {}, geometry: circle(f.pos, f.accuracy) });
     drawHeading();
