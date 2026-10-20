@@ -21,6 +21,7 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 const store = {
   get: (k: string) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode: fine */ } },
+  del: (k: string) => { try { localStorage.removeItem(k); } catch { /* private mode: fine */ } },
 };
 // Animations: Full, Reduced or Off. Starts from the phone's Reduce Motion setting; Settings can override it.
 type Motion = 'full' | 'reduced' | 'off';
@@ -60,7 +61,11 @@ const groupIcon = (g: GroupId) =>
 $$('[data-icon]').forEach((el) => (el.innerHTML = icons[el.dataset.icon as keyof typeof icons] ?? ''));
 $$('.author').forEach((el) => (el.textContent = config.author));
 // an empty link in config.ts hides its icon
-$$<HTMLAnchorElement>('.li').forEach((a) => { a.href = config.links.linkedin; a.hidden = !config.links.linkedin; });
+$$<HTMLAnchorElement>('[data-link]').forEach((a) => {
+  const url = config.links[a.dataset.link as keyof typeof config.links] ?? '';
+  a.href = url;
+  a.hidden = !url;
+});
 initAnalytics();
 
 let toastTimer = 0;
@@ -121,11 +126,13 @@ function waveLater(left: number, delay: number) {
   }, delay);
 }
 welcomeMascot.addEventListener('animationend', (e) => { if (e.animationName === 'wave-hello') welcomeMascot.classList.remove('waving'); });
-if (!linkedId && store.get('roam.welcomed') !== '1') {
+function showWelcome() {
+  clearTimeout(waveTimer);
   welcome.hidden = false;
   document.body.classList.add('hello-open');
   waveLater(4, 1200);
 }
+if (!linkedId && store.get('roam.welcomed') !== '1') showWelcome();
 $('#welcome-go').addEventListener('click', dismissWelcome);
 $('.hello-close').addEventListener('click', dismissWelcome);
 // "Find me" on the card does what the locate button does
@@ -149,6 +156,13 @@ settings.addEventListener('change', (e) => {
   if (r.name === 'motion') { store.set('roam.motion', r.value); applyMotion(); }
 });
 $('#settings-close').addEventListener('click', () => closeDialog(settings));
+// forget that the welcome card was closed, and show it now
+$('#welcome-again').addEventListener('click', () => {
+  store.del('roam.welcomed');
+  closeDialog(settings);
+  showWelcome();
+  $('#welcome-go').focus();
+});
 settings.addEventListener('click', (e) => { if (e.target === settings) closeDialog(settings); });
 
 $('#settings-btn').addEventListener('click', openSettings);
@@ -248,8 +262,15 @@ async function main() {
   const passes = (p: Place) => (filter === 'saved' ? saved.has(p.id) : passesFilter(filter, groupOf(p)));
 
   // ---------- markers ----------
-  type M = { p: Place; group: GroupId; marker: maplibregl.Marker; el: HTMLButtonElement; offset: [number, number]; labelW: number };
+  type M = { p: Place; group: GroupId; marker: maplibregl.Marker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; gate: boolean };
   const markers = new Map<string, M>();
+  // a named entrance's pin stands over its garden gate in the wall (data/walls.geojson)
+  const gateAt = new Map<string, LngLat>();
+  for (const f of walls.features) {
+    if (f.properties?.part !== 'gate' || !f.properties.place || f.geometry.type !== 'LineString') continue;
+    const [a, b] = f.geometry.coordinates;
+    gateAt.set(f.properties.place, [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+  }
   for (const p of places) {
     const group = groupOf(p);
     const el = document.createElement('button');
@@ -259,9 +280,10 @@ async function main() {
       ? `<span class="gate">${icons.entrance}</span><span class="label">${esc(p.name)}</span>`
       : `<span class="dot">${placeIcon(p.category, p.kind)}</span><span class="label"><span class="lname">${esc(p.name)}</span>${p.code ? `<span class="lcode">${esc(p.code)}</span>` : ''}</span>`;
     el.addEventListener('click', (e) => { e.stopPropagation(); select(p, { source: 'marker' }); });
-    const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(p.position);
+    const at = gateAt.get(p.id) ?? p.position;
+    const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(at);
     if (map) marker.addTo(map);
-    markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0 });
+    markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0, at, gate: gateAt.has(p.id) });
   }
   // places sharing a spot (e.g. a café inside its building) sit side by side instead of stacking
   {
@@ -322,14 +344,18 @@ async function main() {
     const off = (m: M) => m.group !== 'entrance' && !passes(m.p); // outside the chosen category
     const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || PRIORITY[b.group] - PRIORITY[a.group]);
     const shown: { m: M; x: number; y: number; sel: boolean }[] = [];
+    // gate pins float just above the pillars' lanterns (about 5.4 m up, as seen at this zoom and tilt)
+    const pxPerM = (512 * 2 ** z) / (40075017 * Math.cos((map.getCenter().lat * Math.PI) / 180));
+    const lift = -Math.min(90, 5.4 * pxPerM * Math.sin((map.getPitch() * Math.PI) / 180) + 16);
     for (const m of list) {
+      if (m.gate && m.offset[1] !== Math.round(lift)) { m.offset = [0, Math.round(lift)]; m.marker.setOffset(m.offset); }
       const sel = isSel(m);
       const filtered = off(m);
       const tooFar = m.group === 'entrance' && z < 16.3;
       // places outside the chosen category stay as faint context once you're zoomed in; matches always come first
       let show = sel || (!tooFar && (!filtered || z >= 16.6));
       m.el.classList.toggle('faded', filtered && !sel);
-      const pt = map.project(m.p.position);
+      const pt = map.project(m.at);
       const x = pt.x + m.offset[0], y = pt.y + m.offset[1];
       const onScreen = x > -40 && x < W + 40 && y > -40 && y < H + 40;
       if (show && onScreen && !sel && dots.some(([a, b]) => Math.hypot(a - x, b - y) < gap)) show = false;

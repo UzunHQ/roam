@@ -530,7 +530,9 @@ svg { display: block; flex: none; }
 .about-card h2 { margin: 0 0 10px; }
 .about-card p { margin: 0 0 10px; font-size: 15px; }
 .about-close { position: absolute; right: 8px; top: 8px; }
-.about-by { display: flex; align-items: center; gap: 2px; font-weight: 700; }
+.about-by { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 700; }
+.about-by a { color: var(--primary); }
+.welcome-again { width: 100%; margin: 16px 0 10px; }
 @keyframes fade { from { opacity: 0; } }
 
 /* ---------- footer ---------- */
@@ -544,8 +546,9 @@ svg { display: block; flex: none; }
 .footer-row { display: flex; align-items: center; height: 26px; font-size: 13px; font-weight: 700; color: var(--text); }
 .footer-row > span { margin-right: 2px; }
 .footer p { margin: 0; line-height: 1.25; }
-.icon-link { width: 44px; height: 44px; margin: -9px -4px; display: grid; place-items: center; color: var(--muted); }
-.icon-link svg { width: 17px; height: 17px; }
+.icon-link { width: 44px; height: 44px; margin: -9px -6px; display: grid; place-items: center; color: var(--text); border-radius: 12px; }
+.icon-link svg { width: 20px; height: 20px; }
+.icon-link:hover, .icon-link:focus-visible { color: var(--primary); }
 
 /* ---------- large screens: side panel ---------- */
 @media (min-width: 900px) {

@@ -20,7 +20,7 @@ const PALETTE = {
     selected: '#ff7a59', selectedWall: '#ffe2d8', trunk: '#a27b5b', leaf: '#8fcb7d', leafDark: '#6fb465', accuracy: '#3b82f6',
     tones: ['#7fc36d', '#6aae5f', '#94cf7c', '#5f9f58', '#a9d47f'], blossom: '#f4b8c8',
     route: '#ff4f7b', routeCase: '#ffffff', routeFlow: '#ffffff', outside: '#c2d8b1', shadow: 'rgba(52,70,40,0.14)',
-    stones: ['#cbb08a', '#bfa27b', '#d6be99'], coping: '#ead8b6', wallShadow: 'rgba(92,70,38,0.22)',
+    stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -34,7 +34,7 @@ const PALETTE = {
     selected: '#ff8a6b', selectedWall: '#8a5d52', trunk: '#6e5340', leaf: '#3f7a4c', leafDark: '#2f6140', accuracy: '#6ea6ff',
     tones: ['#3f7a4c', '#356b42', '#4a8655', '#2f6140', '#557f45'], blossom: '#9a6a7a',
     route: '#ff7f9c', routeCase: '#1b2228', routeFlow: '#ffe3ea', outside: '#19261f', shadow: 'rgba(0,0,0,0.28)',
-    stones: ['#6c5e4a', '#625440', '#766854'], coping: '#8e816b', wallShadow: 'rgba(0,0,0,0.32)',
+    stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
   },
 } as const;
 
@@ -87,8 +87,8 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     water: { 'fill-color': p.water },
     shore: { 'line-color': p.shore },
     waterway: { 'line-color': p.water },
-    'road-edge': { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpathEdge, p.roadEdge] },
-    road: { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpath, p.road] },
+    'road-edge': { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpathEdge, 'wall', p.plinth, p.roadEdge] },
+    road: { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpath, 'wall', p.stones[1], p.road] },
     'building-walls': { 'fill-extrusion-color': ['case', SELECTED, p.selectedWall, wallColor(p)] },
     'building-roof': { 'fill-extrusion-color': ['case', SELECTED, p.selected, rimColor(p)] },
     'building-top': { 'fill-extrusion-color': ['case', SELECTED, p.selected, partColor(p)] },
@@ -102,10 +102,11 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'route-hop': { 'line-color': p.route },
     'route-flow': { 'line-color': p.routeFlow },
     'building-shadow': { 'fill-color': p.shadow },
-    'wall-shadow': { 'line-color': p.wallShadow },
-    'wall-line': { 'line-color': p.stones[1] },
-    'wall-stone': { 'fill-extrusion-color': ['match', ['get', 'tone'], 0, p.stones[0], 1, p.stones[1], p.stones[2]] },
-    'wall-cap': { 'fill-extrusion-color': p.coping },
+    'wall-3d': {
+      'fill-extrusion-color': ['match', ['get', 'part'],
+        'plinth', p.plinth, 'pier', p.pier, 'cope', p.coping, 'iron', p.iron, 'lamp', p.lamp,
+        ['match', ['get', 'tone'], 0, p.stones[0], 1, p.stones[1], p.stones[2]]],
+    },
     'building-halo': { 'line-color': p.selected },
   };
 }
@@ -323,38 +324,115 @@ function treePolygons(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
 }
 
 /**
- * The campus wall along Clarence Lane and Roehampton Lane (data/walls.geojson): two courses of
- * stone blocks with staggered joints under a lighter coping, and a square pillar with a cap on
- * each side of every gate. Low on purpose: well under the buildings.
+ * The campus wall along Roehampton Lane and Clarence Lane (data/walls.geojson), low-poly and
+ * well under the buildings: a dark plinth, a course of warm stone blocks in three tones and a
+ * light coping that overhangs both faces; a thicker pier every ~17 m; a pillar wherever it
+ * ends or opens; and at each named entrance a garden gate: two tall pillars with lanterns, an iron
+ * double gate standing open into campus, and an iron arch between them.
+ * Everything is one source and one extrusion layer, so it draws in a single batch per tile.
  */
-const WALL = { half: 0.75, course: 1, block: 1.5, copeHalf: 0.95, cope: 2.4, pillarHalf: 1.15, pillar: 3.2, pillarCapHalf: 1.4, pillarCap: 3.65 };
+const WALL = { plinthHalf: 0.9, plinth: 0.32, half: 0.72, course: 1.68, block: 4.2, copeHalf: 0.94, cope: 2.28 };
 function wallParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
   const out: GeoJSON.Feature[] = [];
-  const add = (ring: number[][], toLL: (p: number[]) => LngLat, properties: Record<string, unknown>) => {
-    const r = ring.map(toLL);
-    r.push(r[0]);
-    out.push({ type: 'Feature', properties, geometry: { type: 'Polygon', coordinates: [r] } });
-  };
+  type Pt = number[];
   // a stable pseudo-random stone colour, so the wall looks the same on every visit
   const tone = (x: number, y: number) => Math.floor((Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1) * 3);
   for (const f of fc.features) {
     const pr = f.properties ?? {};
-    if (f.geometry.type === 'Point' && pr.part === 'pillar') {
-      const [lng, lat] = f.geometry.coordinates;
-      const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
-      const toLL = ([x, y]: number[]): LngLat => [lng + x / kx, lat + y / ky];
-      const a = Number(pr.angle) || 0, c = Math.cos(a), s = Math.sin(a);
-      const square = (h: number) => [[-h, -h], [h, -h], [h, h], [-h, h]].map(([x, y]) => [x * c - y * s, x * s + y * c]);
-      add(square(WALL.pillarHalf), toLL, { part: 'pillar', tone: 2, base: 0, top: WALL.pillar });
-      add(square(WALL.pillarCapHalf), toLL, { part: 'cap', base: WALL.pillar, top: WALL.pillarCap });
+    const g = f.geometry as GeoJSON.Point | GeoJSON.LineString;
+    const first = (g.type === 'Point' ? g.coordinates : g.coordinates[0]) as LngLat;
+    const [lng0, lat0] = first;
+    const kx = 111320 * Math.cos((lat0 * Math.PI) / 180), ky = 111320;
+    const toLL = ([x, y]: Pt): LngLat => [lng0 + x / kx, lat0 + y / ky];
+    const local = ([lng, lat]: number[]): Pt => [(lng - lng0) * kx, (lat - lat0) * ky];
+    const put = (ring: Pt[], part: string, base: number, top: number, extra: Record<string, unknown> = {}) => {
+      const r = ring.map(toLL);
+      r.push(r[0]);
+      out.push({ type: 'Feature', properties: { part, base, top, ...extra }, geometry: { type: 'Polygon', coordinates: [r] } });
+    };
+    /** a box centred on c, `hx` along direction `a` (radians) and `hy` across it */
+    const box = (c: Pt, a: number, hx: number, hy = hx): Pt[] => {
+      const u = [Math.cos(a), Math.sin(a)], v = [-u[1], u[0]];
+      return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([i, j]) => [c[0] + u[0] * hx * i + v[0] * hy * j, c[1] + u[1] * hx * i + v[1] * hy * j]);
+    };
+    const oct = (c: Pt, r: number): Pt[] => Array.from({ length: 8 }, (_, i) => [c[0] + r * Math.cos((i * Math.PI) / 4 + 0.39), c[1] + r * Math.sin((i * Math.PI) / 4 + 0.39)]);
+    /** a square post: plinth, body and cap */
+    const post = (c: Pt, a: number, body: number, height: number) => {
+      put(box(c, a, body + 0.14), 'plinth', 0, WALL.plinth + 0.06);
+      put(box(c, a, body), 'pier', WALL.plinth, height);
+      put(box(c, a, body + 0.17), 'cope', height, height + 0.3);
+    };
+
+    if (g.type === 'Point') {
+      const c = local(g.coordinates), a = Number(pr.angle) || 0;
+      if (pr.part === 'pier') post(c, a, 0.92, 2.5);
+      if (pr.part === 'pillar') post(c, a, 1, 2.9);
       continue;
     }
-    if (f.geometry.type !== 'LineString') continue;
-    const line = f.geometry.coordinates;
-    const [lng0, lat0] = line[0];
-    const kx = 111320 * Math.cos((lat0 * Math.PI) / 180), ky = 111320;
-    const toLL = ([x, y]: number[]): LngLat => [lng0 + x / kx, lat0 + y / ky];
-    const pts = line.map(([lng, lat]) => [(lng - lng0) * kx, (lat - lat0) * ky]);
+    const pts = g.coordinates.map(local);
+
+    if (pr.part === 'railing') { // a plain gate, shut: iron bars between two rails
+      const [A, B] = pts;
+      const span = Math.hypot(B[0] - A[0], B[1] - A[1]), a = Math.atan2(B[1] - A[1], B[0] - A[0]);
+      const n = Math.max(3, Math.round((span - 1.6) / 0.42));
+      for (let j = 0; j <= n; j++) {
+        const t = 0.8 + ((span - 1.6) * j) / n, c = [A[0] + Math.cos(a) * t, A[1] + Math.sin(a) * t];
+        put(box(c, a, 0.08), 'iron', 0.12, 1.9);
+        put(box(c, a, 0.045), 'iron', 1.9, 2.08);
+      }
+      for (const [b0, b1] of [[0.3, 0.42], [1.66, 1.78]]) put(box([(A[0] + B[0]) / 2, (A[1] + B[1]) / 2], a, span / 2 - 0.7, 0.06), 'iron', b0, b1);
+      continue;
+    }
+    if (pr.part === 'gate') {
+      const [A, B] = pts;
+      const span = Math.hypot(B[0] - A[0], B[1] - A[1]);
+      const d = [(B[0] - A[0]) / span, (B[1] - A[1]) / span], left = [-d[1], d[0]];
+      const inward = [left[0] * (Number(pr.in) || 1), left[1] * (Number(pr.in) || 1)];
+      const a = Math.atan2(d[1], d[0]);
+      const at = (p: Pt, k: number, q = d): Pt => [p[0] + q[0] * k, p[1] + q[1] * k];
+      const SHAFT = 1, TOP = 3.8;
+      const pa = at(A, -0.4), pb = at(B, 0.4); // the pillars stand over the wall ends
+      for (const c of [pa, pb]) {
+        put(box(c, a, SHAFT + 0.25), 'plinth', 0, 0.55);
+        put(box(c, a, SHAFT), 'pier', 0.55, TOP);
+        put(box(c, a, SHAFT + 0.28), 'cope', TOP, TOP + 0.32);
+        put(box(c, a, SHAFT - 0.15), 'cope', TOP + 0.32, TOP + 0.48);
+        // a little lantern on top
+        put(oct(c, 0.34), 'iron', TOP + 0.48, TOP + 0.6);
+        put(oct(c, 0.26), 'lamp', TOP + 0.6, TOP + 1.05);
+        put(oct(c, 0.37), 'iron', TOP + 1.05, TOP + 1.17);
+        put(oct(c, 0.1), 'iron', TOP + 1.17, TOP + 1.37);
+      }
+      // the double gate, both leaves standing open into campus
+      const ha = at(pa, SHAFT), hb = at(pb, -SHAFT);
+      const opening = Math.hypot(hb[0] - ha[0], hb[1] - ha[1]);
+      const leaf = opening / 2 - 0.05, swing = (68 * Math.PI) / 180;
+      for (const [h, along] of [[ha, 1], [hb, -1]] as const) {
+        const q = [d[0] * along * Math.cos(swing) + inward[0] * Math.sin(swing), d[1] * along * Math.cos(swing) + inward[1] * Math.sin(swing)];
+        const qa = Math.atan2(q[1], q[0]);
+        const n = Math.max(4, Math.round(leaf / 0.42));
+        for (let j = 0; j <= n; j++) {
+          const t = j / n, c = at(h, 0.1 + (leaf - 0.2) * t, q);
+          const top = 2.2 + 0.65 * Math.sin((t * Math.PI) / 2); // the tops rise to meet in the middle
+          const edge = j === 0 || j === n;
+          put(box(c, qa, edge ? 0.12 : 0.08), 'iron', 0.12, top);
+          put(box(c, qa, 0.045), 'iron', top, top + 0.2); // spike
+        }
+        for (const [b0, b1] of [[0.3, 0.44], [1.92, 2.06]]) {
+          put(box(at(h, leaf / 2, q), qa, leaf / 2, 0.06), 'iron', b0, b1);
+        }
+      }
+      // an iron arch between the pillars
+      const N = 12, arch = (x: number) => TOP - 0.25 + 1.05 * Math.sin(Math.PI * x);
+      for (let k = 0; k < N; k++) {
+        const x0 = k / N, x1 = (k + 1) / N, mid = at(ha, opening * ((x0 + x1) / 2));
+        const y = arch((x0 + x1) / 2);
+        put(box(mid, a, (opening / N) / 2 + 0.02, 0.07), 'iron', y - 0.08, y + 0.1);
+      }
+      continue;
+    }
+
+    // a piece of wall: plinth, blocks, coping (few, long blocks: cheap to draw on phones)
     const cum = [0];
     for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
     const L = cum[cum.length - 1];
@@ -364,8 +442,8 @@ function wallParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
     };
     const seg = (d: number) => { let i = 0; while (i < pts.length - 2 && cum[i + 1] < d) i++; return i; };
     const pointAt = (d: number, side: number) => {
-      const i = seg(d), t = (d - cum[i]) / (cum[i + 1] - cum[i] || 1), n = normal(i);
-      return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t + n[0] * side, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t + n[1] * side];
+      const i = seg(d), t = (d - cum[i]) / (cum[i + 1] - cum[i] || 1), nn = normal(i);
+      return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t + nn[0] * side, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t + nn[1] * side];
     };
     const mitre = (i: number, side: number) => { // offset corner at vertex i
       const n1 = normal(i - 1), n2 = normal(i), m = [n1[0] + n2[0], n1[1] + n2[1]], l = Math.hypot(m[0], m[1]) || 1;
@@ -375,19 +453,17 @@ function wallParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
     /** the band of wall between d0 and d1 metres along the line */
     const band = (d0: number, d1: number, half: number) => {
       const inner = pts.map((_, i) => i).filter((i) => i > 0 && i < pts.length - 1 && cum[i] > d0 && cum[i] < d1);
-      const left = [pointAt(d0, half), ...inner.map((i) => mitre(i, half)), pointAt(d1, half)];
-      const right = [pointAt(d0, -half), ...inner.map((i) => mitre(i, -half)), pointAt(d1, -half)];
-      return [...left, ...right.reverse()];
+      const l = [pointAt(d0, half), ...inner.map((i) => mitre(i, half)), pointAt(d1, half)];
+      const r = [pointAt(d0, -half), ...inner.map((i) => mitre(i, -half)), pointAt(d1, -half)];
+      return [...l, ...r.reverse()];
     };
-    for (const course of [0, 1]) {
-      for (let d = course ? -WALL.block / 2 : 0; d < L; d += WALL.block) {
-        const d0 = Math.max(0, d), d1 = Math.min(L, d + WALL.block);
-        if (d1 - d0 < 0.1) continue;
-        const mid = pointAt((d0 + d1) / 2, 0);
-        add(band(d0, d1, WALL.half), toLL, { part: 'stone', tone: tone(mid[0] + lng0 * 1e4, mid[1] + course * 7.1), base: course * WALL.course, top: (course + 1) * WALL.course });
-      }
+    put(band(0, L, WALL.plinthHalf), 'plinth', 0, WALL.plinth);
+    const nBlocks = Math.max(1, Math.round(L / WALL.block));
+    for (let k = 0; k < nBlocks; k++) {
+      const d0 = (L * k) / nBlocks, d1 = (L * (k + 1)) / nBlocks, mid = pointAt((d0 + d1) / 2, 0);
+      put(band(d0, d1, WALL.half), 'stone', WALL.plinth, WALL.plinth + WALL.course, { tone: tone(mid[0] + lng0 * 1e4, mid[1]) });
     }
-    add(band(0, L, WALL.copeHalf), toLL, { part: 'cap', base: 2 * WALL.course, top: WALL.cope });
+    put(band(0, L, WALL.copeHalf), 'cope', WALL.plinth + WALL.course, WALL.cope);
   }
   return { type: 'FeatureCollection', features: out };
 }
@@ -420,11 +496,12 @@ export function createMap(opts: {
   const style: StyleSpecification = {
     version: 8,
     sources: {
-      campus: { type: 'geojson', data: campus, promoteId: 'osmId' },
+      // the wall's ground line rides in the path layers (no extra layer): from afar it is a thin
+      // stone-coloured line, close up it sits under the 3D wall
+      campus: { type: 'geojson', data: { ...campus, features: [...campus.features, ...walls.features.filter((f) => f.properties?.part === 'wall').map((f) => ({ ...f, properties: { layer: 'path', kind: 'wall' } }))] }, promoteId: 'osmId' },
       buildings: { type: 'geojson', data: buildings, promoteId: 'osmId' },
       roofparts: { type: 'geojson', data: roofParts(buildings), promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
-      walls: { type: 'geojson', data: walls },
       wallparts: { type: 'geojson', data: wallParts(walls) },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
@@ -444,8 +521,8 @@ export function createMap(opts: {
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
           'line-width': ['interpolate', ['exponential', 2], ['zoom'], 15,
-            ['match', ['get', 'kind'], 'footpath', 3, 'service', 3.5, 4.5], 19,
-            ['match', ['get', 'kind'], 'footpath', 15, 'service', 21, 30]],
+            ['match', ['get', 'kind'], 'footpath', 3, 'service', 3.5, 'wall', 3.6, 4.5], 19,
+            ['match', ['get', 'kind'], 'footpath', 15, 'service', 21, 'wall', 8, 30]],
         },
       },
       {
@@ -453,30 +530,15 @@ export function createMap(opts: {
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
           'line-width': ['interpolate', ['exponential', 2], ['zoom'], 15,
-            ['match', ['get', 'kind'], 'footpath', 1.7, 'service', 2, 3], 19,
-            ['match', ['get', 'kind'], 'footpath', 12, 'service', 18, 26]],
+            ['match', ['get', 'kind'], 'footpath', 1.7, 'service', 2, 'wall', 2.2, 3], 19,
+            ['match', ['get', 'kind'], 'footpath', 12, 'service', 18, 'wall', 6, 26]],
         },
       },
       { id: 'outside', type: 'fill', source: 'outside', paint: { 'fill-opacity': 0.85 } },
       // the campus wall sits under the route, the labels and the pins
       {
-        id: 'wall-shadow', type: 'line', source: 'walls', filter: ['==', ['get', 'part'], 'wall'],
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-width': ['interpolate', ['exponential', 2], ['zoom'], 15, 1.2, 19, 9], 'line-blur': 1.5, 'line-translate': [1.5, 1.5] },
-      },
-      // from afar the blocks are too small to read, so a stone-coloured line carries the wall
-      {
-        id: 'wall-line', type: 'line', source: 'walls', filter: ['==', ['get', 'part'], 'wall'],
-        layout: { 'line-cap': 'butt', 'line-join': 'round' },
-        paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 2.4, 17, 3.8], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 16.8, 1, 17.6, 0] },
-      },
-      {
-        id: 'wall-stone', type: 'fill-extrusion', source: 'wallparts', filter: ['in', ['get', 'part'], ['literal', ['stone', 'pillar']]],
+        id: 'wall-3d', type: 'fill-extrusion', source: 'wallparts', minzoom: 16.8,
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-vertical-gradient': true },
-      },
-      {
-        id: 'wall-cap', type: 'fill-extrusion', source: 'wallparts', filter: ['==', ['get', 'part'], 'cap'],
-        paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'] },
       },
       { id: 'route-hop', type: 'line', source: 'hop', layout: { 'line-cap': 'round' }, paint: { 'line-width': 3, 'line-opacity': 0.6, 'line-dasharray': [0.5, 2] } },
       { id: 'route-case', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 6, 19, 13] } },

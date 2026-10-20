@@ -2,7 +2,8 @@
 export const config = {
   author: 'Hüseyin',
   links: {
-    linkedin: 'https://www.linkedin.com/in/huseyinuzun-data', // empty hides the icon
+    linkedin: 'https://www.linkedin.com/in/huseyinuzun-data', // empty hides the link
+    github: 'https://github.com/UzunHQ',
   },
   // "Report a mistake" opens this Google Form with the place already filled in.
   // placeField is the form question's entry id (Forms → ⋮ → Get pre-filled link).
