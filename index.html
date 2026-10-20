@@ -24,11 +24,8 @@
           placeholder="Where would you like to go?" aria-label="Search for a building, café, service or room"
           aria-controls="results" aria-autocomplete="list" />
         <button type="button" class="icon-btn clear" aria-label="Clear search" hidden data-icon="close"></button>
-        <button type="button" id="list-btn" class="icon-btn list-btn" aria-label="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menu" data-icon="list"></button>
-        <div id="menu" class="menu" role="menu" aria-label="Menu" hidden>
-          <button type="button" role="menuitem" id="menu-list"><span data-icon="list"></span><span>List of places</span></button>
-          <button type="button" role="menuitem" id="menu-settings"><span data-icon="settings"></span><span>Settings</span></button>
-        </div>
+        <button type="button" id="settings-btn" class="icon-btn" aria-label="Settings" aria-haspopup="dialog" data-icon="settings"></button>
+        <button type="button" id="list-btn" class="icon-btn list-btn" aria-label="Show list of places" aria-pressed="false" data-icon="list"></button>
       </form>
       <ul id="results" class="results" role="listbox" aria-label="Search suggestions" hidden></ul>
       <nav id="chips" class="chips" aria-label="Filter by category"></nav>
@@ -67,16 +64,16 @@
       </div>
     </div>
 
-    <!-- every visit: a small welcome card, not a wall; the map is usable around it -->
+    <!-- first visit: a small welcome card, not a wall; the map is usable around it -->
     <section id="welcome" class="hello" aria-labelledby="welcome-title" hidden>
       <div class="hello-mascot welcome-mascot" aria-hidden="true"></div>
       <div class="hello-text">
         <h1 id="welcome-title">Welcome to Roehampton</h1>
-        <p>Hello, explorer! Find your way around the University of Roehampton's Roehampton Lane campus.</p>
-        <div class="hello-actions">
-          <button class="btn primary" id="welcome-find"><span data-icon="locate"></span><span>Find me</span></button>
-          <button class="btn ghost" id="welcome-go">Explore</button>
-        </div>
+        <p>Hello, explorer! <span class="hello-long">Find your way around the University of Roehampton's Roehampton Lane campus.</span><span class="hello-short">Find your way around campus.</span></p>
+      </div>
+      <div class="hello-actions">
+        <button class="btn primary" id="welcome-find"><span data-icon="locate"></span><span>Find me</span></button>
+        <button class="btn ghost" id="welcome-go">Explore</button>
       </div>
       <button class="icon-btn hello-close" aria-label="Close" data-icon="close"></button>
     </section>

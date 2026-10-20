@@ -95,26 +95,36 @@ document.addEventListener('keydown', (e) => {
 
 const linkedId = new URLSearchParams(location.search).get('place');
 const welcome = $('#welcome');
-// every visit opens with the welcome card (direct links to a building skip it). It steps aside
-// by itself after a few seconds, unless you're reading or using it.
-$('.welcome-mascot').innerHTML = avatarSvg.replace('width="48" height="63"', '');
-let helloTimer = 0;
+// The welcome card shows until you close it (X, Find me or Explore), then never again on this
+// device. Direct links to a building skip it. While it's open the mascot waves now and then.
+const welcomeMascot = $('.welcome-mascot');
+welcomeMascot.innerHTML = avatarSvg.replace('width="48" height="63"', '');
+let waveTimer = 0;
 const dismissWelcome = () => {
-  clearTimeout(helloTimer);
+  clearTimeout(waveTimer);
+  store.set('roam.welcomed', '1');
   if (welcome.hidden) return;
   document.body.classList.remove('hello-open');
   welcome.classList.add('bye');
   setTimeout(() => { welcome.hidden = true; welcome.classList.remove('bye'); }, ms(200));
 };
-const helloLater = () => {
-  clearTimeout(helloTimer);
-  helloTimer = window.setTimeout(() => (welcome.matches(':hover, :focus-within') ? helloLater() : dismissWelcome()), 9000);
-};
-if (!linkedId) {
+/** a short wave, 4 in all, about every 8-10 s; never with reduced or no motion */
+function waveLater(left: number, delay: number) {
+  waveTimer = window.setTimeout(() => {
+    if (welcome.hidden) return;
+    if (motion() === 'full' && !reducedMotion.matches) {
+      welcomeMascot.classList.remove('waving');
+      void welcomeMascot.offsetWidth; // restart the animation
+      welcomeMascot.classList.add('waving');
+    }
+    if (left > 1) waveLater(left - 1, 8000 + Math.random() * 2000);
+  }, delay);
+}
+welcomeMascot.addEventListener('animationend', (e) => { if (e.animationName === 'wave-hello') welcomeMascot.classList.remove('waving'); });
+if (!linkedId && store.get('roam.welcomed') !== '1') {
   welcome.hidden = false;
   document.body.classList.add('hello-open');
-  setTimeout(() => $('.welcome-mascot').classList.add('greet'), 500);
-  helloLater();
+  waveLater(4, 1200);
 }
 $('#welcome-go').addEventListener('click', dismissWelcome);
 $('.hello-close').addEventListener('click', dismissWelcome);
@@ -126,7 +136,7 @@ $('#about-btn').addEventListener('click', () => openDialog(about, $('.about-clos
 $('.about-close').addEventListener('click', () => closeDialog(about));
 about.addEventListener('click', (e) => { if (e.target === about) closeDialog(about); });
 
-// Settings (from the menu in the search bar): theme and animations, remembered on this device
+// Settings (the gear in the search bar): theme and animations, remembered on this device
 const settings = $('#settings');
 function openSettings() {
   $$<HTMLInputElement>('input[name=theme]').forEach((r) => (r.checked = r.value === themePref()));
@@ -141,25 +151,7 @@ settings.addEventListener('change', (e) => {
 $('#settings-close').addEventListener('click', () => closeDialog(settings));
 settings.addEventListener('click', (e) => { if (e.target === settings) closeDialog(settings); });
 
-// the menu button in the search bar: list of places, settings
-const menu = $('#menu'), menuBtn = $('#list-btn');
-function toggleMenu(open = menu.hidden) {
-  menu.hidden = !open;
-  menuBtn.setAttribute('aria-expanded', String(open));
-  if (open) menu.querySelector<HTMLElement>('[role=menuitem]')?.focus();
-}
-menuBtn.addEventListener('click', () => toggleMenu());
-document.addEventListener('pointerdown', (e) => {
-  if (!menu.hidden && !menu.contains(e.target as Node) && !menuBtn.contains(e.target as Node)) toggleMenu(false);
-});
-menu.addEventListener('keydown', (e) => {
-  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-  e.preventDefault();
-  const items = $$('[role=menuitem]').filter((x) => menu.contains(x));
-  const i = items.indexOf(document.activeElement as HTMLElement);
-  items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
-});
-$('#menu-settings').addEventListener('click', () => { toggleMenu(false); openSettings(); });
+$('#settings-btn').addEventListener('click', openSettings);
 
 // ---------- start ----------
 main().catch((err) => {
@@ -1417,7 +1409,7 @@ async function main() {
   clearBtn.addEventListener('click', () => { input.value = ''; showResults(); input.focus(); });
 
   // ---------- list view (same data; works without the map) ----------
-  const listItem = $('#menu-list');
+  const listBtn = $('#list-btn');
   function renderList() {
     const q = input.value.trim();
     const pool = (q ? search(q, places, 100).map((h) => h.place) : places).filter(passes);
@@ -1440,14 +1432,18 @@ async function main() {
     n.hidden = !note;
     if (note) n.textContent = note;
     $('#list').hidden = false;
-    listItem.innerHTML = `<span>${icons.map}</span><span>Back to map</span>`;
+    listBtn.setAttribute('aria-pressed', 'true');
+    listBtn.setAttribute('aria-label', 'Show map');
+    listBtn.innerHTML = icons.map;
   }
   function hideList() {
     if (!map) return; // without a map the list is the whole app
     $('#list').hidden = true;
-    listItem.innerHTML = `<span>${icons.list}</span><span>List of places</span>`;
+    listBtn.setAttribute('aria-pressed', 'false');
+    listBtn.setAttribute('aria-label', 'Show list of places');
+    listBtn.innerHTML = icons.list;
   }
-  listItem.addEventListener('click', () => { toggleMenu(false); if ($('#list').hidden) showList(); else hideList(); });
+  listBtn.addEventListener('click', () => ($('#list').hidden ? showList() : hideList()));
   $('#list-body').addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-id]');
     const p = b && byId.get(b.dataset.id!);
@@ -1466,8 +1462,6 @@ async function main() {
     if (e.key !== 'Escape') return;
     if (!about.hidden) closeDialog(about);
     else if (!settings.hidden) closeDialog(settings);
-    else if (!menu.hidden) { toggleMenu(false); menuBtn.focus(); }
-    else if (!welcome.hidden) dismissWelcome();
     else if (navigating) endNavigation();
     else if (!$('#ask').hidden) { $('#ask').hidden = true; pendingLocate?.(false); pendingLocate = null; }
     else if (!key.hidden) { toggleKey(false); keyBtn.focus(); }

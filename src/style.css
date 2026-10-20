@@ -135,21 +135,7 @@ svg { display: block; flex: none; }
   transition: background-color 0.12s, transform 0.12s;
 }
 .icon-btn:active { background: var(--surface-2); transform: scale(0.94); }
-.list-btn[aria-expanded="true"] { background: var(--surface-2); color: var(--text); }
-.menu {
-  position: absolute; right: 0; top: calc(100% + 6px); z-index: 2; min-width: 200px; padding: 6px;
-  background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
-  display: flex; flex-direction: column; animation: pop 0.16s var(--ease);
-}
-.menu[hidden] { display: none; }
-.menu button {
-  display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px;
-  border: 0; border-radius: 12px; background: transparent; color: var(--text);
-  font: inherit; font-weight: 700; font-size: 15px; text-align: left; cursor: pointer;
-}
-.menu button:hover, .menu button:focus-visible { background: var(--surface-2); }
-.menu button svg { width: 20px; height: 20px; color: var(--muted); }
-.menu button > span:first-child { display: grid; }
+.list-btn[aria-pressed="true"] { background: var(--primary); color: var(--primary-ink); }
 
 .results {
   list-style: none; margin: 6px 0 0; padding: 6px;
@@ -360,6 +346,16 @@ svg { display: block; flex: none; }
 /* the waving arm is drawn in front of the head; the resting one hides meanwhile */
 .greet .me .arm-r { visibility: hidden; }
 .greet .me .arm-wave { display: inline; animation: wave 0.42s ease-in-out 6 alternate; transform: rotate(-104deg); }
+/* welcome card: a short hello now and then (main.ts); the arm rises, waves three times, drops */
+.waving .me .arm-r { visibility: hidden; }
+.waving .me .arm-wave { display: inline; animation: wave-hello 1.6s ease-in-out both; }
+@keyframes wave-hello {
+  0%, 100% { transform: rotate(0deg); }
+  16% { transform: rotate(-100deg); }
+  30%, 58% { transform: rotate(-124deg); }
+  44%, 72% { transform: rotate(-94deg); }
+  86% { transform: rotate(-112deg); }
+}
 @keyframes wave { from { transform: rotate(-92deg); } to { transform: rotate(-120deg); } }
 .cheer .me { animation: hop 0.42s ease-out 3; }
 .cheer .me .arm-r { visibility: hidden; }
@@ -694,23 +690,35 @@ body.has-fix .find-label, body.panel-open .find-label { display: none; }
 .roof-metal { background: #bfcdd8; }
 
 /* ---------- first visit: "Hello, explorer" card (not a modal) ---------- */
+/* compact on phones: the mascot and the text side by side, the two buttons in one row below */
 .hello {
   position: fixed; z-index: 8; left: 10px; right: 64px; bottom: calc(var(--footer-h) + 12px);
-  max-width: 420px; display: flex; align-items: flex-end; gap: 6px; padding: 14px 14px 14px 6px;
+  max-width: 420px; display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 8px; align-items: end;
+  padding: 10px 10px 10px 8px;
   background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
   animation: pop 0.22s var(--ease);
 }
-.hello-mascot { width: 74px; height: 97px; flex: none; margin: -30px 0 -4px; }
-.hello-text { flex: 1; min-width: 0; }
-.hello h1 { margin: 0 28px 2px 0; font-size: 19px; line-height: 1.2; }
-.hello p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
-.hello-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.hello-actions .btn { min-height: 42px; padding: 0 14px; font-size: 15px; }
+.hello-mascot { width: 50px; height: 66px; margin: -24px 0 0; }
+.hello-text { min-width: 0; align-self: center; }
+.hello h1 { margin: 0 34px 2px 0; font-size: 17px; line-height: 1.2; }
+.hello p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.35; }
+.hello-long { display: none; }
+.hello-actions { grid-column: 1 / -1; display: flex; gap: 8px; margin-top: 8px; }
+.hello-actions .btn { flex: 1; min-height: 44px; padding: 0 12px; font-size: 15px; }
 .hello-actions .btn svg { width: 18px; height: 18px; }
-.hello-close { position: absolute; right: 4px; top: 4px; width: 40px; height: 40px; }
+.hello-close { position: absolute; right: 2px; top: 2px; width: 44px; height: 44px; }
 body.hello-open .key-btn, body.hello-open .find-label { display: none; }
 .hello.bye { opacity: 0; transform: translateY(10px); transition: opacity 0.2s, transform 0.2s var(--ease); }
-@media (min-width: 900px) { .hello { left: 16px; right: auto; width: 380px; bottom: calc(var(--footer-h) + 16px); } }
+@media (min-width: 900px) {
+  .hello { left: 16px; right: auto; width: 380px; bottom: calc(var(--footer-h) + 16px); padding: 14px 14px 14px 6px; }
+  .hello-mascot { width: 74px; height: 97px; margin: -30px 0 -4px; grid-row: span 2; }
+  .hello h1 { font-size: 19px; }
+  .hello p { font-size: 14px; }
+  .hello-long { display: inline; }
+  .hello-short { display: none; }
+  .hello-actions { grid-column: 2; margin-top: 10px; }
+  .hello-actions .btn { flex: none; min-height: 42px; padding: 0 14px; }
+}
 
 /* ---------- walking: Start folds the directions into a slim bar; the map gets the screen ---------- */
 .route-go { display: flex; margin: 0 0 12px; }
