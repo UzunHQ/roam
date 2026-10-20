@@ -32,8 +32,9 @@ const groupIcon = (g: GroupId) =>
 
 $$('[data-icon]').forEach((el) => (el.innerHTML = icons[el.dataset.icon as keyof typeof icons] ?? ''));
 $$('.author').forEach((el) => (el.textContent = config.author));
-$$<HTMLAnchorElement>('.ig').forEach((a) => (a.href = config.links.instagram));
-$$<HTMLAnchorElement>('.li').forEach((a) => (a.href = config.links.linkedin));
+// an empty link in config.ts hides its icon
+$$<HTMLAnchorElement>('.ig').forEach((a) => { a.href = config.links.instagram; a.hidden = !config.links.instagram; });
+$$<HTMLAnchorElement>('.li').forEach((a) => { a.href = config.links.linkedin; a.hidden = !config.links.linkedin; });
 initAnalytics();
 
 let toastTimer = 0;
@@ -461,10 +462,10 @@ async function main() {
         <button class="btn ghost share" aria-label="Share a link to ${esc(p.name)}">${icons.share}<span>Share</span></button>
       </div>
       ${p.officialUrl ? `<a class="official" href="${esc(p.officialUrl)}" target="_blank" rel="noopener">Official page ${icons.external}</a>` : ''}
-      <p class="small">
-        ${src ? `Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)}</a>${checked ? `, checked ${fmtDate(checked)}` : ''} · ` : checked ? `Last checked ${fmtDate(checked)} · ` : ''}
-        <a href="${mail}">Report a mistake</a>
-      </p>`;
+      <p class="small">${[
+        src ? `Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)}</a>${checked ? `, checked ${fmtDate(checked)}` : ''}` : checked ? `Last checked ${fmtDate(checked)}` : '',
+        config.reportEmail ? `<a href="${mail}">Report a mistake</a>` : '', // hidden until an inbox is set in config.ts
+      ].filter(Boolean).join(' · ')}</p>`;
     panelBody.querySelector('.close')!.addEventListener('click', closePanel);
     panelBody.querySelector('.dir')!.addEventListener('click', () => openDirections(p));
     panelBody.querySelector('.share')!.addEventListener('click', () => share(p));

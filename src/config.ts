@@ -2,11 +2,11 @@
 export const config = {
   author: 'Hüseyin',
   links: {
-    instagram: 'https://www.instagram.com/uzunhq/', // TODO: confirm
-    linkedin: 'https://www.linkedin.com/in/REPLACE_ME/', // TODO: your LinkedIn URL
+    instagram: 'https://www.instagram.com/uzunhq/',
+    linkedin: '', // add your LinkedIn URL here; empty hides the icon
   },
   // "Report a mistake" opens this with the place name added to the subject.
-  reportEmail: 'REPLACE_ME@example.com', // TODO: an inbox you read
+  reportEmail: '', // add an inbox you read; empty hides the link
 
   // Cookieless analytics (Umami). Leave websiteId empty to turn analytics off.
   // Umami Cloud: https://cloud.umami.is/script.js
