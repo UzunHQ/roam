@@ -30,6 +30,16 @@ const motion = (): Motion => motionChoice() ?? (reducedMotion.matches ? 'reduced
 const applyMotion = () => { document.documentElement.dataset.motion = motion(); document.dispatchEvent(new Event('roam-motion')); };
 applyMotion();
 reducedMotion.addEventListener('change', applyMotion);
+// Theme: light for everyone by default (the daytime miniature); Dark is a saved choice in About.
+const themeChoice = (): 'light' | 'dark' => (store.get('roam.theme') === 'dark' ? 'dark' : 'light');
+function applyThemeChoice() {
+  const t = themeChoice();
+  document.documentElement.dataset.theme = t;
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', t === 'dark' ? '#1f2e28' : '#cfe3be');
+  document.querySelector('meta[name=color-scheme]')?.setAttribute('content', t);
+  document.dispatchEvent(new Event('roam-theme'));
+}
+applyThemeChoice();
 // low-end phones skip the purely decorative motion (pond ripples, drifting route dashes)
 const nav = navigator as Navigator & { deviceMemory?: number };
 const lite = (nav.deviceMemory ?? 8) <= 2 || (navigator.hardwareConcurrency ?? 8) <= 2;
@@ -94,10 +104,12 @@ welcome.addEventListener('click', (e) => { if (e.target === welcome) dismissWelc
 const about = $('#about');
 $('#about-btn').addEventListener('click', () => {
   $$<HTMLInputElement>('input[name=motion]').forEach((r) => (r.checked = r.value === motion()));
+  $$<HTMLInputElement>('input[name=theme]').forEach((r) => (r.checked = r.value === themeChoice()));
   openDialog(about, $('.about-close'));
 });
 about.addEventListener('change', (e) => {
   const r = e.target as HTMLInputElement;
+  if (r.name === 'theme') { store.set('roam.theme', r.value); applyThemeChoice(); }
   if (r.name !== 'motion') return;
   store.set('roam.motion', r.value);
   applyMotion();
@@ -126,8 +138,7 @@ async function main() {
   const router = new Router(paths);
 
   // ---------- map (falls back to the list if WebGL is unavailable) ----------
-  const darkQuery = matchMedia('(prefers-color-scheme: dark)');
-  const theme = (): Theme => (darkQuery.matches ? 'dark' : 'light');
+  const theme = (): Theme => themeChoice();
   let map: MLMap | null = null;
   try {
     map = createMap({ container: 'map', campus, bounds: doc.bounds, theme: theme() });
@@ -138,7 +149,7 @@ async function main() {
   if (map) {
     const slow = setTimeout(() => { loading.textContent = 'The map is taking a while. You can use the list view in the meantime.'; }, 10000);
     map.once('load', () => { clearTimeout(slow); loading.hidden = true; });
-    darkQuery.addEventListener('change', () => applyTheme(map!, theme()));
+    document.addEventListener('roam-theme', () => applyTheme(map!, theme()));
     if (import.meta.env.DEV) Object.assign(window, { map });
   }
 
@@ -148,7 +159,14 @@ async function main() {
   })();
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
   map?.jumpTo({ center: campusCenter, zoom: homeZoom() });
-  const campusPoints = places.filter((p) => p.category !== 'entrance').map((p) => p.position);
+  // the overview frames every campus building (its footprint's corners), not just the pins
+  const campusPoints: LngLat[] = places.filter((p) => p.category !== 'entrance').map((p) => p.position);
+  for (const f of campus.features) {
+    if (f.properties?.layer !== 'building' || f.properties?.campus === false || f.geometry.type !== 'Polygon') continue;
+    const ring = f.geometry.coordinates[0] as LngLat[];
+    const xs = ring.map((c) => c[0]), ys = ring.map((c) => c[1]);
+    campusPoints.push([Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)], [Math.min(...xs), Math.max(...ys)], [Math.max(...xs), Math.min(...ys)]);
+  }
 
   // ---------- state ----------
   let current: Place | null = null;
@@ -168,7 +186,7 @@ async function main() {
     el.setAttribute('aria-label', `${p.name}, ${groupLabel(group)}`);
     el.innerHTML = group === 'entrance'
       ? `<span class="gate">${icons.entrance}</span><span class="label">${esc(p.name)}</span>`
-      : `<span class="dot">${placeIcon(p.category, p.kind)}</span><span class="label">${p.code ? `<b>${esc(p.code)}</b> ` : ''}${esc(p.name)}</span>`;
+      : `<span class="dot">${placeIcon(p.category, p.kind)}</span><span class="label"><span class="lname">${esc(p.name)}</span>${p.code ? `<span class="lcode">${esc(p.code)}</span>` : ''}</span>`;
     el.addEventListener('click', (e) => { e.stopPropagation(); select(p, { source: 'marker' }); });
     const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(p.position);
     if (map) marker.addTo(map);
@@ -201,15 +219,19 @@ async function main() {
     const gap = z < 16 ? 30 : z < 17 ? 26 : 22;
     const W = innerWidth, H = innerHeight;
     const dots: [number, number][] = [];
+    const keyDots: [number, number][] = []; // dots that labels must avoid (faded context pins don't count)
     const labels: [number, number, number, number][] = [];
     const isSel = (m: M) => m.p.id === current?.id || m.p.id === routeFrom?.id;
-    const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || PRIORITY[b.group] - PRIORITY[a.group]);
+    const off = (m: M) => m.group !== 'entrance' && !passes(m.p); // outside the chosen category
+    const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || PRIORITY[b.group] - PRIORITY[a.group]);
     const shown: { m: M; x: number; y: number; sel: boolean }[] = [];
     for (const m of list) {
       const sel = isSel(m);
-      const filtered = m.group !== 'entrance' && !passes(m.p);
+      const filtered = off(m);
       const tooFar = m.group === 'entrance' && z < 16.3;
-      let show = sel || (!filtered && !tooFar);
+      // places outside the chosen category stay as faint context once you're zoomed in; matches always come first
+      let show = sel || (!tooFar && (!filtered || z >= 16.6));
+      m.el.classList.toggle('faded', filtered && !sel);
       const pt = map.project(m.p.position);
       const x = pt.x + m.offset[0], y = pt.y + m.offset[1];
       const onScreen = x > -40 && x < W + 40 && y > -40 && y < H + 40;
@@ -217,7 +239,7 @@ async function main() {
       m.el.classList.toggle('hidden', !show);
       m.el.tabIndex = show ? 0 : -1;
       m.el.classList.remove('show-label');
-      if (show && onScreen) { dots.push([x, y]); shown.push({ m, x, y, sel }); }
+      if (show && onScreen) { dots.push([x, y]); if (!filtered || sel) { shown.push({ m, x, y, sel }); keyDots.push([x, y]); } }
     }
     // second pass: names where they cover neither another label nor a dot. The main buildings and
     // the library get theirs from zoom 16.3, food and sport from 16.8, everything else from 17.
@@ -231,7 +253,7 @@ async function main() {
       const box: [number, number, number, number] = [x - m.labelW / 2, y + 14, x + m.labelW / 2, y + 36];
       const clipped = box[0] < 4 || box[2] > W - 4 || taken.some(([a, b, c, d]) => box[0] < c && box[2] > a && box[1] < d && box[3] > b);
       if (!sel && clipped) continue;
-      const hitsDot = dots.some(([dx, dy]) => (dx !== x || dy !== y) && dx + 12 > box[0] && dx - 12 < box[2] && dy + 12 > box[1] && dy - 12 < box[3]);
+      const hitsDot = keyDots.some(([dx, dy]) => (dx !== x || dy !== y) && dx + 12 > box[0] && dx - 12 < box[2] && dy + 12 > box[1] && dy - 12 < box[3]);
       const hitsLabel = labels.some(([a, b, c, d]) => box[0] < c && box[2] > a && box[1] < d && box[3] > b);
       if (sel || (!hitsDot && !hitsLabel)) { labels.push(box); m.el.classList.add('show-label'); }
     }
@@ -340,7 +362,8 @@ async function main() {
   function showWholeCampus(duration = 500) {
     if (!map) return;
     const phone = !isDesktop();
-    fitPoints(campusPoints, { pitch: tilt(phone ? 45 : 55), bearing: phone ? PHONE_BEARING : 0, maxZoom: 17, fullWidth: phone, duration });
+    // a little more top-down than before, so paths and entrances read clearly
+    fitPoints(campusPoints, { pitch: tilt(phone ? 38 : 45), bearing: phone ? PHONE_BEARING : 0, maxZoom: 17, fullWidth: phone, duration });
   }
   if (!linkedId) map?.once('load', () => showWholeCampus(0));
   const northIcon = $('#north svg');
@@ -382,6 +405,8 @@ async function main() {
   let routeEnd: LngLat | null = null;
   let arrivalArmed = false;
   const findBtn = $('#findme');
+  // until we have a real fix, the button says what it does (no character at a made-up spot)
+  findBtn.insertAdjacentHTML('beforeend', '<span class="find-label" aria-hidden="true">Find me</span>');
 
   function setFollowing(on: boolean) {
     following = on;
@@ -523,6 +548,7 @@ async function main() {
     setGeoJSON(map, 'user', { type: 'Feature', properties: {}, geometry: circle(f.pos, f.accuracy) });
     drawHeading();
     findBtn.classList.add('active');
+    document.body.classList.add('has-fix');
     const off = distanceToBounds(f.pos, doc.bounds);
     if (off > 0) { setFollowing(false); toast(`You're not on campus yet · ${formatDistance(off)} away`, 6000); return; }
     if (f.accuracy > config.weakGpsM) toast(`GPS is weak here · accurate to about ${Math.round(f.accuracy)} m`, 5000);
@@ -599,8 +625,9 @@ async function main() {
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
     const a = freeArea();
     // pins stand about 20 px either side of their point and 40 px above it
+    // full width (phone overview): keep clear of the Key button and the control column's lower half
     const box = opts.fullWidth
-      ? { l: 22, r: W - 22, t: a.top + 30, b: Math.min(a.bottom, H) - 8 }
+      ? { l: 22, r: W - 22, t: a.top + 24, b: Math.min(a.bottom, H) - 60 }
       : { l: a.left + 20, r: Math.min(a.right, W) - 20, t: a.top + 30, b: Math.min(a.bottom, H) - 8 };
     const zero = { top: 0, bottom: 0, left: 0, right: 0 };
     const before = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), padding: map.getPadding() };
@@ -762,6 +789,12 @@ async function main() {
       else if (dy > 70) { if (panel.classList.contains('expanded')) setExpanded(false); else closePanel(); }
     });
   }
+  // the desktop side card and list start just under the search + chips block, whatever its height
+  // (measured at the chips; while search suggestions hide them the last value stays)
+  new ResizeObserver(() => {
+    const r = $('#chips').getBoundingClientRect();
+    if (r.height) document.documentElement.style.setProperty('--top-b', `${Math.round(r.bottom)}px`);
+  }).observe($('#chips'));
   // keep the floating controls above the sheet on phones
   new ResizeObserver(() => {
     const h = panel.hidden ? 0 : panel.offsetHeight;
@@ -979,7 +1012,7 @@ async function main() {
   map?.on('click', (e) => {
     hideResults();
     if (!key.hidden) toggleKey(false);
-    const f = map!.queryRenderedFeatures(e.point, { layers: ['building-walls', 'building-roof'] })[0];
+    const f = map!.queryRenderedFeatures(e.point, { layers: ['building-walls', 'building-roof', 'building-top'] })[0];
     const p = f && footprintToPlace.get(f.properties?.osmId);
     if (p) { select(p, { source: 'building' }); return; }
     if (current && !directionsOpen) closePanel();

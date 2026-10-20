@@ -30,8 +30,8 @@
   --roof-froebel: #f6d77a;
   --roof-southlands: #bba9e8;
   --roof-other: #ecd3bb;
-  --path: #f9eed3;
-  --path-edge: #e3cf9f;
+  --path: #fcf3dc;
+  --path-edge: #d8c08b;
   --road: #d4d8d8;
   --road-edge: #b9bfbf;
   --shadow: 0 4px 0 rgba(31, 45, 39, 0.06), 0 8px 24px rgba(31, 45, 39, 0.14);
@@ -40,37 +40,36 @@
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1f2e28;
-    --surface: #24302b;
-    --surface-2: #2f3d37;
-    --text: #f1efe7;
-    --muted: #b3bcb5;
-    --line: #3d4b44;
-    --primary: #74d3a6;
-    --primary-ink: #0d2419;
-    --primary-shadow: #3f8f69;
-    --primary-soft: #26453a;
-    --select: #ff8a6b;
-    --route: #ff7f9c;
-    --focus: #8ab4ff;
-    --open: #7fe0a5;
-    --open-bg: #22402f;
-    --closed: #ffa59a;
-    --closed-bg: #4a2b2a;
-    --unknown-bg: #3b3a4a;
-    --roof-digby: #5689b0;
-    --roof-froebel: #b39545;
-    --roof-southlands: #7666a8;
-    --roof-other: #7a6a5a;
-    --path: #6d6450;
-    --path-edge: #4d4636;
-    --road: #4a5157;
-    --road-edge: #2c3237;
-    --shadow: 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
-    color-scheme: dark;
-  }
+/* dark theme: chosen in About (light is the default for everyone) */
+:root[data-theme="dark"] {
+  --bg: #1f2e28;
+  --surface: #24302b;
+  --surface-2: #2f3d37;
+  --text: #f1efe7;
+  --muted: #b3bcb5;
+  --line: #3d4b44;
+  --primary: #74d3a6;
+  --primary-ink: #0d2419;
+  --primary-shadow: #3f8f69;
+  --primary-soft: #26453a;
+  --select: #ff8a6b;
+  --route: #ff7f9c;
+  --focus: #8ab4ff;
+  --open: #7fe0a5;
+  --open-bg: #22402f;
+  --closed: #ffa59a;
+  --closed-bg: #4a2b2a;
+  --unknown-bg: #3b3a4a;
+  --roof-digby: #5689b0;
+  --roof-froebel: #b39545;
+  --roof-southlands: #7666a8;
+  --roof-other: #7a6a5a;
+  --path: #6d6450;
+  --path-edge: #4d4636;
+  --road: #4a5157;
+  --road-edge: #2c3237;
+  --shadow: 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -278,13 +277,23 @@ svg { display: block; flex: none; }
 .compact-pins .pin.selected .dot { transform: scale(1.6); }
 .pin .label {
   position: absolute; top: 34px; left: 50%; transform: translateX(-50%);
-  white-space: nowrap; max-width: 150px; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 4px;
+  white-space: nowrap; max-width: 232px;
   padding: 1px 7px; border-radius: 8px; font-size: 12px; font-weight: 700; line-height: 18px;
   background: var(--surface); color: var(--text); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
   opacity: 0; transition: opacity 0.15s; pointer-events: none;
 }
 .pin.show-label .label { opacity: 1; }
-.pin.selected .label { background: var(--text); color: var(--surface); }
+/* the name leads; the building code is a small badge after it */
+.pin .lname { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pin .lcode {
+  flex: none; padding: 0 4px; border-radius: 5px; font-size: 10px; font-weight: 800; line-height: 15px;
+  background: var(--surface-2); color: var(--muted);
+}
+.pin.selected .label { background: var(--text); color: var(--surface); max-width: none; z-index: 3; }
+.pin.selected .lcode { background: rgba(255, 255, 255, 0.2); color: inherit; }
+/* outside the chosen category: faint context, not gone */
+.pin.faded .dot, .pin.faded .gate { opacity: 0.38; transform: scale(0.78); filter: saturate(0.6); }
 .pin .gate {
   width: 22px; height: 22px; display: grid; place-items: center; border-radius: 7px;
   background: var(--surface); color: var(--muted); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.18); border: 1.5px solid var(--line);
@@ -535,20 +544,22 @@ svg { display: block; flex: none; }
   .brand b { font-size: 20px; }
   .brand span { font-size: 13px; color: var(--muted); font-weight: 650; }
   .top { z-index: 12; } /* suggestions open over the side panel */
+  /* --top-b: bottom edge of the search + chips block, measured in main.ts (chips may wrap to two rows) */
   .panel {
-    left: 16px; right: auto; bottom: auto; top: 196px; margin: 0;
-    width: 380px; max-width: none; max-height: calc(100vh - 196px - var(--footer-h) - 16px); border-radius: var(--radius); padding: 16px;
+    left: 16px; right: auto; bottom: auto; top: calc(var(--top-b, 186px) + 10px); margin: 0;
+    width: 380px; max-width: none; max-height: calc(100vh - var(--top-b, 186px) - 10px - var(--footer-h) - 16px); border-radius: var(--radius); padding: 16px;
     transform: translateX(-110%); box-shadow: var(--shadow);
   }
   .panel.open { transform: none; }
-  .panel.expanded { max-height: calc(100vh - 196px - var(--footer-h) - 16px); }
+  .panel.expanded { max-height: calc(100vh - var(--top-b, 186px) - 10px - var(--footer-h) - 16px); }
   .handle { display: none; }
   .brand { flex-direction: row; align-items: center; gap: 10px; }
   .brand > span { display: flex; flex-direction: column; }
   .brand .mark { width: 40px; height: 40px; }
   .search-mark { display: none; }
   .search { padding-left: 18px; }
-  .list { left: 16px; right: auto; width: 380px; top: 196px; bottom: calc(var(--footer-h) + 16px); border-radius: var(--radius); }
+  .chips, .chips.more-left, .chips.more-right { flex-wrap: wrap; overflow: visible; margin: 8px 0 0; padding: 2px 0 6px; -webkit-mask-image: none; mask-image: none; }
+  .list { left: 16px; right: auto; width: 380px; top: calc(var(--top-b, 186px) + 10px); bottom: calc(var(--footer-h) + 16px); border-radius: var(--radius); }
   .controls { right: 16px; bottom: calc(var(--footer-h) + 16px); }
   .key-btn { left: auto; right: 72px; bottom: calc(var(--footer-h) + 16px); }
   .key { left: auto; right: 72px; bottom: calc(var(--footer-h) + 68px); }
@@ -623,3 +634,19 @@ html[data-motion="off"] .ripple, html[data-motion="off"] .avatar .halo { display
 .key-me .walk { display: none; }
 .key-me .shadow { fill: rgba(0, 0, 0, 0.18); }
 .key-me .me * { animation: none !important; }
+.seg.seg-2 { grid-template-columns: repeat(2, 1fr); }
+
+/* "Find me" next to the locate button until the first real fix */
+.ctl.locate { position: relative; }
+.find-label {
+  position: absolute; right: 52px; top: 50%; transform: translateY(-50%);
+  padding: 0 12px; height: 34px; display: grid; place-items: center; white-space: nowrap;
+  border-radius: 17px; background: var(--primary); color: var(--primary-ink);
+  font-size: 14px; font-weight: 800; box-shadow: var(--shadow); pointer-events: none;
+}
+.find-label::after {
+  content: ""; position: absolute; right: -4px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px;
+  background: var(--primary); transform: rotate(45deg); border-radius: 2px;
+}
+body.has-fix .find-label, body.panel-open .find-label { display: none; }
+@media (min-width: 900px) { .find-label { display: none; } } /* desktop: the Key button sits there; the button has a tooltip */
