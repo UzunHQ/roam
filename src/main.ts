@@ -3,7 +3,7 @@ import './style.css';
 import maplibregl, { type Map as MLMap } from 'maplibre-gl';
 import { config } from './config';
 import { loadData } from './data';
-import { applyTheme, bounceBuilding, createMap, lineFeature, selectBuilding, setGeoJSON, type Theme } from './map';
+import { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, selectBuilding, setGeoJSON, type Theme } from './map';
 import { icons, placeIcon } from './icons';
 import { matchingGroups, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
@@ -11,7 +11,7 @@ import { avatarSvg } from './avatar';
 import { Router, type Route } from './route';
 import { londonNow, openState, todayText } from './hours';
 import { initAnalytics, track } from './analytics';
-import { GROUPS, PRIORITY, groupLabel, groupOf, type GroupId } from './categories';
+import { FILTERS, GROUPS, PRIORITY, chipOf, filterLabel, groupLabel, groupOf, passesFilter, type Filter, type GroupId } from './categories';
 import type { LngLat, Place } from './types';
 
 // ---------- small helpers ----------
@@ -22,8 +22,20 @@ const store = {
   get: (k: string) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode: fine */ } },
 };
+// Animations: Full, Reduced or Off. Starts from the phone's Reduce Motion setting; About can override it.
+type Motion = 'full' | 'reduced' | 'off';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const ms = (d: number) => (reducedMotion.matches ? 0 : d);
+const motionChoice = (): Motion | null => { const v = store.get('roam.motion'); return v === 'full' || v === 'reduced' || v === 'off' ? v : null; };
+const motion = (): Motion => motionChoice() ?? (reducedMotion.matches ? 'reduced' : 'full');
+const applyMotion = () => { document.documentElement.dataset.motion = motion(); document.dispatchEvent(new Event('roam-motion')); };
+applyMotion();
+reducedMotion.addEventListener('change', applyMotion);
+// low-end phones skip the purely decorative motion (pond ripples, drifting route dashes)
+const nav = navigator as Navigator & { deviceMemory?: number };
+const lite = (nav.deviceMemory ?? 8) <= 2 || (navigator.hardwareConcurrency ?? 8) <= 2;
+document.documentElement.classList.toggle('lite', lite);
+/** animation length, or 0 (jump) unless motion is Full */
+const ms = (d: number) => (motion() === 'full' ? d : 0);
 const isDesktop = () => innerWidth >= 900;
 const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const COLLEGE: Record<string, string> = { 'digby-stuart': 'Digby Stuart', froebel: 'Froebel', southlands: 'Southlands' };
@@ -70,13 +82,26 @@ document.addEventListener('keydown', (e) => {
 const linkedId = new URLSearchParams(location.search).get('place');
 const welcome = $('#welcome');
 // direct links to a building skip the welcome
-if (!linkedId && !store.get('roam.welcomed')) openDialog(welcome, $('#welcome-go'));
+$('.welcome-mascot').innerHTML = avatarSvg.replace('width="48" height="63"', '');
+if (!linkedId && !store.get('roam.welcomed')) {
+  openDialog(welcome, $('#welcome-go'));
+  setTimeout(() => $('.welcome-mascot').classList.add('greet'), 350);
+}
 const dismissWelcome = () => { store.set('roam.welcomed', '1'); closeDialog(welcome); };
 $('#welcome-go').addEventListener('click', dismissWelcome);
 welcome.addEventListener('click', (e) => { if (e.target === welcome) dismissWelcome(); });
 
 const about = $('#about');
-$('#about-btn').addEventListener('click', () => openDialog(about, $('.about-close')));
+$('#about-btn').addEventListener('click', () => {
+  $$<HTMLInputElement>('input[name=motion]').forEach((r) => (r.checked = r.value === motion()));
+  openDialog(about, $('.about-close'));
+});
+about.addEventListener('change', (e) => {
+  const r = e.target as HTMLInputElement;
+  if (r.name !== 'motion') return;
+  store.set('roam.motion', r.value);
+  applyMotion();
+});
 $('.about-close').addEventListener('click', () => closeDialog(about));
 about.addEventListener('click', (e) => { if (e.target === about) closeDialog(about); });
 
@@ -130,8 +155,8 @@ async function main() {
   let directionsOpen = false;
   let routeShown = false;
   let routeFrom: Place | null = null;
-  let filter: GroupId | 'all' = 'all';
-  const passes = (p: Place) => filter === 'all' || groupOf(p) === filter;
+  let filter: Filter = 'all';
+  const passes = (p: Place) => passesFilter(filter, groupOf(p));
 
   // ---------- markers ----------
   type M = { p: Place; group: GroupId; marker: maplibregl.Marker; el: HTMLButtonElement; offset: [number, number]; labelW: number };
@@ -194,11 +219,18 @@ async function main() {
       m.el.classList.remove('show-label');
       if (show && onScreen) { dots.push([x, y]); shown.push({ m, x, y, sel }); }
     }
-    // second pass: labels (from zoom 17) only where they cover neither another label nor a dot
+    // second pass: names where they cover neither another label nor a dot. The main buildings and
+    // the library get theirs from zoom 16.3, food and sport from 16.8, everything else from 17.
+    const minPriority = z >= 17 ? 0 : z >= 16.8 ? 7 : z >= 16.3 ? 8 : Infinity;
+    // floating buttons count as taken space, so names never hide half under them
+    const taken = ['.controls', '#key-btn'].map((sel) => $(sel).getBoundingClientRect()).filter((r) => r.width)
+      .map((r) => [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4] as [number, number, number, number]);
     for (const { m, x, y, sel } of shown) {
-      if (!sel && z < 17) continue;
+      if (!sel && PRIORITY[m.group] < minPriority) continue;
       if (!m.labelW) m.labelW = m.el.querySelector<HTMLElement>('.label')!.offsetWidth || 120;
       const box: [number, number, number, number] = [x - m.labelW / 2, y + 14, x + m.labelW / 2, y + 36];
+      const clipped = box[0] < 4 || box[2] > W - 4 || taken.some(([a, b, c, d]) => box[0] < c && box[2] > a && box[1] < d && box[3] > b);
+      if (!sel && clipped) continue;
       const hitsDot = dots.some(([dx, dy]) => (dx !== x || dy !== y) && dx + 12 > box[0] && dx - 12 < box[2] && dy + 12 > box[1] && dy - 12 < box[3]);
       const hitsLabel = labels.some(([a, b, c, d]) => box[0] < c && box[2] > a && box[1] < d && box[3] > b);
       if (sel || (!hitsDot && !hitsLabel)) { labels.push(box); m.el.classList.add('show-label'); }
@@ -208,15 +240,57 @@ async function main() {
   map?.once('load', layoutMarkers);
   addEventListener('resize', () => layoutMarkers());
 
+  // ---------- ambient: slow ripples on the larger ponds (CSS only; none in Reduced/Off or on low-end phones) ----------
+  if (map) {
+    const [bw, bs, be, bn] = doc.bounds;
+    const ponds = campus.features
+      .filter((f) => f.properties?.layer === 'water' && f.geometry.type === 'Polygon')
+      .map((f) => {
+        const ring = (f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[];
+        let a = 0, cx = 0, cy = 0;
+        for (let i = 0; i < ring.length - 1; i++) {
+          const [x0, y0] = ring[i], [x1, y1] = ring[i + 1], k = x0 * y1 - x1 * y0;
+          a += k; cx += (x0 + x1) * k; cy += (y0 + y1) * k;
+        }
+        return { area: Math.abs(a / 2), c: [cx / (3 * a), cy / (3 * a)] as LngLat };
+      })
+      .filter((p) => p.c[0] > bw && p.c[0] < be && p.c[1] > bs && p.c[1] < bn)
+      .sort((a, b) => b.area - a.area)
+      .slice(0, 3);
+    ponds.forEach((p, i) => {
+      const el = document.createElement('div');
+      el.className = 'ripple';
+      el.setAttribute('aria-hidden', 'true');
+      el.style.setProperty('--d', `${i * 1.4}s`);
+      el.innerHTML = '<i></i><i></i>';
+      new maplibregl.Marker({ element: el, pitchAlignment: 'map', rotationAlignment: 'map' }).setLngLat(p.c).addTo(map!);
+    });
+    // ripples keep a real-world size: about 45 m across
+    const rippleSize = () => document.documentElement.style.setProperty('--ripple', `${Math.round(60 * 2 ** (map!.getZoom() - 17))}px`);
+    rippleSize();
+    map.on('zoomend', rippleSize);
+  }
+
   // ---------- filters ----------
   const chips = $('#chips');
   const visibleGroups = GROUPS.filter((g) => g.id !== 'entrance' && (groupCount.get(g.id) ?? 0) > 0); // never show empty categories
+  const visibleFilters = FILTERS.filter((f) => f.groups.some((g) => (groupCount.get(g) ?? 0) > 0));
   chips.innerHTML = `<button class="chip" data-filter="all" aria-pressed="true">All</button>` +
-    visibleGroups.map((g) => `<button class="chip" data-filter="${g.id}" aria-pressed="false" aria-label="${g.label}"><span class="chip-dot g-${g.id}">${groupIcon(g.id)}</span>${g.short}</button>`).join('');
-  function setFilter(f: GroupId | 'all') {
+    visibleFilters.map((f) => `<button class="chip" data-filter="${f.id}" aria-pressed="false" aria-label="${f.full}"><span class="chip-dot g-${f.icon}">${groupIcon(f.icon)}</span>${f.label}</button>`).join('');
+  // a fade on the edge that has more chips behind it, so the row reads as scrollable
+  const chipEdges = () => {
+    const max = chips.scrollWidth - chips.clientWidth;
+    chips.classList.toggle('more-right', chips.scrollLeft < max - 2);
+    chips.classList.toggle('more-left', chips.scrollLeft > 2);
+  };
+  chips.addEventListener('scroll', chipEdges, { passive: true });
+  addEventListener('resize', chipEdges);
+  requestAnimationFrame(chipEdges);
+  function setFilter(f: Filter) {
     filter = f;
-    $$('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.filter === f)));
-    $(`.chip[data-filter="${f}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: ms(1) ? 'smooth' : 'auto' });
+    const chip = chipOf(f);
+    $$('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.filter === chip)));
+    $(`.chip[data-filter="${chip}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: ms(1) ? 'smooth' : 'auto' });
     layoutMarkers();
     if (!$('#list').hidden) renderList();
     if (input.value) showResults();
@@ -224,7 +298,7 @@ async function main() {
   chips.addEventListener('click', (e) => {
     const c = (e.target as HTMLElement).closest<HTMLElement>('.chip');
     // tapping the active chip again resets to All
-    if (c) setFilter((c.dataset.filter === filter ? 'all' : c.dataset.filter) as GroupId | 'all');
+    if (c) setFilter((c.dataset.filter === chipOf(filter) ? 'all' : c.dataset.filter) as Filter);
   });
 
   // ---------- map key ----------
@@ -238,7 +312,9 @@ async function main() {
       <li><span class="swatch roof-southlands"></span>Southlands</li>
       <li><span class="swatch roof-other"></span>Other university building</li>
     </ul>
-    <ul><li><span class="swatch line-path"></span>Footpath</li><li><span class="swatch line-road"></span>Road</li><li><span class="swatch line-route"></span>Walking route</li></ul>`;
+    <ul><li><span class="swatch line-path"></span>Footpath</li><li><span class="swatch line-road"></span>Road</li><li><span class="swatch line-route"></span>Walking route</li>
+      <li><span class="swatch sel-roof"></span>Selected building</li>
+      <li><span class="key-me">${avatarSvg.replace('width="48" height="63"', 'width="18" height="24"')}</span>You (after you share your location)</li></ul>`;
   const keyBtn = $('#key-btn');
   const toggleKey = (open = key.hidden) => { key.hidden = !open; keyBtn.setAttribute('aria-expanded', String(open)); };
   keyBtn.addEventListener('click', () => toggleKey());
@@ -246,15 +322,25 @@ async function main() {
   // ---------- map controls ----------
   $('#zoom-in').addEventListener('click', () => map?.zoomIn({ duration: ms(250) }));
   $('#zoom-out').addEventListener('click', () => map?.zoomOut({ duration: ms(250) }));
-  $('#north').addEventListener('click', () => map?.easeTo({ bearing: 0, pitch: 55, duration: ms(400) }));
+  let flat = false; // 2D: looking straight down
+  const tilt = (pitch: number) => (flat ? 0 : pitch);
+  $('#north').addEventListener('click', () => map?.easeTo({ bearing: 0, pitch: tilt(55), duration: ms(400) }));
   $('#whole').addEventListener('click', () => showWholeCampus());
+  const dimBtn = $('#dim');
+  dimBtn.addEventListener('click', () => {
+    flat = !flat;
+    map?.easeTo({ pitch: tilt(55), duration: ms(450) });
+    dimBtn.textContent = flat ? '2D' : '3D';
+    dimBtn.setAttribute('aria-pressed', String(!flat));
+    dimBtn.setAttribute('aria-label', flat ? 'Switch to a 3D map' : 'Switch to a flat 2D map');
+  });
   // Phones are tall and the campus runs south-west to north-east, so the phone overview faces
   // north-east (like the official campus map, turned to portrait). The compass button resets to north.
   const PHONE_BEARING = 28;
   function showWholeCampus(duration = 500) {
     if (!map) return;
     const phone = !isDesktop();
-    fitPoints(campusPoints, { pitch: phone ? 45 : 55, bearing: phone ? PHONE_BEARING : 0, maxZoom: 17, fullWidth: phone, duration });
+    fitPoints(campusPoints, { pitch: tilt(phone ? 45 : 55), bearing: phone ? PHONE_BEARING : 0, maxZoom: 17, fullWidth: phone, duration });
   }
   if (!linkedId) map?.once('load', () => showWholeCampus(0));
   const northIcon = $('#north svg');
@@ -267,7 +353,7 @@ async function main() {
   const avatarEl = document.createElement('div');
   avatarEl.className = 'avatar';
   avatarEl.setAttribute('aria-hidden', 'true');
-  avatarEl.innerHTML = `<div class="arrow" hidden></div>${avatarSvg}`;
+  avatarEl.innerHTML = `<div class="arrow" hidden></div><div class="halo"></div>${avatarSvg}`;
   // feet on the spot: the SVG's ground line is 2 px above its bottom edge
   const avatar = new maplibregl.Marker({ element: avatarEl, anchor: 'bottom', offset: [0, 2] });
 
@@ -289,16 +375,58 @@ async function main() {
   let shownPos: LngLat | null = null;
   let glide = 0;
   let walkTimer = 0;
+  let following = false; // camera keeps you in view
+  let stale = false;
+  let lastFixAt = 0;
+  let greeted = false;
+  let routeEnd: LngLat | null = null;
+  let arrivalArmed = false;
+  const findBtn = $('#findme');
+
+  function setFollowing(on: boolean) {
+    following = on;
+    findBtn.classList.toggle('following', on);
+    findBtn.setAttribute('aria-pressed', String(on));
+    findBtn.setAttribute('aria-label', on ? 'Following your location. Move the map to stop.' : 'Show my location');
+  }
+  // moving the map by hand pauses following; the locate button brings it back
+  map?.on('dragstart', () => { if (following) setFollowing(false); });
+
+  /** a speech bubble over the character */
+  function say(text: string, time = 3300) {
+    avatarEl.querySelector('.say')?.remove();
+    const b = document.createElement('div');
+    b.className = 'say';
+    b.textContent = text;
+    avatarEl.appendChild(b);
+    setTimeout(() => b.remove(), time);
+  }
+  function play(cls: 'greet' | 'cheer', time: number) {
+    avatarEl.classList.add(cls);
+    setTimeout(() => avatarEl.classList.remove(cls), time);
+  }
+  function markFresh() {
+    lastFixAt = Date.now();
+    if (stale) { stale = false; avatarEl.classList.remove('stale'); }
+  }
+  // no new reading for a while (indoors, or the phone paused GPS): fade the character instead of pretending
+  setInterval(() => {
+    if (!tracking || !lastFixAt || document.hidden) return;
+    const old = Date.now() - lastFixAt > 30000;
+    if (old !== stale) { stale = old; avatarEl.classList.toggle('stale', old); }
+  }, 5000);
 
   function startTracking() {
     tracking = true;
     if (stopWatch || document.hidden || !('geolocation' in navigator)) return;
+    lastFixAt = Date.now(); // the clock for "stale" starts when GPS (re)starts
     stopWatch = watchFix(onLiveFix, (err) => { if (err.code === 1) { tracking = false; stopWatch?.(); stopWatch = null; } });
   }
 
   function onLiveFix(f: Fix) {
     if (!map || !shownPos) return; // the first fix goes through showFix
     fix = f;
+    markFresh();
     setGeoJSON(map, 'user', { type: 'Feature', properties: {}, geometry: circle(f.pos, f.accuracy) });
     trail = [...trail, f].filter((t) => f.time - t.time <= 6000);
     const first = trail[0];
@@ -317,6 +445,14 @@ async function main() {
     }
     glideTo(f.pos);
     drawHeading();
+    if (following) map.easeTo({ center: f.pos, duration: ms(700) });
+    // arrival: only from a decent fix, close to the end of the route you were shown
+    if (routeShown && routeEnd && arrivalArmed && f.accuracy <= 30 && distanceM(f.pos, routeEnd) <= Math.max(12, f.accuracy)) {
+      arrivalArmed = false;
+      play('cheer', 1400);
+      say('You made it!');
+      toast(`You've arrived${current ? ` at ${current.name}` : ''}.`, 5000);
+    }
   }
 
   const faceLeft = (left: boolean) => avatarEl.classList.toggle('face-left', left);
@@ -325,7 +461,7 @@ async function main() {
   function glideTo(to: LngLat) {
     cancelAnimationFrame(glide);
     const from = shownPos;
-    if (!from || reducedMotion.matches || distanceM(from, to) > 60) { shownPos = to; avatar.setLngLat(to); return; }
+    if (!from || motion() !== 'full' || distanceM(from, to) > 60) { shownPos = to; avatar.setLngLat(to); return; }
     const t0 = performance.now();
     const step = (now: number) => {
       const k = Math.min((now - t0) / 900, 1), e = k * (2 - k);
@@ -383,15 +519,32 @@ async function main() {
     shownPos = f.pos;
     trail = [f];
     avatar.setLngLat(f.pos).addTo(map);
+    markFresh();
     setGeoJSON(map, 'user', { type: 'Feature', properties: {}, geometry: circle(f.pos, f.accuracy) });
     drawHeading();
-    $('#findme').classList.add('active');
+    findBtn.classList.add('active');
     const off = distanceToBounds(f.pos, doc.bounds);
-    if (off > 0) { toast(`You're not on campus yet · ${formatDistance(off)} away`, 6000); return; }
+    if (off > 0) { setFollowing(false); toast(`You're not on campus yet · ${formatDistance(off)} away`, 6000); return; }
     if (f.accuracy > config.weakGpsM) toast(`GPS is weak here · accurate to about ${Math.round(f.accuracy)} m`, 5000);
-    if (!routeShown) map.easeTo({ center: f.pos, zoom: Math.max(map.getZoom(), 17.2), duration: ms(500) });
+    if (!routeShown) {
+      setFollowing(true);
+      map.easeTo({ center: f.pos, zoom: Math.max(map.getZoom(), 17.2), duration: ms(500) });
+    }
+    if (!greeted) {
+      greeted = true;
+      setTimeout(() => { say("Hi! You're here."); play('greet', 2600); }, ms(450));
+    }
   }
-  $('#findme').addEventListener('click', async () => {
+  findBtn.addEventListener('click', async () => {
+    if (map && tracking && fix && !stale) {
+      // already live: bring the map back to you and keep following
+      const off = distanceToBounds(fix.pos, doc.bounds);
+      if (off > 0) { toast(`You're not on campus yet · ${formatDistance(off)} away`, 6000); return; }
+      setFollowing(true);
+      map.easeTo({ center: fix.pos, zoom: Math.max(map.getZoom(), 17.2), duration: ms(500) });
+      return;
+    }
+    if (stale) toast("Your location hasn't updated for a while. Checking again…", 4000);
     if ((await requestLocation()) && current && directionsOpen && fromValue === 'me') planRoute();
   });
 
@@ -418,6 +571,7 @@ async function main() {
     setTimeout(() => { if (!panel.classList.contains('open')) panel.hidden = true; }, ms(180));
     $$('.pin.selected').forEach((el) => el.classList.remove('selected'));
     if (map) selectBuilding(map, null);
+    showDoor(null);
     history.replaceState(null, '', location.pathname);
     layoutMarkers();
     if (panelOpener && document.contains(panelOpener)) panelOpener.focus();
@@ -499,8 +653,17 @@ async function main() {
     return `<div class="hours"><span class="badge ${cls}">${text}</span><span class="today">${todayText(p.hours)}</span></div>
       ${p.hours.notes ? `<p class="notes">${esc(p.hours.notes)}</p>` : ''}`;
   }
+  // places where people would expect opening hours; for these we say plainly when we don't have them
+  const expectsHours = (p: Place) => ['food', 'sport', 'library', 'services'].includes(groupOf(p));
 
-  function renderCard(p: Place) {
+  /** "About 4 min walk from you", only from a fresh, decent fix on campus and a real path route. */
+  function walkHint(p: Place): string {
+    if (!fix || stale || fix.accuracy > config.weakGpsM || distanceToBounds(fix.pos, doc.bounds) > 0) return '';
+    const r = router.route(fix.pos, p, footprints);
+    return r ? `About ${r.minutes} min walk from you` : '';
+  }
+
+  function renderCard(p: Place, expanded = false) {
     const g = groupOf(p);
     const placeLabel = p.code ? `${p.name} (${p.code})` : p.name;
     const report = config.reportForm.url
@@ -510,6 +673,8 @@ async function main() {
         : '';
     const src = p.sources?.[0];
     const checked = src?.checked ?? p.lastVerified;
+    const walk = walkHint(p);
+    // compact first: name, what it is, one line of description, the way there. Everything else under "View details".
     panelBody.innerHTML = `
       <div class="p-head">
         <span class="cat-icon g-${g}">${placeIcon(p.category, p.kind)}</span>
@@ -519,22 +684,34 @@ async function main() {
         </div>
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
       </div>
-      ${p.photo ? `<img class="photo" src="/${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy" decoding="async" width="1200" height="675">` : ''}
-      ${p.description ? `<p class="desc">${esc(p.description)}</p>` : ''}
-      ${p.services?.length ? `<ul class="services" aria-label="Services">${p.services.map((s, i) => `<li${i >= 4 ? ' hidden' : ''}>${esc(s)}</li>`).join('')}${p.services.length > 4 ? `<li><button class="more" aria-label="Show ${p.services.length - 4} more services">+${p.services.length - 4} more</button></li>` : ''}</ul>` : ''}
+      ${p.description ? `<p class="desc${expanded ? '' : ' clamp'}">${esc(p.description)}</p>` : ''}
       ${hoursBlock(p)}
-      ${p.accessibility ? `<p class="access"><a href="${esc(p.accessibility.url)}" target="_blank" rel="noopener">${icons.accessible}<span>${esc(p.accessibility.summary)}</span></a></p>` : ''}
+      ${walk ? `<p class="walk-hint">${icons.walk}<span>${walk}</span></p>` : ''}
       <div class="actions">
-        <button class="btn primary dir">${icons.directions}<span>Directions</span></button>
-        <button class="btn ghost share" aria-label="Share a link to ${esc(p.name)}">${icons.share}<span>Share</span></button>
+        <button class="btn primary dir">${icons.directions}<span>Take me there</span></button>
+        <button class="btn ghost more-info" aria-expanded="${expanded}" aria-controls="details">${expanded ? 'Hide details' : 'View details'}</button>
       </div>
-      ${p.officialUrl ? `<a class="official" href="${esc(p.officialUrl)}" target="_blank" rel="noopener">Official page ${icons.external}</a>` : ''}
-      <p class="small">${[
-        src ? `Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)}</a>${checked ? `, checked ${fmtDate(checked)}` : ''}` : checked ? `Last checked ${fmtDate(checked)}` : '',
-        report ? `<a href="${esc(report)}"${report.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>Report a mistake</a>` : '', // hidden until a form or inbox is set in config.ts
-      ].filter(Boolean).join(' · ')}</p>`;
+      <div id="details" class="details"${expanded ? '' : ' hidden'}>
+        ${p.photo ? `<img class="photo" src="/${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy" decoding="async" width="1200" height="675">` : ''}
+        ${p.services?.length ? `<ul class="services" aria-label="Services">${p.services.map((s, i) => `<li${i >= 4 ? ' hidden' : ''}>${esc(s)}</li>`).join('')}${p.services.length > 4 ? `<li><button class="more" aria-label="Show ${p.services.length - 4} more services">+${p.services.length - 4} more</button></li>` : ''}</ul>` : ''}
+        ${!p.hours && expectsHours(p) ? `<p class="detail-row">${icons.clock}<span>Opening hours aren't listed here yet. Check the official page.</span></p>` : ''}
+        ${p.accessibility ? `<p class="access"><a href="${esc(p.accessibility.url)}" target="_blank" rel="noopener">${icons.accessible}<span>${esc(p.accessibility.summary)}</span></a></p>` : ''}
+        <div class="detail-links">
+          <button class="btn ghost share" aria-label="Share a link to ${esc(p.name)}">${icons.share}<span>Share</span></button>
+          ${p.officialUrl ? `<a class="official" href="${esc(p.officialUrl)}" target="_blank" rel="noopener">Official page ${icons.external}</a>` : ''}
+        </div>
+        <p class="small">${[
+          src ? `Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)}</a>${checked ? `, checked ${fmtDate(checked)}` : ''}` : checked ? `Last checked ${fmtDate(checked)}` : '',
+          report ? `<a href="${esc(report)}"${report.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>Report a mistake</a>` : '', // hidden until a form or inbox is set in config.ts
+        ].filter(Boolean).join(' · ')}</p>
+      </div>`;
+    panelBody.classList.remove('panel-body-in');
+    void panelBody.offsetWidth;
+    panelBody.classList.add('panel-body-in');
+    setExpanded(expanded);
     panelBody.querySelector('.close')!.addEventListener('click', closePanel);
     panelBody.querySelector('.dir')!.addEventListener('click', () => openDirections(p));
+    panelBody.querySelector('.more-info')!.addEventListener('click', () => setExpanded(!panel.classList.contains('expanded')));
     panelBody.querySelector('.share')!.addEventListener('click', () => share(p));
     panelBody.querySelector('.more')?.addEventListener('click', (e) => {
       panelBody.querySelectorAll<HTMLElement>('.services li[hidden]').forEach((li) => (li.hidden = false));
@@ -544,6 +721,62 @@ async function main() {
     panelBody.querySelector<HTMLImageElement>('.photo')?.addEventListener('error', (e) => (e.target as HTMLElement).remove());
   }
 
+  /** Bottom sheet: compact by default, taller with details. The handle and "View details" both toggle it. */
+  function setExpanded(on: boolean) {
+    panel.classList.toggle('expanded', on);
+    handle.setAttribute('aria-expanded', String(on));
+    handle.setAttribute('aria-label', on ? 'Show less' : 'Show more');
+    const details = panelBody.querySelector<HTMLElement>('#details');
+    const btn = panelBody.querySelector<HTMLElement>('.more-info');
+    if (details) details.hidden = !on;
+    if (btn) { btn.setAttribute('aria-expanded', String(on)); btn.textContent = on ? 'Hide details' : 'View details'; }
+    panelBody.querySelector('.desc')?.classList.toggle('clamp', !on);
+    if (!on) panel.scrollTop = 0;
+  }
+  const handle = $('.handle');
+  handle.addEventListener('click', () => {
+    if (panelBody.querySelector('#details')) setExpanded(!panel.classList.contains('expanded'));
+  });
+  // swipe the sheet: up shows more, down shows less (or closes)
+  {
+    let y0 = 0, dy = 0, dragging = false;
+    const head = (t: EventTarget | null) => (t as HTMLElement).closest('.handle, .p-head') && !(t as HTMLElement).closest('button:not(.handle)');
+    panel.addEventListener('touchstart', (e) => {
+      if (isDesktop() || !head(e.target)) return;
+      dragging = true; y0 = e.touches[0].clientY; dy = 0;
+      panel.classList.add('dragging');
+    }, { passive: true });
+    panel.addEventListener('touchmove', (e) => {
+      if (!dragging) return;
+      dy = e.touches[0].clientY - y0;
+      if (dy > 0) panel.style.transform = `translateY(${dy}px)`;
+    }, { passive: true });
+    panel.addEventListener('touchend', () => {
+      if (!dragging) return;
+      dragging = false;
+      panel.classList.remove('dragging');
+      panel.style.transform = '';
+      const hasDetails = !!panelBody.querySelector('#details');
+      if (dy < -40 && hasDetails) setExpanded(true);
+      else if (dy > 70) { if (panel.classList.contains('expanded')) setExpanded(false); else closePanel(); }
+    });
+  }
+  // keep the floating controls above the sheet on phones
+  new ResizeObserver(() => {
+    const h = panel.hidden ? 0 : panel.offsetHeight;
+    document.documentElement.style.setProperty('--sheet-h', `${h}px`);
+    document.body.classList.toggle('sheet-tall', h > innerHeight * 0.55);
+    setTimeout(layoutMarkers, 220); // after the controls have slid
+  }).observe(panel);
+
+  // the selected place's door, when its entrance has been mapped
+  const doorEl = document.createElement('div');
+  doorEl.className = 'door-pin';
+  doorEl.setAttribute('aria-hidden', 'true');
+  doorEl.innerHTML = icons.entrance;
+  const doorMarker = new maplibregl.Marker({ element: doorEl, anchor: 'bottom' });
+  const showDoor = (p: Place | null) => { if (map && p?.entrance) doorMarker.setLngLat(p.entrance).addTo(map); else doorMarker.remove(); };
+
   function select(p: Place, opts: { source: 'marker' | 'building' | 'search' | 'link' | 'list' }) {
     if (current?.id !== p.id) clearRoute();
     current = p;
@@ -552,6 +785,7 @@ async function main() {
     openPanel();
     $$('.pin.selected').forEach((el) => el.classList.remove('selected'));
     markers.get(p.id)?.el.classList.add('selected');
+    showDoor(p);
     if (map) {
       selectBuilding(map, p.footprintId);
       if (p.footprintId && ms(1)) bounceBuilding(map, p.footprintId);
@@ -664,25 +898,77 @@ async function main() {
       <p class="small">Follows footpaths and campus roads mapped on OpenStreetMap. Step-free routes aren't available yet.</p>`;
   }
 
+  // ---------- route motion: the line draws itself in, then light dashes drift towards the destination ----------
+  let drawAnim = 0;
+  let flowTimer = 0;
+  const DASHES = [[0, 4, 3], [0.5, 4, 2.5], [1, 4, 2], [1.5, 4, 1.5], [2, 4, 1], [2.5, 4, 0.5], [3, 4, 0],
+    [0, 0.5, 3, 3.5], [0, 1, 3, 3], [0, 1.5, 3, 2.5], [0, 2, 3, 2], [0, 2.5, 3, 1.5], [0, 3, 3, 1], [0, 3.5, 3, 0.5]];
+  function startFlow() {
+    stopFlow();
+    if (!map || !routeShown || motion() !== 'full' || lite) return;
+    map.setPaintProperty('route-flow', 'line-opacity', 0.85);
+    let i = 0;
+    flowTimer = window.setInterval(() => {
+      if (document.hidden || !map) return; // no work while Roam is in the background
+      i = (i + 1) % DASHES.length;
+      map.setPaintProperty('route-flow', 'line-dasharray', DASHES[i]);
+    }, 90);
+  }
+  function stopFlow() {
+    clearInterval(flowTimer);
+    if (map?.getLayer('route-flow')) map.setPaintProperty('route-flow', 'line-opacity', 0);
+  }
+  document.addEventListener('roam-motion', () => (routeShown ? startFlow() : stopFlow()));
+  function animateRouteIn(coords: LngLat[]) {
+    cancelAnimationFrame(drawAnim);
+    if (!map) return;
+    if (!ms(1) || coords.length < 2) { setGeoJSON(map, 'route', lineFeature(coords)); startFlow(); return; }
+    const cum = [0];
+    for (let i = 1; i < coords.length; i++) cum.push(cum[i - 1] + distanceM(coords[i - 1], coords[i]));
+    const total = cum[cum.length - 1] || 1;
+    const t0 = performance.now(), D = Math.min(1100, 400 + total);
+    const step = (now: number) => {
+      if (!map) return;
+      const k = Math.min((now - t0) / D, 1), d = total * (1 - (1 - k) ** 3);
+      let j = cum.findIndex((c) => c >= d);
+      if (j < 1) j = 1;
+      const a = coords[j - 1], b = coords[j], u = (d - cum[j - 1]) / (cum[j] - cum[j - 1] || 1);
+      setGeoJSON(map, 'route', lineFeature(k < 1 ? [...coords.slice(0, j), [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]] : coords));
+      if (k < 1) drawAnim = requestAnimationFrame(step);
+      else startFlow();
+    };
+    drawAnim = requestAnimationFrame(step);
+  }
+
   function drawRoute(r: Route, from: LngLat | Place) {
     if (!map) return;
     routeShown = true;
-    setGeoJSON(map, 'route', lineFeature(r.coordinates));
+    setFollowing(false); // show the whole route first; the locate button follows you again
+    routeEnd = r.coordinates[r.coordinates.length - 1];
+    arrivalArmed = !fix || distanceM(fix.pos, routeEnd) > 25;
+    animateRouteIn(r.coordinates);
     setGeoJSON(map, 'hop', lineFeature(r.startHop));
-    startMarker.setLngLat(Array.isArray(from) ? from : from.position).addTo(map);
+    clearTreesAlong(map, [...r.startHop, ...r.coordinates]);
+    // from your own position the character already marks the start
+    if (Array.isArray(from)) startMarker.remove(); else startMarker.setLngLat(from.position).addTo(map);
     endMarker.setLngLat(r.coordinates[r.coordinates.length - 1]).addTo(map);
     const all = [...r.coordinates, ...r.startHop, Array.isArray(from) ? from : from.position];
     // a lower tilt for the overview, so the far end of a long route stays readable
-    requestAnimationFrame(() => fitPoints(all, { pitch: 40, maxZoom: 18 }));
+    requestAnimationFrame(() => fitPoints(all, { pitch: tilt(40), maxZoom: 18 }));
   }
   function clearRoute() {
     routeShown = false;
     routeFrom = null;
+    routeEnd = null;
+    arrivalArmed = false;
+    cancelAnimationFrame(drawAnim);
+    stopFlow();
     startMarker.remove();
     endMarker.remove();
     if (!map) return;
     setGeoJSON(map, 'route', { type: 'FeatureCollection', features: [] });
     setGeoJSON(map, 'hop', { type: 'FeatureCollection', features: [] });
+    clearTreesAlong(map, null);
   }
 
   // tap a building footprint (buildings first, so a café doesn't take over its building)
@@ -719,7 +1005,7 @@ async function main() {
     options = [...groups.map((group) => ({ kind: 'group' as const, group })), ...hits.map((h) => ({ kind: 'place' as const, place: h.place }))];
     const via = new Map(hits.map((h) => [h.place.id, h.via]));
     if (!options.length) {
-      results.innerHTML = `<li class="empty"><p>No places match “${esc(q)}”${filter !== 'all' ? ` in ${esc(groupLabel(filter).toLowerCase())}` : ''}.</p>
+      results.innerHTML = `<li class="empty"><p>No places match “${esc(q)}”${filter !== 'all' ? ` in ${esc(filterLabel(filter))}` : ''}.</p>
         ${filter !== 'all' ? '<button class="btn ghost reset">Search all categories</button>' : '<p class="hint">Try a building name, a code such as D1, or a room such as Ma101.</p>'}</li>`;
       results.querySelector('.reset')?.addEventListener('click', () => { setFilter('all'); input.focus(); });
     } else {
@@ -729,7 +1015,7 @@ async function main() {
         : `<li><button role="option" data-i="${i}">
             <span class="cat-icon small g-${groupOf(o.place)}">${placeIcon(o.place.category, o.place.kind)}</span>
             <span><b>${esc(o.place.name)}</b>${o.place.code ? ` <span class="code">${esc(o.place.code)}</span>` : ''}
-            <small>${esc(via.get(o.place.id) ?? groupLabel(groupOf(o.place)))}</small></span></button></li>`).join('');
+            <small>${esc([via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]].filter(Boolean).join(' · '))}</small></span></button></li>`).join('');
     }
     results.hidden = false;
     input.setAttribute('aria-expanded', 'true');

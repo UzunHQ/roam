@@ -17,17 +17,20 @@ const stand = `
 <g class="stand">
   <rect x="22.5" y="60" width="8.6" height="19" rx="4.3" fill="#fff" ${line}/>
   <rect x="32.9" y="60" width="8.6" height="19" rx="4.3" fill="#fff" ${line}/>
-  <rect x="14.6" y="45" width="8" height="16" rx="4" fill="#fff" ${line} transform="rotate(24 18.6 47)"/>
-  <rect x="41.4" y="45" width="8" height="16" rx="4" fill="#fff" ${line} transform="rotate(-24 45.4 47)"/>
+  <g class="idle">
+  <g class="arm-l"><rect x="14.6" y="45" width="8" height="16" rx="4" fill="#fff" ${line} transform="rotate(24 18.6 47)"/></g>
+  <g class="arm-r"><rect x="41.4" y="45" width="8" height="16" rx="4" fill="#fff" ${line} transform="rotate(-24 45.4 47)"/></g>
   <rect x="20" y="43" width="24" height="24" rx="10" fill="#fff" ${line}/>
   <ellipse cx="32" cy="29" rx="22" ry="18.5" fill="#fff" ${line}/>
-  ${eye(24.5)}${eye(39.5)}
+  <g class="eyes">${eye(24.5)}${eye(39.5)}</g>
   <path d="M28.6 36.4Q32 39.4 35.4 36.4" fill="none" stroke="#1b1d21" stroke-width="1.7" stroke-linecap="round"/>
   <path d="M11.2 23.6C11.6 12.6 20.4 6.6 32 6.6S52.4 12.6 52.8 23.6Q32 20.4 11.2 23.6Z" fill="${CAP}" ${line}/>
   <path d="M23.5 9.6Q19.6 15.4 19.4 21.8M40.5 9.6Q44.4 15.4 44.6 21.8" fill="none" stroke="${CAP_DARK}" stroke-width="1.1"/>
   <path d="M10.6 23.4Q32 19 53.4 23.4Q55 27.4 51.2 27.9Q32 24.4 12.8 27.9Q9 27.4 10.6 23.4Z" fill="${CAP_DARK}" ${line}/>
   <circle cx="32" cy="6.8" r="2" fill="${CAP}" ${line}/>
   ${pin(32, 15.6)}
+  <g class="arm-wave"><rect x="41.4" y="45" width="8" height="16" rx="4" fill="#fff" ${line} transform="rotate(-24 45.4 47)"/></g>
+  </g>
 </g>`;
 
 const walk = `
@@ -41,7 +44,7 @@ const walk = `
     <rect x="21" y="43" width="22" height="24" rx="10" fill="#fff" ${line}/>
     <rect class="arm front" x="28.2" y="46" width="7.6" height="15.5" rx="3.8" fill="#fff" ${line}/>
     <ellipse cx="32" cy="29" rx="20.5" ry="18.5" fill="#fff" ${line}/>
-    ${eye(43)}
+    <g class="eyes">${eye(43)}</g>
     <path d="M44.6 36.2Q47.6 37.8 49.8 35.6" fill="none" stroke="#1b1d21" stroke-width="1.7" stroke-linecap="round"/>
     <path d="M12.6 24.6C12.4 13 20.6 6.6 31.6 6.6 42 6.6 49.8 12.6 51 22.6Q32 20.2 12.6 24.6Z" fill="${CAP}" ${line}/>
     <path d="M24 9.4Q19.6 15.6 19.8 22.6" fill="none" stroke="${CAP_DARK}" stroke-width="1.1"/>

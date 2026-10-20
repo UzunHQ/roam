@@ -3,24 +3,25 @@ import type { LngLat } from './types';
 
 export type Theme = 'light' | 'dark';
 
-// Buildings: warm neutral walls; roofs carry the official college colours
-// (Digby Stuart light blue, Froebel yellow, Southlands navy) so zones stay recognisable.
+// Pastel daytime miniature: sage grass, cream footpaths, grey roads, turquoise water.
+// Walls are warm cream; roofs carry a pastel colour per college (Digby Stuart blue,
+// Froebel yellow, Southlands lavender) so the three zones stay recognisable.
 const PALETTE = {
   light: {
-    bg: '#c4e6a5', green: '#b2df8f', wood: '#93cf77', pitch: '#a5d985', pitchLine: '#effbe6',
-    water: '#7fcbed', shore: '#c4ebf8', road: '#ffffff', roadEdge: '#d8d0c0', footpath: '#f6e3bb', footpathEdge: '#e2c995',
-    wall: '#f7eedf', wallOff: '#ebe6dc',
-    digbyRoof: '#86c3ea', froebelRoof: '#f4c84f', southlandsRoof: '#3a5598', otherRoof: '#d7c6a8', offRoof: '#d3cdc2',
-    selected: '#ff6b6b', selectedWall: '#ffd9d3', trunk: '#a77b56', leaf: '#76c35f', leafDark: '#58a94a', accuracy: '#3b82f6',
-    route: '#ff4f7b', routeCase: '#ffffff', outside: '#b3d79a',
+    bg: '#cfe3be', green: '#c1dcab', wood: '#a6cd8f', pitch: '#b6d99b', pitchLine: '#eef8e4',
+    water: '#86d4cf', shore: '#c6efea', road: '#d4d8d8', roadEdge: '#b9bfbf', footpath: '#f9eed3', footpathEdge: '#e3cf9f',
+    wall: '#fcf6ea', wallOff: '#efe9de',
+    digbyRoof: '#a8cdee', froebelRoof: '#f6d77a', southlandsRoof: '#bba9e8', otherRoof: '#ecd3bb', offRoof: '#d8d3c9',
+    selected: '#ff7a59', selectedWall: '#ffe2d8', trunk: '#a27b5b', leaf: '#8fcb7d', leafDark: '#6fb465', accuracy: '#3b82f6',
+    route: '#ff4f7b', routeCase: '#ffffff', routeFlow: '#ffffff', outside: '#c2d8b1', shadow: 'rgba(52,70,40,0.14)',
   },
   dark: {
-    bg: '#203029', green: '#284235', wood: '#2c4a38', pitch: '#2b4a35', pitchLine: '#46664f',
-    water: '#285a78', shore: '#3d7595', road: '#4a5560', roadEdge: '#2a333c', footpath: '#6a5f48', footpathEdge: '#4d4535',
-    wall: '#59606a', wallOff: '#3d434b',
-    digbyRoof: '#4f88b3', froebelRoof: '#b9953a', southlandsRoof: '#3f5594', otherRoof: '#6e6656', offRoof: '#454a52',
-    selected: '#ff7b7b', selectedWall: '#8a5a5a', trunk: '#6e5340', leaf: '#3f7a4c', leafDark: '#2f6140', accuracy: '#6ea6ff',
-    route: '#ff7f9c', routeCase: '#1b2228', outside: '#1a2722',
+    bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
+    water: '#2a6466', shore: '#3f8384', road: '#4a5157', roadEdge: '#2c3237', footpath: '#6d6450', footpathEdge: '#4d4636',
+    wall: '#5a6168', wallOff: '#3d434a',
+    digbyRoof: '#5689b0', froebelRoof: '#b39545', southlandsRoof: '#7666a8', otherRoof: '#7a6a5a', offRoof: '#454a52',
+    selected: '#ff8a6b', selectedWall: '#8a5d52', trunk: '#6e5340', leaf: '#3f7a4c', leafDark: '#2f6140', accuracy: '#6ea6ff',
+    route: '#ff7f9c', routeCase: '#1b2228', routeFlow: '#ffe3ea', outside: '#19261f', shadow: 'rgba(0,0,0,0.28)',
   },
 } as const;
 
@@ -63,8 +64,13 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     route: { 'line-color': p.route },
     'route-case': { 'line-color': p.routeCase },
     'route-hop': { 'line-color': p.route },
+    'route-flow': { 'line-color': p.routeFlow },
+    'building-shadow': { 'fill-color': p.shadow },
+    'building-halo': { 'line-color': p.selected },
   };
 }
+
+let treeCenters: LngLat[] = [];
 
 /** Low-poly trees: a hexagonal trunk and two stacked, shrinking hexagonal canopies. */
 function treePolygons(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
@@ -77,13 +83,15 @@ function treePolygons(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
     return { type: 'Polygon', coordinates: [ring] };
   };
   const out: GeoJSON.Feature[] = [];
+  treeCenters = [];
   for (const f of points) {
     const c = (f.geometry as GeoJSON.Point).coordinates;
+    const t = treeCenters.push(c as LngLat) - 1;
     const s = (f.properties?.s as number) ?? 1;
     const rot = (c[0] * 1e6) % 1;
-    out.push({ type: 'Feature', properties: { part: 'trunk', base: 0, top: 2.2 * s }, geometry: hex(c, 0.45 * s, rot) });
-    out.push({ type: 'Feature', properties: { part: 'leaf', tier: 0, base: 2 * s, top: 5 * s }, geometry: hex(c, 2.4 * s, rot) });
-    out.push({ type: 'Feature', properties: { part: 'leaf', tier: 1, base: 5 * s, top: 7.2 * s }, geometry: hex(c, 1.5 * s, rot + 0.5) });
+    out.push({ type: 'Feature', properties: { t, part: 'trunk', base: 0, top: 2.2 * s }, geometry: hex(c, 0.45 * s, rot) });
+    out.push({ type: 'Feature', properties: { t, part: 'leaf', tier: 0, base: 2 * s, top: 5 * s }, geometry: hex(c, 2.4 * s, rot) });
+    out.push({ type: 'Feature', properties: { t, part: 'leaf', tier: 1, base: 5 * s, top: 7.2 * s }, geometry: hex(c, 1.5 * s, rot + 0.5) });
   }
   return { type: 'FeatureCollection', features: out };
 }
@@ -149,9 +157,19 @@ export function createMap(opts: {
       { id: 'route-hop', type: 'line', source: 'hop', layout: { 'line-cap': 'round' }, paint: { 'line-width': 3, 'line-opacity': 0.6, 'line-dasharray': [0.5, 2] } },
       { id: 'route-case', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 6, 19, 13] } },
       { id: 'route', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 3.5, 19, 8] } },
+      // light dashes that drift towards the destination (animated in main.ts, full motion only)
+      {
+        id: 'route-flow', type: 'line', source: 'route', layout: { 'line-join': 'round' },
+        paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 1.5, 19, 3.5], 'line-opacity': 0, 'line-dasharray': [0, 4, 3] },
+      },
       { id: 'accuracy', type: 'fill', source: 'user', paint: { 'fill-opacity': 0.14 } },
       { id: 'accuracy-line', type: 'line', source: 'user', paint: { 'line-width': 1.5, 'line-opacity': 0.5 } },
-      { id: 'building-shadow', type: 'fill', source: 'buildings', paint: { 'fill-color': 'rgba(40,50,30,0.16)', 'fill-translate': [4, 4], 'fill-antialias': false } },
+      { id: 'building-shadow', type: 'fill', source: 'buildings', paint: { 'fill-translate': [4, 4], 'fill-antialias': false } },
+      // the selected building gets a soft coloured ring on the ground around its footprint
+      {
+        id: 'building-halo', type: 'line', source: 'buildings', layout: { 'line-join': 'round' },
+        paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 3, 19, 9], 'line-blur': 1.5, 'line-opacity': ['case', SELECTED, 0.9, 0] },
+      },
       {
         id: 'building-walls', type: 'fill-extrusion', source: 'buildings',
         paint: { 'fill-extrusion-height': ['+', HEIGHT, BOUNCE], 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 1, 'fill-extrusion-vertical-gradient': true },
@@ -229,3 +247,27 @@ export function setGeoJSON(map: MLMap, source: 'user' | 'route' | 'hop', data: G
 }
 
 export const lineFeature = (coords: LngLat[]): GeoJSON.Feature => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: coords } });
+
+/** Trees standing on or right beside a route are hidden while it shows, so the line stays readable. */
+export function clearTreesAlong(map: MLMap, line: LngLat[] | null, metres = 7) {
+  const hide: number[] = [];
+  if (line && line.length > 1) {
+    const k = 111320, cos = Math.cos((line[0][1] * Math.PI) / 180);
+    const xy = (p: LngLat) => [p[0] * k * cos, p[1] * k];
+    const segs = line.slice(1).map((b, i) => [xy(line[i]), xy(b)]);
+    treeCenters.forEach((c, t) => {
+      const [px, py] = xy(c);
+      for (const [[ax, ay], [bx, by]] of segs) {
+        const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+        const u = L ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / L)) : 0;
+        if (Math.hypot(px - ax - u * dx, py - ay - u * dy) < metres) { hide.push(t); return; }
+      }
+    });
+  }
+  for (const id of ['tree-trunk', 'tree-leaf']) {
+    const part = id === 'tree-trunk' ? 'trunk' : 'leaf';
+    map.setFilter(id, hide.length
+      ? ['all', ['==', ['get', 'part'], part], ['!', ['in', ['get', 't'], ['literal', hide]]]]
+      : ['==', ['get', 'part'], part]);
+  }
+}

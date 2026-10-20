@@ -41,6 +41,8 @@ export const icons = {
   walk: svg('<circle cx="13" cy="4" r="2"/><path d="m9 21 3-7 3 3v4M7 12l3-4 4 1 2 4M12 14l-1-5"/>'),
   instagram: svg('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/>'),
   linkedin: svg('<path d="M4 9h3.5v11H4zM5.75 3.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM10 9h3.4v1.6c.5-1 1.8-1.9 3.6-1.9 3.4 0 4 2.2 4 5.1V20h-3.5v-5.4c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 2.9V20H10z"/>', true),
+  /** the Roam app icon (a tiny campus block with a "you are here" dot), in colour */
+  mark: `<svg viewBox="0 0 512 512" width="24" height="24" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#cfe9b8"/><path d="M256 92 430 186 256 280 82 186z" fill="#fffaf0"/><path d="M82 186v120l174 94V280z" fill="#a8d8f5"/><path d="M430 186v120l-174 94V280z" fill="#6aaed8"/><path d="M168 160 256 112l88 48-88 48z" fill="#ffe08a"/><path d="M168 160v62l88 48v-62z" fill="#e6b43c"/><path d="M344 160v62l-88 48v-62z" fill="#ffd05a"/><circle cx="256" cy="330" r="34" fill="#ff6b8b" stroke="#fff" stroke-width="12"/></svg>`,
 };
 
 const byKind: Record<string, string> = {
