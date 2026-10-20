@@ -87,16 +87,20 @@ export function search(raw: string, places: Place[], limit = 8): Hit[] {
 
   for (const p of places) {
     if (p.code && norm(p.code) === q) add({ place: p, score: 1.1, via: `Code ${p.code}` });
-    const name = textScore(q, p.name);
+    const name = norm(p.name) === q ? 1.3 : textScore(q, p.name);
     if (name) add({ place: p, score: name });
     for (const a of p.aliases) {
-      const s = textScore(q, a) * 0.95;
+      // an alias typed in full (e.g. "QB054" for the prayer rooms) beats the room-code rule
+      const s = norm(a) === q && q.length >= 4 ? 1.25 : textScore(q, a) * 0.95;
       if (s) add({ place: p, score: s, via: a });
     }
     const d = textScore(q, p.description) * 0.6;
     if (d) add({ place: p, score: d });
   }
   return [...hits.values()]
-    .sort((a, b) => b.score - a.score || (a.place.category === 'entrance' ? 1 : -1))
+    // ties: entrances last, then the shorter (closer) name, so "libary" → Library before Library Café
+    .sort((a, b) => b.score - a.score
+      || Number(a.place.category === 'entrance') - Number(b.place.category === 'entrance')
+      || a.place.name.length - b.place.name.length)
     .slice(0, limit);
 }

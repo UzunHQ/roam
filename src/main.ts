@@ -67,6 +67,19 @@ for (const p of places) {
     .addTo(map);
   markers.set(p.id, { marker, el });
 }
+// places that share a spot (e.g. a café inside its building) fan out sideways instead of stacking
+{
+  const near = (a: Place, b: Place) => Math.abs(a.position[0] - b.position[0]) < 0.00018 && Math.abs(a.position[1] - b.position[1]) < 0.00011; // ~12 m
+  const groups: Place[][] = [];
+  for (const p of places.filter((x) => x.category !== 'entrance')) {
+    const g = groups.find((g) => near(g[0], p));
+    if (g) g.push(p); else groups.push([p]);
+  }
+  for (const g of groups) {
+    if (g.length < 2) continue;
+    g.forEach((p, i) => markers.get(p.id)!.marker.setOffset([(i - (g.length - 1) / 2) * 40, 0]));
+  }
+}
 const updateLabels = () => {
   document.body.classList.toggle('show-labels', map.getZoom() >= 17.2);
   document.body.classList.toggle('compact-pins', map.getZoom() < 16.8);

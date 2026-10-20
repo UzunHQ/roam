@@ -13,7 +13,7 @@
     "Apple Maps",
     "lifestylefitness.co.uk"
   ],
-  "positionNote": "Approximate building points, not entrances. google-maps points are within about 5-12 m; official-map points about 15-25 m. Snap to OSM footprints and verify on site.",
+  "positionNote": "Building points sit inside their OpenStreetMap footprint (osm-footprint, about 5 m). Other points come from Google Maps (about 5-12 m) or the official campus map (about 20 m). Entrances still need picking on site.",
   "places": [
     {
       "id": "epworth-court",
@@ -29,11 +29,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.245168,
-        51.459375
+        -0.244868,
+        51.459582
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629207323",
       "photo": null
@@ -52,11 +52,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244667,
-        51.459486
+        -0.244527,
+        51.45989
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629207326",
       "photo": null
@@ -75,11 +75,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.245066,
-        51.458982
+        -0.244942,
+        51.45936
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/1339072173",
       "photo": null
@@ -98,11 +98,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.245335,
-        51.458675
+        -0.244799,
+        51.45879
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 12,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613442",
       "photo": null
@@ -121,11 +121,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.24424,
-        51.457464
+        -0.243957,
+        51.457497
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 12,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "relation/8673532",
       "photo": null
@@ -144,11 +144,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.243578,
-        51.456825
+        -0.24356,
+        51.456677
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/653472807",
       "photo": null
@@ -167,11 +167,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244057,
-        51.456589
+        -0.243967,
+        51.4564
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613445",
       "photo": null
@@ -194,11 +194,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.24355,
-        51.45587
+        -0.243517,
+        51.455798
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/623519883",
       "photo": null
@@ -217,11 +217,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.250222,
-        51.455245
+        -0.250188,
+        51.455122
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613428",
       "photo": null
@@ -240,11 +240,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.249769,
-        51.455199
+        -0.249764,
+        51.455086
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613430",
       "photo": null
@@ -263,11 +263,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.249985,
-        51.454844
+        -0.250033,
+        51.454842
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 6,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613424",
       "photo": null
@@ -292,11 +292,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.245421,
-        51.458261
+        -0.245404,
+        51.458303
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 6,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/653472801",
       "photo": null
@@ -321,10 +321,10 @@
       "status": "confirmed",
       "position": [
         -0.245348,
-        51.457915
+        51.457956
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 6,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/653483620",
       "photo": null
@@ -348,11 +348,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244916,
-        51.457339
+        -0.245092,
+        51.457668
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 40,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/1339072171",
       "photo": null
@@ -376,11 +376,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244864,
-        51.457472
+        -0.244886,
+        51.457302
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/624679293",
       "photo": null
@@ -434,11 +434,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244668,
-        51.456572
+        -0.244532,
+        51.45636
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/624679297",
       "photo": null
@@ -462,11 +462,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.247267,
-        51.456235
+        -0.247312,
+        51.4561
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613417",
       "photo": null
@@ -491,11 +491,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.24653,
-        51.455636
+        -0.246505,
+        51.455561
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/294029614",
       "photo": null
@@ -519,11 +519,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.247011,
-        51.455567
+        -0.246802,
+        51.455671
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/821830636",
       "photo": null
@@ -547,11 +547,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.248044,
-        51.454603
+        -0.248102,
+        51.454765
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/636497041",
       "photo": null
@@ -575,11 +575,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.24717,
-        51.454601
+        -0.247014,
+        51.454651
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/636968856",
       "photo": null
@@ -602,11 +602,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.246049,
-        51.455094
+        -0.245785,
+        51.455144
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/294029608",
       "photo": null
@@ -631,11 +631,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.249761,
-        51.45535
+        -0.249946,
+        51.455248
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613432",
       "photo": null
@@ -660,11 +660,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.24398,
-        51.45933
+        -0.243926,
+        51.459534
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "relation/8758398",
       "photo": null
@@ -686,11 +686,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244779,
-        51.458176
+        -0.244758,
+        51.458225
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 6,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/624430550",
       "photo": null
@@ -739,11 +739,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.243075,
-        51.457227
+        -0.243046,
+        51.457038
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/628917102",
       "photo": null
@@ -815,11 +815,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244121,
-        51.456928
+        -0.244175,
+        51.456819
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/653472791",
       "photo": null
@@ -870,11 +870,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.246698,
-        51.455433
+        -0.246694,
+        51.455454
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 6,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/821830635",
       "photo": null
@@ -929,11 +929,11 @@
       "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
-        -0.247487,
-        51.455798
+        -0.247422,
+        51.455813
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 6,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613419",
       "photo": null
@@ -986,11 +986,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.247873,
-        51.455865
+        -0.247834,
+        51.455759
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "relation/8763239",
       "photo": null
@@ -1012,11 +1012,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.247873,
-        51.455865
+        -0.24769,
+        51.455813
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": "relation/8763239",
       "photo": null
@@ -1038,11 +1038,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244272,
-        51.458802
+        -0.244231,
+        51.459013
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613410",
       "photo": null
@@ -1067,11 +1067,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.243901,
-        51.459062
+        -0.243718,
+        51.459169
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/1339072172",
       "photo": null
@@ -1094,11 +1094,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.243516,
-        51.456523
+        -0.243357,
+        51.45634
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/624679296",
       "photo": null
@@ -1121,11 +1121,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244916,
-        51.457339
+        -0.245222,
+        51.457632
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 40,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": "way/1339072171",
       "photo": null
@@ -1241,8 +1241,7 @@
       "name": "The Hive Café",
       "aliases": [
         "Hive",
-        "Hive Cafe",
-        "Growhampton"
+        "Hive Cafe"
       ],
       "roomCodePrefixes": [],
       "category": "food",
@@ -1259,7 +1258,7 @@
       "positionSource": "official-map",
       "positionAccuracyM": 20,
       "entrance": null,
-      "footprintId": "way/629613440",
+      "footprintId": "way/653472809",
       "photo": null
     },
     {
@@ -1555,11 +1554,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244916,
-        51.457339
+        -0.244962,
+        51.457632
       ],
-      "positionSource": "google-maps",
-      "positionAccuracyM": 40,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": "way/1339072171",
       "photo": null
