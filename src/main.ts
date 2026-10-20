@@ -458,7 +458,7 @@ async function main() {
       ${p.accessibility ? `<p class="access"><a href="${esc(p.accessibility.url)}" target="_blank" rel="noopener">${icons.accessible}<span>${esc(p.accessibility.summary)}</span></a></p>` : ''}
       <div class="actions">
         <button class="btn primary dir">${icons.directions}<span>Directions</span></button>
-        <button class="btn ghost share">${icons.share}<span>Share location</span></button>
+        <button class="btn ghost share" aria-label="Share a link to ${esc(p.name)}">${icons.share}<span>Share</span></button>
       </div>
       ${p.officialUrl ? `<a class="official" href="${esc(p.officialUrl)}" target="_blank" rel="noopener">Official page ${icons.external}</a>` : ''}
       <p class="small">

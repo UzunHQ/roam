@@ -138,6 +138,8 @@ svg { display: block; flex: none; }
 
 .chips { display: flex; gap: 6px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px 2px 6px; }
 .chips::-webkit-scrollbar { display: none; }
+/* search suggestions open under the search bar: keep the chips out of the way */
+.top:has(#results:not([hidden])) .chips { display: none; }
 .chip {
   flex: none; min-height: 44px; padding: 0 13px 0 8px; display: inline-flex; align-items: center; gap: 6px;
   border: 0; border-radius: 22px; background: var(--surface); box-shadow: 0 2px 0 rgba(36, 35, 46, 0.1);
