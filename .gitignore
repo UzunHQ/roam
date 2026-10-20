@@ -3,3 +3,5 @@ dist
 .DS_Store
 scripts/.overpass-cache.json
 photos-src
+.vercel
+.env*
