@@ -28,6 +28,7 @@ export const ROOFS: Record<string, RoofKind> = {
   'way/624679296': 'slate', // Sacred Heart Chapel
   'way/653472808': 'slate', // Erasmus House
   'way/653472807': 'slate', // Bede House
+  'way/653472806': 'slate', // the laundry block between Bede and Erasmus
   // Southlands
   'way/629613442': 'slate', // Shaw House
 };

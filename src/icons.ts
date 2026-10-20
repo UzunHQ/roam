@@ -18,6 +18,7 @@ export const icons = {
   faith: svg('<path d="M12 3c1.7 1.9 2.2 3.1 2.2 4.2a2.2 2.2 0 0 1-4.4 0C9.8 6.1 10.3 4.9 12 3z"/><rect x="8.5" y="11.5" width="7" height="9.5" rx="1.5"/>'),
   careers: svg('<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M3 12.5h18"/>'),
   security: svg('<path d="M12 3 19 6v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="m9 12 2 2 4-4"/>'),
+  post: svg('<path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4M12 11.5v9M7.8 5.5l8.4 4"/>'),
   laundry: svg('<rect x="4" y="3" width="16" height="18" rx="3"/><circle cx="12" cy="13" r="4.5"/><path d="M8 6.5h.01M11 6.5h4"/>'),
   cafe: svg('<path d="M5 9h12v4a6 6 0 0 1-12 0z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3c0 1.5 1 1.5 1 3M12 3c0 1.5 1 1.5 1 3"/>'),
   restaurant: svg('<path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18"/><path d="M17 21V3c-2 1-3.5 3.5-3.5 7.5 0 1.4.9 2.5 2.2 2.5H17"/>'),
@@ -49,7 +50,7 @@ export const icons = {
 
 const byKind: Record<string, string> = {
   academic: icons.academic, accommodation: icons.accommodation, library: icons.library, health: icons.health,
-  union: icons.union, faith: icons.faith, careers: icons.careers, security: icons.security, laundry: icons.laundry,
+  union: icons.union, faith: icons.faith, careers: icons.careers, security: icons.security, laundry: icons.laundry, post: icons.post,
   service: icons.service, cafe: icons.cafe, restaurant: icons.restaurant, bar: icons.bar, shop: icons.shop,
   gym: icons.gym, court: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
 };

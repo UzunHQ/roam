@@ -695,4 +695,24 @@ body.has-fix .find-label, body.panel-open .find-label { display: none; }
 .hello-actions .btn svg { width: 18px; height: 18px; }
 .hello-close { position: absolute; right: 4px; top: 4px; width: 40px; height: 40px; }
 body.hello-open .key-btn, body.hello-open .find-label { display: none; }
+.hello.bye { opacity: 0; transform: translateY(10px); transition: opacity 0.2s, transform 0.2s var(--ease); }
 @media (min-width: 900px) { .hello { left: 16px; right: auto; width: 380px; bottom: calc(var(--footer-h) + 16px); } }
+
+/* ---------- walking: Start folds the directions into a slim bar; the map gets the screen ---------- */
+.route-go { display: flex; margin: 0 0 12px; }
+.route-go .btn { flex: 1; min-height: 52px; font-size: 17px; }
+body.navigating .top > :not(.toast), body.navigating .key-btn, body.navigating .key, body.navigating .find-label { display: none; }
+.panel.nav { padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+.panel.nav .handle { display: none; }
+.nav-bar { display: flex; align-items: center; gap: 10px; }
+.nav-info {
+  flex: 1; min-width: 0; min-height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 2px;
+  padding: 0 2px; border: 0; background: none; color: inherit; font: inherit; text-align: left;
+}
+.nav-info b { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 17px; line-height: 1.2; }
+.nav-info b:focus { outline: none; }
+.nav-left { color: var(--muted); font-size: 14px; font-weight: 700; }
+.nav-left.arrived { color: var(--primary); }
+.btn.nav-end { min-height: 46px; padding: 0 20px; border: 0; background: #e5484d; color: #fff; box-shadow: 0 3px 0 #a82d31; }
+.btn.nav-end:active { transform: translateY(2px); box-shadow: 0 1px 0 #a82d31; }
+@media (min-width: 900px) { body.navigating .panel { top: 16px; } }

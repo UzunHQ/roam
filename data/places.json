@@ -1643,18 +1643,18 @@
       "category": "building",
       "kind": "laundry",
       "college": "digby-stuart",
-      "description": "Student laundry",
+      "description": "Student laundry in the long low block between Bede House and Erasmus House, on the north side of the courtyard.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.243322,
-        51.457086
+        -0.24333,
+        51.456962
       ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 8,
       "entrance": null,
-      "footprintId": "way/624435278",
+      "footprintId": "way/653472806",
       "photo": null,
       "services": [
         "Free laundry facilities",
@@ -1738,7 +1738,6 @@
       "aliases": [
         "Richardson",
         "Wellbeing",
-        "Post Room",
         "Student Finance"
       ],
       "roomCodePrefixes": [],
@@ -1790,6 +1789,47 @@
         {
           "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
           "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        }
+      ]
+    },
+    {
+      "id": "post-room",
+      "code": "",
+      "name": "Post Room",
+      "aliases": [
+        "Post",
+        "Mail room",
+        "Parcels",
+        "Amazon Locker"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "post",
+      "college": "digby-stuart",
+      "description": "Where students collect post and parcels, at the east end of the Richardson Building. Apple Maps also shows an Amazon Locker here.",
+      "hours": null,
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243862,
+        51.45687
+      ],
+      "positionSource": "apple-maps",
+      "positionAccuracyM": 12,
+      "entrance": null,
+      "footprintId": "way/653472791",
+      "photo": null,
+      "services": [
+        "Post and parcel collection",
+        "Amazon Locker"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
           "checked": "2026-10-20"
         }
       ]

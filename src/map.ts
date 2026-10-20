@@ -64,6 +64,10 @@ const partColor = (p: Pal): Expr => ['match', ['get', 'part'],
 ];
 const wallColor = (p: Pal): Expr => ['case', ['coalesce', ['get', 'campus'], true], p.wall, p.wallOff];
 const SELECTED: Expr = ['boolean', ['feature-state', 'selected'], false];
+// layer filters, kept here so see-through mode (setXray) can add to them and put them back
+const TOP_FILTER: Expr = ['!', ['all', ['==', ['get', 'part'], 'patch'], ['==', ['get', 'kind'], 'solar']]];
+const SOLAR_FILTER: Expr = ['all', ['==', ['get', 'part'], 'patch'], ['==', ['get', 'kind'], 'solar']];
+const inIds = (ids: string[]): Expr => ['in', ['get', 'osmId'], ['literal', ids]];
 
 // chunky: unknown heights become 2-3 storeys; known ones are kept
 const HEIGHT: Expr = ['coalesce', ['get', 'height'], ['match', ['get', 'building'], ['house', 'detached', 'shed', 'garage'], 6, 9]];
@@ -86,6 +90,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'building-walls': { 'fill-extrusion-color': ['case', SELECTED, p.selectedWall, wallColor(p)] },
     'building-roof': { 'fill-extrusion-color': ['case', SELECTED, p.selected, rimColor(p)] },
     'building-top': { 'fill-extrusion-color': ['case', SELECTED, p.selected, partColor(p)] },
+    'building-ghost': { 'fill-extrusion-color': ['case', SELECTED, p.selected, roofColor(p)] },
     'tree-trunk': { 'fill-extrusion-color': p.trunk },
     'tree-leaf': { 'fill-extrusion-color': ['match', ['get', 'tone'], 0, p.tones[0], 1, p.tones[1], 2, p.tones[2], 3, p.tones[3], 4, p.tones[4], p.blossom] },
     accuracy: { 'fill-color': p.accuracy },
@@ -399,7 +404,7 @@ export function createMap(opts: {
       },
       {
         id: 'building-top', type: 'fill-extrusion', source: 'roofparts',
-        filter: ['!', ['all', ['==', ['get', 'part'], 'patch'], ['==', ['get', 'kind'], 'solar']]],
+        filter: TOP_FILTER,
         paint: {
           'fill-extrusion-height': ['+', ['get', 'h'], ['get', 'top'], BOUNCE],
           'fill-extrusion-base': ['+', ['get', 'h'], ['get', 'base'], BOUNCE],
@@ -409,12 +414,17 @@ export function createMap(opts: {
       // solar panels: rows of cells (pattern image added on load)
       {
         id: 'roof-solar', type: 'fill-extrusion', source: 'roofparts',
-        filter: ['all', ['==', ['get', 'part'], 'patch'], ['==', ['get', 'kind'], 'solar']],
+        filter: SOLAR_FILTER,
         paint: {
           'fill-extrusion-height': ['+', ['get', 'h'], ['get', 'top'], BOUNCE],
           'fill-extrusion-base': ['+', ['get', 'h'], ['get', 'base'], BOUNCE],
           'fill-extrusion-pattern': 'solar-cells',
         },
+      },
+      // buildings standing between you and the route turn see-through while it shows (setXray)
+      {
+        id: 'building-ghost', type: 'fill-extrusion', source: 'buildings', filter: inIds([]),
+        paint: { 'fill-extrusion-height': RIM, 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 0.42, 'fill-extrusion-vertical-gradient': false },
       },
       {
         id: 'tree-trunk', type: 'fill-extrusion', source: 'trees', filter: ['==', ['get', 'part'], 'trunk'],
@@ -491,6 +501,25 @@ export function selectBuilding(map: MLMap, osmId: string | null) {
   if (selectedId) for (const source of ['buildings', 'roofparts']) map.setFeatureState({ source, id: selectedId }, { selected: false });
   selectedId = osmId;
   if (osmId) for (const source of ['buildings', 'roofparts']) map.setFeatureState({ source, id: osmId }, { selected: true });
+}
+
+/**
+ * See-through mode: the given buildings leave the solid layers and are drawn as one pale,
+ * glassy block instead, so a route behind them stays visible. An empty list puts everything back.
+ */
+let xray = '';
+export function setXray(map: MLMap, ids: string[]) {
+  const sorted = [...new Set(ids)].sort();
+  const key = sorted.join(',');
+  if (key === xray || !map.getLayer('building-ghost')) return;
+  xray = key;
+  const out: Expr = ['!', inIds(sorted)];
+  const any = sorted.length > 0;
+  map.setFilter('building-walls', any ? out : null);
+  map.setFilter('building-roof', any ? out : null);
+  map.setFilter('building-top', any ? ['all', TOP_FILTER, out] : TOP_FILTER);
+  map.setFilter('roof-solar', any ? ['all', SOLAR_FILTER, out] : SOLAR_FILTER);
+  map.setFilter('building-ghost', inIds(sorted));
 }
 
 export function setGeoJSON(map: MLMap, source: 'user' | 'route' | 'hop', data: GeoJSON.Feature | GeoJSON.FeatureCollection) {

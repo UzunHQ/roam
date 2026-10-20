@@ -15,7 +15,7 @@ export function initAnalytics() {
   window.addEventListener('appinstalled', () => track('install'));
 }
 
-export function track(event: 'place-tap' | 'search' | 'install', data?: Record<string, string | number>) {
+export function track(event: 'place-tap' | 'search' | 'install' | 'nav-start', data?: Record<string, string | number>) {
   try {
     umami()?.track(event, data);
   } catch {

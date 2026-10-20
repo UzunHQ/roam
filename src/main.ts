@@ -1,9 +1,9 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
-import maplibregl, { type Map as MLMap } from 'maplibre-gl';
+import maplibregl, { type EaseToOptions, type Map as MLMap } from 'maplibre-gl';
 import { config } from './config';
 import { loadData } from './data';
-import { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, selectBuilding, setGeoJSON, type Theme } from './map';
+import { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, selectBuilding, setGeoJSON, setXray, type Theme } from './map';
 import { icons, placeIcon } from './icons';
 import { matchingGroups, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
@@ -91,14 +91,27 @@ document.addEventListener('keydown', (e) => {
 
 const linkedId = new URLSearchParams(location.search).get('place');
 const welcome = $('#welcome');
-// first visit: the explorer card (direct links to a building skip it)
+// every visit opens with the welcome card (direct links to a building skip it). It steps aside
+// by itself after a few seconds, unless you're reading or using it.
 $('.welcome-mascot').innerHTML = avatarSvg.replace('width="48" height="63"', '');
-if (!linkedId && !store.get('roam.welcomed')) {
+let helloTimer = 0;
+const dismissWelcome = () => {
+  clearTimeout(helloTimer);
+  if (welcome.hidden) return;
+  document.body.classList.remove('hello-open');
+  welcome.classList.add('bye');
+  setTimeout(() => { welcome.hidden = true; welcome.classList.remove('bye'); }, ms(200));
+};
+const helloLater = () => {
+  clearTimeout(helloTimer);
+  helloTimer = window.setTimeout(() => (welcome.matches(':hover, :focus-within') ? helloLater() : dismissWelcome()), 9000);
+};
+if (!linkedId) {
   welcome.hidden = false;
   document.body.classList.add('hello-open');
   setTimeout(() => $('.welcome-mascot').classList.add('greet'), 500);
+  helloLater();
 }
-const dismissWelcome = () => { store.set('roam.welcomed', '1'); welcome.hidden = true; document.body.classList.remove('hello-open'); };
 $('#welcome-go').addEventListener('click', dismissWelcome);
 $('.hello-close').addEventListener('click', dismissWelcome);
 // "Find me" on the card does what the locate button does
@@ -139,6 +152,27 @@ async function main() {
     if (f.properties?.layer === 'building' && f.geometry.type === 'Polygon') footprints.set(f.properties.osmId, f.geometry.coordinates[0] as LngLat[]);
   }
   const router = new Router(paths);
+  // Which place a building tap opens when several share one building: the building itself (named
+  // like it in OpenStreetMap), not the café, prayer room or post room inside it.
+  const SUB_KINDS = new Set(['faith', 'post', 'cafe', 'restaurant', 'bar', 'shop']);
+  const osmName = new Map<string, string>();
+  for (const f of campus.features) if (f.properties?.layer === 'building' && f.properties.name) osmName.set(f.properties.osmId, String(f.properties.name).toLowerCase());
+  const footprintToPlace = new Map<string, Place>();
+  {
+    const score = (p: Place) => {
+      const n = osmName.get(p.footprintId!) ?? '\u0000', m = p.name.toLowerCase();
+      return (p.category !== 'food' && !SUB_KINDS.has(p.kind) ? 2 : 0) + (n.includes(m) || m.includes(n) ? 1 : 0);
+    };
+    for (const p of places) {
+      if (!p.footprintId) continue;
+      const had = footprintToPlace.get(p.footprintId);
+      if (!had || score(p) > score(had)) footprintToPlace.set(p.footprintId, p);
+    }
+  }
+  // a place inside someone else's building (a café, the post room) is routed to its own spot,
+  // not to whichever side of the whole building is nearest
+  const routeTarget = (p: Place): Place =>
+    p.footprintId && footprintToPlace.get(p.footprintId) !== p ? { ...p, footprintId: null } : p;
 
   // ---------- map (falls back to the list if WebGL is unavailable) ----------
   const theme = (): Theme => themeChoice();
@@ -153,7 +187,7 @@ async function main() {
     const slow = setTimeout(() => { loading.textContent = 'The map is taking a while. You can use the list view in the meantime.'; }, 10000);
     map.once('load', () => { clearTimeout(slow); loading.hidden = true; });
     document.addEventListener('roam-theme', () => applyTheme(map!, theme()));
-    if (import.meta.env.DEV) Object.assign(window, { map });
+    if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute } });
   }
 
   const campusCenter: LngLat = (() => {
@@ -176,6 +210,9 @@ async function main() {
   let directionsOpen = false;
   let routeShown = false;
   let routeFrom: Place | null = null;
+  let navigating = false; // after Start: the directions fold into a slim bar and the map follows you
+  let lastRoute: Route | null = null;
+  let routeLine: LngLat[] = []; // the whole route, start hop included (for see-through buildings)
   let filter: Filter = 'all';
   // saved places live on this phone only
   const saved = new Set<string>((() => { try { return JSON.parse(store.get('roam.saved') ?? '[]') as string[]; } catch { return []; } })().filter((id) => byId.has(id)));
@@ -439,6 +476,8 @@ async function main() {
   let glide = 0;
   let walkTimer = 0;
   let following = false; // camera keeps you in view
+  let camBusyUntil = 0; // a bigger camera move is under way; following waits for it instead of cutting it short
+  const camMove = (opts: EaseToOptions) => { camBusyUntil = Date.now() + (opts.duration ?? 0) + 80; map?.easeTo(opts); };
   let stale = false;
   let lastFixAt = 0;
   let greeted = false;
@@ -510,13 +549,19 @@ async function main() {
     }
     glideTo(f.pos);
     drawHeading();
-    if (following) map.easeTo({ center: f.pos, duration: ms(700) });
+    if (following && Date.now() > camBusyUntil) map.easeTo({ center: f.pos, duration: ms(700) });
+    if (navigating) onNavFix(f);
     // arrival: only from a decent fix, close to the end of the route you were shown
     if (routeShown && routeEnd && arrivalArmed && f.accuracy <= 30 && distanceM(f.pos, routeEnd) <= Math.max(12, f.accuracy)) {
       arrivalArmed = false;
       play('cheer', 1400);
       say('You made it!');
       toast(`You've arrived${current ? ` at ${current.name}` : ''}.`, 5000);
+      if (navigating) {
+        const left = document.querySelector('#nav-left');
+        if (left) { left.textContent = "You've arrived"; left.classList.add('arrived'); }
+        setTimeout(() => { if (navigating) endNavigation(); }, 4000);
+      }
     }
   }
 
@@ -594,7 +639,7 @@ async function main() {
     if (f.accuracy > config.weakGpsM) toast(`GPS is weak here · accurate to about ${Math.round(f.accuracy)} m`, 5000);
     if (!routeShown) {
       setFollowing(true);
-      map.easeTo({ center: f.pos, zoom: Math.max(map.getZoom(), 17.2), duration: ms(500) });
+      camMove({ center: f.pos, zoom: Math.max(map.getZoom(), 17.2), duration: ms(500) });
     }
     if (!greeted) {
       greeted = true;
@@ -607,7 +652,7 @@ async function main() {
       const off = distanceToBounds(fix.pos, doc.bounds);
       if (off > 0) { toast(`You're not on campus yet · ${formatDistance(off)} away`, 6000); return; }
       setFollowing(true);
-      map.easeTo({ center: fix.pos, zoom: Math.max(map.getZoom(), 17.2), duration: ms(500) });
+      camMove({ center: fix.pos, zoom: Math.max(map.getZoom(), 17.2), duration: ms(500) });
       return;
     }
     if (stale) toast("Your location hasn't updated for a while. Checking again…", 4000);
@@ -629,6 +674,7 @@ async function main() {
     document.body.classList.add('panel-open');
   }
   function closePanel() {
+    leaveNavMode();
     current = null;
     directionsOpen = false;
     clearRoute();
@@ -727,7 +773,7 @@ async function main() {
   /** "About 4 min walk from you", only from a fresh, decent fix on campus and a real path route. */
   function walkHint(p: Place): string {
     if (!fix || stale || fix.accuracy > config.weakGpsM || distanceToBounds(fix.pos, doc.bounds) > 0) return '';
-    const r = router.route(fix.pos, p, footprints);
+    const r = router.route(fix.pos, routeTarget(p), footprints);
     return r ? `About ${r.minutes} min walk from you` : '';
   }
 
@@ -866,6 +912,7 @@ async function main() {
 
   function select(p: Place, opts: { source: 'marker' | 'building' | 'search' | 'link' | 'list' }) {
     if (!welcome.hidden) dismissWelcome();
+    if (navigating) { leaveNavMode(); clearRoute(); }
     if (current?.id !== p.id) clearRoute();
     current = p;
     directionsOpen = false;
@@ -971,7 +1018,7 @@ async function main() {
       routeFrom = p;
       from = p;
     }
-    const r = router.route(from, to, footprints);
+    const r = router.route(Array.isArray(from) ? from : routeTarget(from), routeTarget(to), footprints);
     if (!r) {
       out.innerHTML = `<p>We couldn't find a mapped walking route between these places. The building is highlighted on the map.</p>`;
       return;
@@ -983,8 +1030,10 @@ async function main() {
       fromValue === 'me' && fix && fix.accuracy > config.weakGpsM ? `Your location is approximate (about ${Math.round(fix.accuracy)} m).` : '',
     ].filter(Boolean);
     out.innerHTML = `<p class="route-sum">${icons.walk}<span><b>About ${r.minutes} min</b> · ${formatDistance(r.distanceM)} along paths</span></p>
+      <div class="route-go"><button class="btn primary start">${icons.directions}<span>Start</span></button></div>
       <ul class="route-notes">${notes.map((n) => `<li>${n}</li>`).join('')}</ul>
       <p class="small">Follows footpaths and campus roads mapped on OpenStreetMap. Step-free routes aren't available yet.</p>`;
+    out.querySelector('.start')!.addEventListener('click', startNavigation);
   }
 
   // ---------- route motion: the line draws itself in, then light dashes drift towards the destination ----------
@@ -1029,18 +1078,28 @@ async function main() {
     drawAnim = requestAnimationFrame(step);
   }
 
-  function drawRoute(r: Route, from: LngLat | Place) {
+  /** Show a route. `quiet` (a new route while you walk) skips the draw-in and keeps the camera on you. */
+  function drawRoute(r: Route, from: LngLat | Place, quiet = false) {
     if (!map) return;
     routeShown = true;
-    setFollowing(false); // show the whole route first; the locate button follows you again
+    lastRoute = r;
+    routeLine = [...r.startHop, ...r.coordinates];
     routeEnd = r.coordinates[r.coordinates.length - 1];
-    arrivalArmed = !fix || distanceM(fix.pos, routeEnd) > 25;
-    animateRouteIn(r.coordinates);
+    if (!quiet) {
+      setFollowing(false); // show the whole route first; Start (or the locate button) follows you again
+      arrivalArmed = !fix || distanceM(fix.pos, routeEnd) > 25;
+      animateRouteIn(r.coordinates);
+    } else {
+      cancelAnimationFrame(drawAnim);
+      setGeoJSON(map, 'route', lineFeature(r.coordinates));
+    }
     setGeoJSON(map, 'hop', lineFeature(r.startHop));
-    clearTreesAlong(map, [...r.startHop, ...r.coordinates]);
+    clearTreesAlong(map, routeLine);
     // from your own position the character already marks the start
     if (Array.isArray(from)) startMarker.remove(); else startMarker.setLngLat(from.position).addTo(map);
-    endMarker.setLngLat(r.coordinates[r.coordinates.length - 1]).addTo(map);
+    endMarker.setLngLat(routeEnd).addTo(map);
+    xrayKey = '';
+    if (quiet) { scheduleXray(); return; }
     const all = [...r.coordinates, ...r.startHop, Array.isArray(from) ? from : from.position];
     // a lower tilt for the overview, so the far end of a long route stays readable
     requestAnimationFrame(() => fitPoints(all, { pitch: tilt(40), maxZoom: 18 }));
@@ -1050,6 +1109,8 @@ async function main() {
     routeFrom = null;
     routeEnd = null;
     arrivalArmed = false;
+    lastRoute = null;
+    routeLine = [];
     cancelAnimationFrame(drawAnim);
     stopFlow();
     startMarker.remove();
@@ -1058,21 +1119,185 @@ async function main() {
     setGeoJSON(map, 'route', { type: 'FeatureCollection', features: [] });
     setGeoJSON(map, 'hop', { type: 'FeatureCollection', features: [] });
     clearTreesAlong(map, null);
+    setXray(map, []);
+    xrayKey = '';
   }
 
-  // tap a building footprint (buildings first, so a café doesn't take over its building)
-  const footprintToPlace = new Map(places.filter((p) => p.footprintId && p.category === 'building').map((p) => [p.footprintId!, p]));
-  for (const p of places) if (p.footprintId && !footprintToPlace.has(p.footprintId)) footprintToPlace.set(p.footprintId, p);
+  // ---------- see-through buildings: whatever stands between the camera and the route turns glassy ----------
+  // Each route point is checked on screen: a building drawn over it (and not the one the route
+  // touches) is in the way. Runs after the camera stops, never per frame.
+  const XRAY_LAYERS = ['building-walls', 'building-roof', 'building-top', 'roof-solar', 'building-ghost'];
+  let xrayKey = '';
+  let xrayTimer = 0;
+  // waits for the view's tiles (a new zoom level loads first), up to about 3 s
+  const scheduleXray = (tries = 0) => {
+    clearTimeout(xrayTimer);
+    xrayTimer = window.setTimeout(() => (map && !map.areTilesLoaded() && tries < 20 ? scheduleXray(tries + 1) : updateXray()), tries ? 150 : 80);
+  };
+  /** within `m` metres of a building outline, or inside it */
+  function touches(p: LngLat, ring: LngLat[], m: number) {
+    const k = 111320, cos = Math.cos((p[1] * Math.PI) / 180);
+    const xy = (q: LngLat) => [(q[0] - p[0]) * k * cos, (q[1] - p[1]) * k];
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [ax, ay] = xy(ring[i]), [bx, by] = xy(ring[j]);
+      if ((ay > 0) !== (by > 0) && 0 < ((bx - ax) * (0 - ay)) / (by - ay) + ax) inside = !inside;
+      const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+      const u = L ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L)) : 0;
+      if (Math.hypot(ax + u * dx, ay + u * dy) < m) return true;
+    }
+    return inside;
+  }
+  function updateXray() {
+    if (!map || !map.getLayer('building-ghost')) return; // (isStyleLoaded() reads false while the route dashes animate)
+    if (!routeShown || routeLine.length < 2 || map.getPitch() < 8) { xrayKey = ''; setXray(map, []); return; }
+    const c = map.getCenter();
+    const key = [map.areTilesLoaded(), routeLine.length, c.lng.toFixed(5), c.lat.toFixed(5), map.getZoom().toFixed(2), Math.round(map.getBearing()), Math.round(map.getPitch()), innerWidth, innerHeight].join('|');
+    if (key === xrayKey) return;
+    xrayKey = key;
+    // points every few metres along the route, at most about 90
+    let total = 0;
+    for (let i = 1; i < routeLine.length; i++) total += distanceM(routeLine[i - 1], routeLine[i]);
+    const step = Math.max(3, total / 90);
+    const pts: LngLat[] = [routeLine[0]];
+    for (let i = 1; i < routeLine.length; i++) {
+      const a = routeLine[i - 1], b = routeLine[i], d = distanceM(a, b);
+      for (let t = step; t < d; t += step) pts.push([a[0] + ((b[0] - a[0]) * t) / d, a[1] + ((b[1] - a[1]) * t) / d]);
+      pts.push(b);
+    }
+    const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
+    const hit = new Set<string>();
+    for (const p of pts) {
+      const s = map.project(p);
+      if (s.x < 0 || s.y < 0 || s.x > W || s.y > H) continue;
+      for (const f of map.queryRenderedFeatures(s, { layers: XRAY_LAYERS })) {
+        const id = f.properties?.osmId as string | undefined;
+        if (!id || hit.has(id)) continue;
+        const ring = footprints.get(id);
+        if (ring && touches(p, ring, 3)) continue; // the route runs along or into this one: it isn't in the way
+        hit.add(id);
+      }
+    }
+    setXray(map, [...hit]);
+  }
+  // when the camera stops, and again once its tiles are in (cheap when nothing changed)
+  map?.on('moveend', () => { if (routeShown) scheduleXray(); });
+  map?.on('idle', () => { if (routeShown) updateXray(); });
+
+  // ---------- walking: Start folds the directions into a slim bar and follows you ----------
+  const LOCAL = (p: LngLat, o: LngLat) => [(p[0] - o[0]) * 111320 * Math.cos((o[1] * Math.PI) / 180), (p[1] - o[1]) * 111320];
+  /** where you are along the route: metres off it, metres left to walk, and a point a little ahead */
+  function along(pos: LngLat, line: LngLat[]) {
+    if (line.length < 2) return { off: line.length ? distanceM(pos, line[0]) : 0, left: 0, ahead: line[0] ?? pos };
+    let best = { off: Infinity, seg: 0, u: 0 };
+    for (let i = 1; i < line.length; i++) {
+      const [ax, ay] = LOCAL(line[i - 1], pos), [bx, by] = LOCAL(line[i], pos);
+      const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+      const u = L ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L)) : 0;
+      const off = Math.hypot(ax + u * dx, ay + u * dy);
+      if (off < best.off) best = { off, seg: i, u };
+    }
+    const a = line[best.seg - 1] ?? line[0], b = line[best.seg] ?? line[0];
+    const onLine: LngLat = [a[0] + (b[0] - a[0]) * best.u, a[1] + (b[1] - a[1]) * best.u];
+    let left = distanceM(onLine, b);
+    for (let i = best.seg + 1; i < line.length; i++) left += distanceM(line[i - 1], line[i]);
+    // 25 m further along, for which way to face at the start
+    let need = 25, ahead: LngLat = b, prev = onLine;
+    for (let i = best.seg; i < line.length && need > 0; i++) {
+      const d = distanceM(prev, line[i]);
+      if (d >= need) { const t = need / d; ahead = [prev[0] + (line[i][0] - prev[0]) * t, prev[1] + (line[i][1] - prev[1]) * t]; need = 0; break; }
+      need -= d; prev = line[i]; ahead = line[i];
+    }
+    return { off: best.off, left, ahead };
+  }
+  const bearingTo = (a: LngLat, b: LngLat) => { const [x, y] = LOCAL(b, a); return (Math.atan2(x, y) * 180) / Math.PI; };
+  const navText = (metres: number) => `About ${Math.max(1, Math.round(metres / config.walkingSpeedMps / 60))} min · ${formatDistance(metres)} to go`;
+
+  function renderNav() {
+    if (!current || !lastRoute) return;
+    panelBody.innerHTML = `
+      <div class="nav-bar">
+        <span class="cat-icon g-${groupOf(current)}">${icons.walk}</span>
+        <button class="nav-info" aria-label="Change the route to ${esc(current.name)}">
+          <b id="panel-name" tabindex="-1">${esc(current.name)}</b>
+          <span id="nav-left" class="nav-left" aria-live="polite">${navText(lastRoute.distanceM)}</span>
+        </button>
+        <button class="btn nav-end">End</button>
+      </div>`;
+    panelBody.querySelector('.nav-end')!.addEventListener('click', () => endNavigation());
+    panelBody.querySelector('.nav-info')!.addEventListener('click', () => { const p = current!; leaveNavMode(); openDirections(p); });
+  }
+  function leaveNavMode() {
+    if (!navigating) return;
+    navigating = false;
+    document.body.classList.remove('navigating');
+    panel.classList.remove('nav');
+  }
+  function startNavigation() {
+    if (!map || !current || !routeShown || !lastRoute) return;
+    navigating = true;
+    lastReroute = Date.now() - 9000; // a first new route is allowed a few seconds after Start
+    offCount = 0;
+    if (!welcome.hidden) dismissWelcome();
+    hideResults();
+    toggleKey(false);
+    document.body.classList.add('navigating');
+    panel.classList.add('nav');
+    setExpanded(false);
+    renderNav();
+    track('nav-start', { id: current.id, from: fromValue === 'me' ? 'me' : 'place' });
+    if (fromValue === 'me' && fix) {
+      // follow you, facing the way the route goes
+      if (!tracking) startTracking();
+      setFollowing(true);
+      const a = along(fix.pos, lastRoute.coordinates);
+      const bearing = a.off < 40 ? bearingTo(fix.pos, a.ahead) : map.getBearing();
+      camMove({ center: fix.pos, zoom: Math.max(map.getZoom(), 18), pitch: tilt(55), bearing, padding: { top: 0, bottom: 0, left: 0, right: 0 }, duration: ms(800) });
+    } else {
+      // from an entrance or another building: the whole route, now with the full screen to use
+      const all = [...routeLine, ...(routeFrom ? [routeFrom.position] : [])];
+      setTimeout(() => fitPoints(all, { pitch: tilt(45), maxZoom: 18 }), 60);
+    }
+  }
+  function endNavigation() {
+    leaveNavMode();
+    if (!current) return;
+    clearRoute();
+    directionsOpen = false;
+    renderCard(current);
+    layoutMarkers();
+  }
+  let lastReroute = 0;
+  let offCount = 0;
+  /** each new fix while walking: time left, and a fresh route if you've clearly left this one */
+  function onNavFix(f: Fix) {
+    if (!lastRoute || !current) return;
+    const a = along(f.pos, lastRoute.coordinates);
+    const out = document.querySelector('#nav-left');
+    const off = a.off > 35 && f.accuracy <= 25;
+    offCount = off ? offCount + 1 : 0;
+    if (out && !out.classList.contains('arrived')) out.textContent = navText(a.left + (off ? a.off : 0)) + (off ? ' · off the route' : '');
+    // twice in a row and not too often: a new route from where you are now (only when it started from you)
+    if (offCount >= 2 && fromValue === 'me' && Date.now() - lastReroute > 15000 && distanceToBounds(f.pos, doc.bounds) === 0) {
+      lastReroute = Date.now();
+      offCount = 0;
+      const r = router.route(f.pos, routeTarget(current), footprints);
+      if (r) { drawRoute(r, f.pos, true); renderNav(); toast('New route from where you are', 2500); }
+    }
+  }
+
+  // tap a building footprint (footprintToPlace picks the building, so a café doesn't take it over)
   map?.on('click', (e) => {
     hideResults();
     if (!key.hidden) toggleKey(false);
-    const f = map!.queryRenderedFeatures(e.point, { layers: ['building-walls', 'building-roof', 'building-top'] })[0];
+    if (navigating) return; // while walking, stray taps on the map shouldn't end the route
+    const f = map!.queryRenderedFeatures(e.point, { layers: ['building-walls', 'building-roof', 'building-top', 'building-ghost'] })[0];
     const p = f && footprintToPlace.get(f.properties?.osmId);
     if (p) { select(p, { source: 'building' }); return; }
     if (current && !directionsOpen) closePanel();
   });
   map?.on('mousemove', (e) => {
-    const hit = map!.queryRenderedFeatures(e.point, { layers: ['building-walls'] }).some((f) => footprintToPlace.has(f.properties?.osmId));
+    const hit = map!.queryRenderedFeatures(e.point, { layers: ['building-walls', 'building-ghost'] }).some((f) => footprintToPlace.has(f.properties?.osmId));
     map!.getCanvas().style.cursor = hit ? 'pointer' : '';
   });
 
@@ -1201,6 +1426,7 @@ async function main() {
     if (e.key !== 'Escape') return;
     if (!welcome.hidden) dismissWelcome();
     else if (!about.hidden) closeDialog(about);
+    else if (navigating) endNavigation();
     else if (!$('#ask').hidden) { $('#ask').hidden = true; pendingLocate?.(false); pendingLocate = null; }
     else if (!key.hidden) { toggleKey(false); keyBtn.focus(); }
     else if (!results.hidden) hideResults();
