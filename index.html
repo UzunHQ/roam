@@ -24,7 +24,11 @@
           placeholder="Where would you like to go?" aria-label="Search for a building, café, service or room"
           aria-controls="results" aria-autocomplete="list" />
         <button type="button" class="icon-btn clear" aria-label="Clear search" hidden data-icon="close"></button>
-        <button type="button" id="list-btn" class="icon-btn list-btn" aria-label="Show list of places" aria-pressed="false" data-icon="list"></button>
+        <button type="button" id="list-btn" class="icon-btn list-btn" aria-label="Menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menu" data-icon="list"></button>
+        <div id="menu" class="menu" role="menu" aria-label="Menu" hidden>
+          <button type="button" role="menuitem" id="menu-list"><span data-icon="list"></span><span>List of places</span></button>
+          <button type="button" role="menuitem" id="menu-settings"><span data-icon="settings"></span><span>Settings</span></button>
+        </div>
       </form>
       <ul id="results" class="results" role="listbox" aria-label="Search suggestions" hidden></ul>
       <nav id="chips" class="chips" aria-label="Filter by category"></nav>
@@ -85,12 +89,25 @@
         <p>Place details come from the university's own web pages and campus map, with the date each was checked. Opening hours change, so check the linked official page before you travel.</p>
         <p>Walking routes follow paths mapped on OpenStreetMap. Entrances have not all been mapped yet, so a route may end at the path beside a building.</p>
         <p>Your location stays on your phone. There are no accounts and no cookies.</p>
+        <p class="about-by">Made by <span class="author"></span>
+          <a class="icon-link li" target="_blank" rel="noopener" aria-label="LinkedIn" data-icon="linkedin"></a>
+        </p>
+        <p class="small">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
+      </div>
+    </div>
+
+    <div id="settings" class="about" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+      <div class="about-card">
+        <button class="icon-btn about-close" id="settings-close" aria-label="Close" data-icon="close"></button>
+        <h2 id="settings-title">Settings</h2>
         <fieldset class="motion-set">
-          <legend>Map theme</legend>
-          <div class="seg seg-2">
+          <legend>Theme</legend>
+          <div class="seg">
+            <label><input type="radio" name="theme" value="system" /><span>System</span></label>
             <label><input type="radio" name="theme" value="light" /><span>Light</span></label>
             <label><input type="radio" name="theme" value="dark" /><span>Dark</span></label>
           </div>
+          <p class="small">System follows your phone's light or dark mode.</p>
         </fieldset>
         <fieldset class="motion-set">
           <legend>Animations</legend>
@@ -101,18 +118,13 @@
           </div>
           <p class="small">Starts from your phone's Reduce Motion setting.</p>
         </fieldset>
-        <p class="about-by">Made by <span class="author"></span>
-          <a class="icon-link ig" target="_blank" rel="noopener" aria-label="Instagram" data-icon="instagram"></a>
-          <a class="icon-link li" target="_blank" rel="noopener" aria-label="LinkedIn" data-icon="linkedin"></a>
-        </p>
-        <p class="small">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
+        <p class="small">Your choices are saved on this device only.</p>
       </div>
     </div>
 
     <footer class="footer">
       <div class="footer-row">
         <span>Made by <span class="author"></span></span>
-        <a class="icon-link ig" target="_blank" rel="noopener" aria-label="Instagram" data-icon="instagram"></a>
         <a class="icon-link li" target="_blank" rel="noopener" aria-label="LinkedIn" data-icon="linkedin"></a>
         <button id="about-btn" class="link-btn">About</button>
       </div>

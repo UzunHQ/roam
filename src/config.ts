@@ -2,8 +2,7 @@
 export const config = {
   author: 'Hüseyin',
   links: {
-    instagram: 'https://www.instagram.com/uzunhq/',
-    linkedin: '', // add your LinkedIn URL here; empty hides the icon
+    linkedin: 'https://www.linkedin.com/in/huseyinuzun-data', // empty hides the icon
   },
   // "Report a mistake" opens this Google Form with the place already filled in.
   // placeField is the form question's entry id (Forms → ⋮ → Get pre-filled link).

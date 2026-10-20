@@ -24,9 +24,10 @@ GPS and the compass need HTTPS on a real phone. `localhost` is fine on your comp
 data/places.json       places (you edit this)
 data/campus.geojson    footprints, paths, green areas, water, trees (generated, committed)
 data/paths.json        walking graph for directions (generated from OSM, committed)
+data/walls.geojson     the stone wall along Clarence Lane and Roehampton Lane, with its gates (generated from OSM, committed)
 data/unmatched.txt     places the snapping could not match by name; check these
 scripts/build-campus.mjs   Overpass → campus.geojson, snaps places to footprints
-src/config.ts          author, Instagram/LinkedIn, report e-mail, analytics
+src/config.ts          author, LinkedIn, report e-mail, analytics
 src/main.ts            UI: markers, sheet, search, filters, location, deep links
 src/map.ts             MapLibre style: extrusions, roofs, low-poly trees, colours
 src/search.ts          fuzzy search (names, codes, aliases, room codes)
@@ -65,7 +66,7 @@ npm run build:campus           # downloads from Overpass once, re-snaps, rewrite
 npm run build:campus -- --cache  # re-snap using the last download
 ```
 
-After rebuilding, also run `npm run build:paths` to refresh the walking graph.
+After rebuilding, also run `npm run build:paths` to refresh the walking graph, and `npm run build:walls` to refresh the campus wall. The wall follows the `barrier=wall` ways along Clarence Lane and the university boundary along Roehampton Lane, opens at every gate and crossing path (with a pillar each side), and stops where a building stands on the line.
 
 The script prints each match. Anything it couldn't match by name goes to `data/unmatched.txt`. Note that it overwrites `footprintId` values you set by hand. The app never calls Overpass itself.
 
@@ -89,7 +90,7 @@ Photos lazy-load when a card opens and are cached for offline use.
 
 Edit `src/config.ts`:
 
-- `links.instagram`, `links.linkedin`: footer icons
+- `links.linkedin`: the LinkedIn icon in the footer and About (empty hides it)
 - `reportForm`: the Google Form "Report a mistake" opens, with the place name prefilled (`placeField` is that question's `entry.` id)
 - `reportEmail`: used instead when `reportForm.url` is empty
 - `analytics.umamiWebsiteId`: [Umami](https://umami.is) is cookieless. It records page views and the events `place-tap`, `search` (query text and picked place) and `install`. Location is never sent. Leave it empty to turn analytics off.

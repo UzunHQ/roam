@@ -20,6 +20,7 @@ const PALETTE = {
     selected: '#ff7a59', selectedWall: '#ffe2d8', trunk: '#a27b5b', leaf: '#8fcb7d', leafDark: '#6fb465', accuracy: '#3b82f6',
     tones: ['#7fc36d', '#6aae5f', '#94cf7c', '#5f9f58', '#a9d47f'], blossom: '#f4b8c8',
     route: '#ff4f7b', routeCase: '#ffffff', routeFlow: '#ffffff', outside: '#c2d8b1', shadow: 'rgba(52,70,40,0.14)',
+    stones: ['#cbb08a', '#bfa27b', '#d6be99'], coping: '#ead8b6', wallShadow: 'rgba(92,70,38,0.22)',
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -33,6 +34,7 @@ const PALETTE = {
     selected: '#ff8a6b', selectedWall: '#8a5d52', trunk: '#6e5340', leaf: '#3f7a4c', leafDark: '#2f6140', accuracy: '#6ea6ff',
     tones: ['#3f7a4c', '#356b42', '#4a8655', '#2f6140', '#557f45'], blossom: '#9a6a7a',
     route: '#ff7f9c', routeCase: '#1b2228', routeFlow: '#ffe3ea', outside: '#19261f', shadow: 'rgba(0,0,0,0.28)',
+    stones: ['#6c5e4a', '#625440', '#766854'], coping: '#8e816b', wallShadow: 'rgba(0,0,0,0.32)',
   },
 } as const;
 
@@ -100,6 +102,10 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'route-hop': { 'line-color': p.route },
     'route-flow': { 'line-color': p.routeFlow },
     'building-shadow': { 'fill-color': p.shadow },
+    'wall-shadow': { 'line-color': p.wallShadow },
+    'wall-line': { 'line-color': p.stones[1] },
+    'wall-stone': { 'fill-extrusion-color': ['match', ['get', 'tone'], 0, p.stones[0], 1, p.stones[1], p.stones[2]] },
+    'wall-cap': { 'fill-extrusion-color': p.coping },
     'building-halo': { 'line-color': p.selected },
   };
 }
@@ -316,14 +322,86 @@ function treePolygons(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
   return { type: 'FeatureCollection', features: out };
 }
 
+/**
+ * The campus wall along Clarence Lane and Roehampton Lane (data/walls.geojson): two courses of
+ * stone blocks with staggered joints under a lighter coping, and a square pillar with a cap on
+ * each side of every gate. Low on purpose: well under the buildings.
+ */
+const WALL = { half: 0.75, course: 1, block: 1.5, copeHalf: 0.95, cope: 2.4, pillarHalf: 1.15, pillar: 3.2, pillarCapHalf: 1.4, pillarCap: 3.65 };
+function wallParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
+  const out: GeoJSON.Feature[] = [];
+  const add = (ring: number[][], toLL: (p: number[]) => LngLat, properties: Record<string, unknown>) => {
+    const r = ring.map(toLL);
+    r.push(r[0]);
+    out.push({ type: 'Feature', properties, geometry: { type: 'Polygon', coordinates: [r] } });
+  };
+  // a stable pseudo-random stone colour, so the wall looks the same on every visit
+  const tone = (x: number, y: number) => Math.floor((Math.abs(Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1) * 3);
+  for (const f of fc.features) {
+    const pr = f.properties ?? {};
+    if (f.geometry.type === 'Point' && pr.part === 'pillar') {
+      const [lng, lat] = f.geometry.coordinates;
+      const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
+      const toLL = ([x, y]: number[]): LngLat => [lng + x / kx, lat + y / ky];
+      const a = Number(pr.angle) || 0, c = Math.cos(a), s = Math.sin(a);
+      const square = (h: number) => [[-h, -h], [h, -h], [h, h], [-h, h]].map(([x, y]) => [x * c - y * s, x * s + y * c]);
+      add(square(WALL.pillarHalf), toLL, { part: 'pillar', tone: 2, base: 0, top: WALL.pillar });
+      add(square(WALL.pillarCapHalf), toLL, { part: 'cap', base: WALL.pillar, top: WALL.pillarCap });
+      continue;
+    }
+    if (f.geometry.type !== 'LineString') continue;
+    const line = f.geometry.coordinates;
+    const [lng0, lat0] = line[0];
+    const kx = 111320 * Math.cos((lat0 * Math.PI) / 180), ky = 111320;
+    const toLL = ([x, y]: number[]): LngLat => [lng0 + x / kx, lat0 + y / ky];
+    const pts = line.map(([lng, lat]) => [(lng - lng0) * kx, (lat - lat0) * ky]);
+    const cum = [0];
+    for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    const L = cum[cum.length - 1];
+    const normal = (i: number) => { // left of segment i -> i+1
+      const dx = pts[i + 1][0] - pts[i][0], dy = pts[i + 1][1] - pts[i][1], l = Math.hypot(dx, dy) || 1;
+      return [-dy / l, dx / l];
+    };
+    const seg = (d: number) => { let i = 0; while (i < pts.length - 2 && cum[i + 1] < d) i++; return i; };
+    const pointAt = (d: number, side: number) => {
+      const i = seg(d), t = (d - cum[i]) / (cum[i + 1] - cum[i] || 1), n = normal(i);
+      return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t + n[0] * side, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t + n[1] * side];
+    };
+    const mitre = (i: number, side: number) => { // offset corner at vertex i
+      const n1 = normal(i - 1), n2 = normal(i), m = [n1[0] + n2[0], n1[1] + n2[1]], l = Math.hypot(m[0], m[1]) || 1;
+      const k = Math.min(side / Math.max((m[0] * n1[0] + m[1] * n1[1]) / l, 0.33), side * 3);
+      return [pts[i][0] + (m[0] / l) * k, pts[i][1] + (m[1] / l) * k];
+    };
+    /** the band of wall between d0 and d1 metres along the line */
+    const band = (d0: number, d1: number, half: number) => {
+      const inner = pts.map((_, i) => i).filter((i) => i > 0 && i < pts.length - 1 && cum[i] > d0 && cum[i] < d1);
+      const left = [pointAt(d0, half), ...inner.map((i) => mitre(i, half)), pointAt(d1, half)];
+      const right = [pointAt(d0, -half), ...inner.map((i) => mitre(i, -half)), pointAt(d1, -half)];
+      return [...left, ...right.reverse()];
+    };
+    for (const course of [0, 1]) {
+      for (let d = course ? -WALL.block / 2 : 0; d < L; d += WALL.block) {
+        const d0 = Math.max(0, d), d1 = Math.min(L, d + WALL.block);
+        if (d1 - d0 < 0.1) continue;
+        const mid = pointAt((d0 + d1) / 2, 0);
+        add(band(d0, d1, WALL.half), toLL, { part: 'stone', tone: tone(mid[0] + lng0 * 1e4, mid[1] + course * 7.1), base: course * WALL.course, top: (course + 1) * WALL.course });
+      }
+    }
+    add(band(0, L, WALL.copeHalf), toLL, { part: 'cap', base: 2 * WALL.course, top: WALL.cope });
+  }
+  return { type: 'FeatureCollection', features: out };
+}
+
 export function createMap(opts: {
   container: string | HTMLElement;
   campus: GeoJSON.FeatureCollection;
+  walls?: GeoJSON.FeatureCollection;
   bounds: [number, number, number, number];
   theme: Theme;
   interactive?: boolean;
 }): MLMap {
   const { campus, bounds, theme } = opts;
+  const walls = opts.walls ?? { type: 'FeatureCollection', features: [] };
   const byLayer = (l: string) => ({ type: 'FeatureCollection', features: campus.features.filter((f) => f.properties?.layer === l) }) as GeoJSON.FeatureCollection;
   // each building carries its roof type (src/roofs.ts) so the layers can style by it
   const buildings = byLayer('building');
@@ -346,6 +424,8 @@ export function createMap(opts: {
       buildings: { type: 'geojson', data: buildings, promoteId: 'osmId' },
       roofparts: { type: 'geojson', data: roofParts(buildings), promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
+      walls: { type: 'geojson', data: walls },
+      wallparts: { type: 'geojson', data: wallParts(walls) },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       route: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
@@ -378,6 +458,26 @@ export function createMap(opts: {
         },
       },
       { id: 'outside', type: 'fill', source: 'outside', paint: { 'fill-opacity': 0.85 } },
+      // the campus wall sits under the route, the labels and the pins
+      {
+        id: 'wall-shadow', type: 'line', source: 'walls', filter: ['==', ['get', 'part'], 'wall'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-width': ['interpolate', ['exponential', 2], ['zoom'], 15, 1.2, 19, 9], 'line-blur': 1.5, 'line-translate': [1.5, 1.5] },
+      },
+      // from afar the blocks are too small to read, so a stone-coloured line carries the wall
+      {
+        id: 'wall-line', type: 'line', source: 'walls', filter: ['==', ['get', 'part'], 'wall'],
+        layout: { 'line-cap': 'butt', 'line-join': 'round' },
+        paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 2.4, 17, 3.8], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 16.8, 1, 17.6, 0] },
+      },
+      {
+        id: 'wall-stone', type: 'fill-extrusion', source: 'wallparts', filter: ['in', ['get', 'part'], ['literal', ['stone', 'pillar']]],
+        paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-vertical-gradient': true },
+      },
+      {
+        id: 'wall-cap', type: 'fill-extrusion', source: 'wallparts', filter: ['==', ['get', 'part'], 'cap'],
+        paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'] },
+      },
       { id: 'route-hop', type: 'line', source: 'hop', layout: { 'line-cap': 'round' }, paint: { 'line-width': 3, 'line-opacity': 0.6, 'line-dasharray': [0.5, 2] } },
       { id: 'route-case', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 6, 19, 13] } },
       { id: 'route', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 3.5, 19, 8] } },

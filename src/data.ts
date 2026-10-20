@@ -1,6 +1,7 @@
 import placesUrl from '../data/places.json?url';
 import campusUrl from '../data/campus.geojson?url';
 import pathsUrl from '../data/paths.json?url';
+import wallsUrl from '../data/walls.geojson?url';
 import type { PathGraph } from './route';
 import type { Place, PlacesDoc } from './types';
 
@@ -18,13 +19,14 @@ async function getJSON<T>(url: string): Promise<T> {
   }
 }
 
-export async function loadData(): Promise<{ doc: PlacesDoc; places: Place[]; campus: GeoJSON.FeatureCollection; paths: PathGraph }> {
-  const [doc, campus, paths] = await Promise.all([
+export async function loadData(): Promise<{ doc: PlacesDoc; places: Place[]; campus: GeoJSON.FeatureCollection; walls: GeoJSON.FeatureCollection; paths: PathGraph }> {
+  const [doc, campus, paths, walls] = await Promise.all([
     getJSON<PlacesDoc>(placesUrl),
     getJSON<GeoJSON.FeatureCollection>(campusUrl),
     getJSON<PathGraph>(pathsUrl),
+    getJSON<GeoJSON.FeatureCollection>(wallsUrl),
   ]);
   // pending-legend places are never shown until their names are confirmed
   const places = doc.places.filter((p) => p.status !== 'pending-legend');
-  return { doc, places, campus, paths };
+  return { doc, places, campus, walls, paths };
 }

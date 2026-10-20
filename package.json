@@ -11,6 +11,7 @@
     "preview:phone": "vite preview --host",
     "build:campus": "node scripts/build-campus.mjs",
     "build:paths": "node scripts/build-paths.mjs",
+    "build:walls": "node scripts/build-walls.mjs",
     "icons": "node scripts/make-icons.mjs",
     "photos": "node scripts/make-photos.mjs"
   },

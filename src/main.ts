@@ -22,7 +22,7 @@ const store = {
   get: (k: string) => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* private mode: fine */ } },
 };
-// Animations: Full, Reduced or Off. Starts from the phone's Reduce Motion setting; About can override it.
+// Animations: Full, Reduced or Off. Starts from the phone's Reduce Motion setting; Settings can override it.
 type Motion = 'full' | 'reduced' | 'off';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const motionChoice = (): Motion | null => { const v = store.get('roam.motion'); return v === 'full' || v === 'reduced' || v === 'off' ? v : null; };
@@ -30,8 +30,11 @@ const motion = (): Motion => motionChoice() ?? (reducedMotion.matches ? 'reduced
 const applyMotion = () => { document.documentElement.dataset.motion = motion(); document.dispatchEvent(new Event('roam-motion')); };
 applyMotion();
 reducedMotion.addEventListener('change', applyMotion);
-// Theme: light for everyone by default (the daytime miniature); Dark is a saved choice in About.
-const themeChoice = (): 'light' | 'dark' => (store.get('roam.theme') === 'dark' ? 'dark' : 'light');
+// Theme: System (follows the phone's light or dark mode) unless Light or Dark is chosen in Settings.
+type ThemePref = 'system' | 'light' | 'dark';
+const darkScheme = matchMedia('(prefers-color-scheme: dark)');
+const themePref = (): ThemePref => { const v = store.get('roam.theme'); return v === 'light' || v === 'dark' ? v : 'system'; };
+const themeChoice = (): Theme => { const p = themePref(); return p === 'system' ? (darkScheme.matches ? 'dark' : 'light') : p; };
 function applyThemeChoice() {
   const t = themeChoice();
   document.documentElement.dataset.theme = t;
@@ -40,6 +43,7 @@ function applyThemeChoice() {
   document.dispatchEvent(new Event('roam-theme'));
 }
 applyThemeChoice();
+darkScheme.addEventListener('change', () => { if (themePref() === 'system') applyThemeChoice(); });
 // low-end phones skip the purely decorative motion (pond ripples, drifting route dashes)
 const nav = navigator as Navigator & { deviceMemory?: number };
 const lite = (nav.deviceMemory ?? 8) <= 2 || (navigator.hardwareConcurrency ?? 8) <= 2;
@@ -56,7 +60,6 @@ const groupIcon = (g: GroupId) =>
 $$('[data-icon]').forEach((el) => (el.innerHTML = icons[el.dataset.icon as keyof typeof icons] ?? ''));
 $$('.author').forEach((el) => (el.textContent = config.author));
 // an empty link in config.ts hides its icon
-$$<HTMLAnchorElement>('.ig').forEach((a) => { a.href = config.links.instagram; a.hidden = !config.links.instagram; });
 $$<HTMLAnchorElement>('.li').forEach((a) => { a.href = config.links.linkedin; a.hidden = !config.links.linkedin; });
 initAnalytics();
 
@@ -69,7 +72,7 @@ function toast(msg: string, time = 4500) {
   if (time) toastTimer = window.setTimeout(() => (t.hidden = true), time);
 }
 
-// ---------- dialogs: welcome, about (focus kept inside, Esc closes) ----------
+// ---------- dialogs: welcome, about, settings (focus kept inside, Esc closes) ----------
 let lastFocus: HTMLElement | null = null;
 function openDialog(el: HTMLElement, focus: HTMLElement) {
   lastFocus = document.activeElement as HTMLElement;
@@ -83,7 +86,8 @@ function closeDialog(el: HTMLElement) {
 document.addEventListener('keydown', (e) => {
   const open = $$('.about').find((d) => !d.hidden);
   if (!open || e.key !== 'Tab') return;
-  const f = $$('button, a[href]').filter((x) => open.contains(x));
+  // radios: only the checked one of each group is a Tab stop
+  const f = $$('button, a[href], input').filter((x) => open.contains(x) && (!(x instanceof HTMLInputElement) || x.checked));
   const [first, last] = [f[0], f[f.length - 1]];
   if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
@@ -118,20 +122,44 @@ $('.hello-close').addEventListener('click', dismissWelcome);
 $('#welcome-find').addEventListener('click', () => { dismissWelcome(); $('#findme').click(); });
 
 const about = $('#about');
-$('#about-btn').addEventListener('click', () => {
-  $$<HTMLInputElement>('input[name=motion]').forEach((r) => (r.checked = r.value === motion()));
-  $$<HTMLInputElement>('input[name=theme]').forEach((r) => (r.checked = r.value === themeChoice()));
-  openDialog(about, $('.about-close'));
-});
-about.addEventListener('change', (e) => {
-  const r = e.target as HTMLInputElement;
-  if (r.name === 'theme') { store.set('roam.theme', r.value); applyThemeChoice(); }
-  if (r.name !== 'motion') return;
-  store.set('roam.motion', r.value);
-  applyMotion();
-});
+$('#about-btn').addEventListener('click', () => openDialog(about, $('.about-close')));
 $('.about-close').addEventListener('click', () => closeDialog(about));
 about.addEventListener('click', (e) => { if (e.target === about) closeDialog(about); });
+
+// Settings (from the menu in the search bar): theme and animations, remembered on this device
+const settings = $('#settings');
+function openSettings() {
+  $$<HTMLInputElement>('input[name=theme]').forEach((r) => (r.checked = r.value === themePref()));
+  $$<HTMLInputElement>('input[name=motion]').forEach((r) => (r.checked = r.value === motion()));
+  openDialog(settings, $('#settings-close'));
+}
+settings.addEventListener('change', (e) => {
+  const r = e.target as HTMLInputElement;
+  if (r.name === 'theme') { store.set('roam.theme', r.value); applyThemeChoice(); }
+  if (r.name === 'motion') { store.set('roam.motion', r.value); applyMotion(); }
+});
+$('#settings-close').addEventListener('click', () => closeDialog(settings));
+settings.addEventListener('click', (e) => { if (e.target === settings) closeDialog(settings); });
+
+// the menu button in the search bar: list of places, settings
+const menu = $('#menu'), menuBtn = $('#list-btn');
+function toggleMenu(open = menu.hidden) {
+  menu.hidden = !open;
+  menuBtn.setAttribute('aria-expanded', String(open));
+  if (open) menu.querySelector<HTMLElement>('[role=menuitem]')?.focus();
+}
+menuBtn.addEventListener('click', () => toggleMenu());
+document.addEventListener('pointerdown', (e) => {
+  if (!menu.hidden && !menu.contains(e.target as Node) && !menuBtn.contains(e.target as Node)) toggleMenu(false);
+});
+menu.addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+  e.preventDefault();
+  const items = $$('[role=menuitem]').filter((x) => menu.contains(x));
+  const i = items.indexOf(document.activeElement as HTMLElement);
+  items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length].focus();
+});
+$('#menu-settings').addEventListener('click', () => { toggleMenu(false); openSettings(); });
 
 // ---------- start ----------
 main().catch((err) => {
@@ -143,7 +171,7 @@ main().catch((err) => {
 });
 
 async function main() {
-  const { doc, places, campus, paths } = await loadData();
+  const { doc, places, campus, walls, paths } = await loadData();
   const byId = new Map(places.map((p) => [p.id, p]));
   const groupCount = new Map<GroupId, number>();
   for (const p of places) groupCount.set(groupOf(p), (groupCount.get(groupOf(p)) ?? 0) + 1);
@@ -182,7 +210,7 @@ async function main() {
   const theme = (): Theme => themeChoice();
   let map: MLMap | null = null;
   try {
-    map = createMap({ container: 'map', campus, bounds: doc.bounds, theme: theme() });
+    map = createMap({ container: 'map', campus, walls, bounds: doc.bounds, theme: theme() });
   } catch (err) {
     console.error(err);
   }
@@ -1389,7 +1417,7 @@ async function main() {
   clearBtn.addEventListener('click', () => { input.value = ''; showResults(); input.focus(); });
 
   // ---------- list view (same data; works without the map) ----------
-  const listBtn = $('#list-btn');
+  const listItem = $('#menu-list');
   function renderList() {
     const q = input.value.trim();
     const pool = (q ? search(q, places, 100).map((h) => h.place) : places).filter(passes);
@@ -1412,18 +1440,14 @@ async function main() {
     n.hidden = !note;
     if (note) n.textContent = note;
     $('#list').hidden = false;
-    listBtn.setAttribute('aria-pressed', 'true');
-    listBtn.setAttribute('aria-label', 'Show map');
-    listBtn.innerHTML = icons.map;
+    listItem.innerHTML = `<span>${icons.map}</span><span>Back to map</span>`;
   }
   function hideList() {
     if (!map) return; // without a map the list is the whole app
     $('#list').hidden = true;
-    listBtn.setAttribute('aria-pressed', 'false');
-    listBtn.setAttribute('aria-label', 'Show list of places');
-    listBtn.innerHTML = icons.list;
+    listItem.innerHTML = `<span>${icons.list}</span><span>List of places</span>`;
   }
-  listBtn.addEventListener('click', () => ($('#list').hidden ? showList() : hideList()));
+  listItem.addEventListener('click', () => { toggleMenu(false); if ($('#list').hidden) showList(); else hideList(); });
   $('#list-body').addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLElement>('[data-id]');
     const p = b && byId.get(b.dataset.id!);
@@ -1441,6 +1465,8 @@ async function main() {
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (!about.hidden) closeDialog(about);
+    else if (!settings.hidden) closeDialog(settings);
+    else if (!menu.hidden) { toggleMenu(false); menuBtn.focus(); }
     else if (!welcome.hidden) dismissWelcome();
     else if (navigating) endNavigation();
     else if (!$('#ask').hidden) { $('#ask').hidden = true; pendingLocate?.(false); pendingLocate = null; }
