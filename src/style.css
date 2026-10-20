@@ -650,3 +650,49 @@ html[data-motion="off"] .ripple, html[data-motion="off"] .avatar .halo { display
 }
 body.has-fix .find-label, body.panel-open .find-label { display: none; }
 @media (min-width: 900px) { .find-label { display: none; } } /* desktop: the Key button sits there; the button has a tooltip */
+
+/* ---------- college area names (overview only) ---------- */
+.area-label {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px 0 6px;
+  border: 0; border-radius: 20px; background: color-mix(in srgb, var(--surface) 92%, transparent);
+  color: var(--text); font-size: 15px; font-weight: 800; white-space: nowrap;
+  box-shadow: 0 3px 0 rgba(31, 45, 39, 0.08), 0 6px 18px rgba(31, 45, 39, 0.16);
+  transition: opacity 0.2s, transform 0.12s; z-index: 1;
+}
+.area-label:active { transform: scale(0.96); }
+.area-label.hidden { visibility: hidden; opacity: 0; pointer-events: none; }
+.area-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #24323a; }
+.area-icon svg { width: 16px; height: 16px; }
+.area-digby-stuart .area-icon { background: var(--roof-digby); }
+.area-froebel .area-icon { background: var(--roof-froebel); }
+.area-southlands .area-icon { background: var(--roof-southlands); }
+
+/* ---------- saved places ---------- */
+.icon-btn.save[aria-pressed="true"] { color: var(--primary); }
+.icon-btn.save[aria-pressed="true"] svg { fill: currentColor; }
+.saved-chip .chip-dot { background: var(--primary); }
+
+/* ---------- roof type swatches (key) ---------- */
+.roof-slate { background: #919cab; }
+.roof-tile { background: #d49a7c; }
+.roof-green { background: #9fcb7c; }
+.roof-solar { background: repeating-linear-gradient(90deg, #6a86a8 0 5px, #e6dccb 5px 6px); }
+.roof-metal { background: #bfcdd8; }
+
+/* ---------- first visit: "Hello, explorer" card (not a modal) ---------- */
+.hello {
+  position: fixed; z-index: 8; left: 10px; right: 64px; bottom: calc(var(--footer-h) + 12px);
+  max-width: 420px; display: flex; align-items: flex-end; gap: 6px; padding: 14px 14px 14px 6px;
+  background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+  animation: pop 0.22s var(--ease);
+}
+.hello-mascot { width: 74px; height: 97px; flex: none; margin: -30px 0 -4px; }
+.hello-text { flex: 1; min-width: 0; }
+.hello h1 { margin: 0 28px 2px 0; font-size: 19px; line-height: 1.2; }
+.hello p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+.hello-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.hello-actions .btn { min-height: 42px; padding: 0 14px; font-size: 15px; }
+.hello-actions .btn svg { width: 18px; height: 18px; }
+.hello-close { position: absolute; right: 4px; top: 4px; width: 40px; height: 40px; }
+body.hello-open .key-btn, body.hello-open .find-label { display: none; }
+@media (min-width: 900px) { .hello { left: 16px; right: auto; width: 380px; bottom: calc(var(--footer-h) + 16px); } }

@@ -44,16 +44,16 @@ export const FILTERS = [
 ] as const satisfies readonly { id: string; label: string; full: string; groups: readonly GroupId[]; icon: GroupId }[];
 
 export type FilterId = (typeof FILTERS)[number]['id'];
-/** 'all', a chip, or a single group picked from search ("Show all: Faith & prayer"). */
-export type Filter = 'all' | FilterId | GroupId;
+/** 'all', your saved places, a chip, or a single group picked from search ("Show all: Faith & prayer"). */
+export type Filter = 'all' | 'saved' | FilterId | GroupId;
 
 export const filterOf = (g: GroupId): FilterId | null => FILTERS.find((f) => (f.groups as readonly GroupId[]).includes(g))?.id ?? null;
 const isGroup = (f: Filter): f is GroupId => GROUPS.some((g) => g.id === f);
 export function passesFilter(f: Filter, g: GroupId): boolean {
-  if (f === 'all') return true;
+  if (f === 'all' || f === 'saved') return true; // 'saved' is checked against the saved list in main.ts
   if (isGroup(f)) return g === f;
   return (FILTERS.find((x) => x.id === f)!.groups as readonly GroupId[]).includes(g);
 }
-export const filterLabel = (f: Filter) => (f === 'all' ? 'All' : isGroup(f) ? groupLabel(f) : FILTERS.find((x) => x.id === f)!.full);
+export const filterLabel = (f: Filter) => (f === 'all' ? 'All' : f === 'saved' ? 'your saved places' : isGroup(f) ? groupLabel(f) : FILTERS.find((x) => x.id === f)!.full);
 /** the chip shown as pressed for a filter */
-export const chipOf = (f: Filter): 'all' | FilterId => (f === 'all' ? 'all' : isGroup(f) ? (filterOf(f) ?? 'all') : f);
+export const chipOf = (f: Filter): 'all' | 'saved' | FilterId => (f === 'all' || f === 'saved' ? f : isGroup(f) ? (filterOf(f) ?? 'all') : f);

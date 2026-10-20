@@ -81,7 +81,7 @@ function closeDialog(el: HTMLElement) {
   lastFocus?.focus?.();
 }
 document.addEventListener('keydown', (e) => {
-  const open = $$('.welcome, .about').find((d) => !d.hidden);
+  const open = $$('.about').find((d) => !d.hidden);
   if (!open || e.key !== 'Tab') return;
   const f = $$('button, a[href]').filter((x) => open.contains(x));
   const [first, last] = [f[0], f[f.length - 1]];
@@ -91,15 +91,18 @@ document.addEventListener('keydown', (e) => {
 
 const linkedId = new URLSearchParams(location.search).get('place');
 const welcome = $('#welcome');
-// direct links to a building skip the welcome
+// first visit: the explorer card (direct links to a building skip it)
 $('.welcome-mascot').innerHTML = avatarSvg.replace('width="48" height="63"', '');
 if (!linkedId && !store.get('roam.welcomed')) {
-  openDialog(welcome, $('#welcome-go'));
-  setTimeout(() => $('.welcome-mascot').classList.add('greet'), 350);
+  welcome.hidden = false;
+  document.body.classList.add('hello-open');
+  setTimeout(() => $('.welcome-mascot').classList.add('greet'), 500);
 }
-const dismissWelcome = () => { store.set('roam.welcomed', '1'); closeDialog(welcome); };
+const dismissWelcome = () => { store.set('roam.welcomed', '1'); welcome.hidden = true; document.body.classList.remove('hello-open'); };
 $('#welcome-go').addEventListener('click', dismissWelcome);
-welcome.addEventListener('click', (e) => { if (e.target === welcome) dismissWelcome(); });
+$('.hello-close').addEventListener('click', dismissWelcome);
+// "Find me" on the card does what the locate button does
+$('#welcome-find').addEventListener('click', () => { dismissWelcome(); $('#findme').click(); });
 
 const about = $('#about');
 $('#about-btn').addEventListener('click', () => {
@@ -174,7 +177,9 @@ async function main() {
   let routeShown = false;
   let routeFrom: Place | null = null;
   let filter: Filter = 'all';
-  const passes = (p: Place) => passesFilter(filter, groupOf(p));
+  // saved places live on this phone only
+  const saved = new Set<string>((() => { try { return JSON.parse(store.get('roam.saved') ?? '[]') as string[]; } catch { return []; } })().filter((id) => byId.has(id)));
+  const passes = (p: Place) => (filter === 'saved' ? saved.has(p.id) : passesFilter(filter, groupOf(p)));
 
   // ---------- markers ----------
   type M = { p: Place; group: GroupId; marker: maplibregl.Marker; el: HTMLButtonElement; offset: [number, number]; labelW: number };
@@ -210,6 +215,22 @@ async function main() {
     }
   }
 
+  // ---------- college areas: their names over the overview; tap one to zoom in ----------
+  const AREA_Z = 16.65;
+  const areas = (['digby-stuart', 'froebel', 'southlands'] as const).map((college) => {
+    const pts = places.filter((p) => p.college === college && p.category !== 'entrance').map((p) => p.position);
+    const c: LngLat = [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
+    const el = document.createElement('button');
+    el.className = `area-label area-${college}`;
+    el.innerHTML = `<span class="area-icon">${icons.campus}</span><span>${COLLEGE[college]}</span>`;
+    el.setAttribute('aria-label', `${COLLEGE[college]} college: zoom in`);
+    // straight to the college at street level (where building names take over)
+    el.addEventListener('click', (e) => { e.stopPropagation(); map?.easeTo({ center: c, zoom: 16.9, pitch: tilt(50), duration: ms(600) }); });
+    const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(c);
+    if (map) marker.addTo(map);
+    return { el, c };
+  });
+
   // Fewer markers when zoomed out, more detail when zoomed in. Runs on moveend only (not every
   // frame): greedy by category priority, the selected place and route start always show.
   function layoutMarkers() {
@@ -222,6 +243,16 @@ async function main() {
     const keyDots: [number, number][] = []; // dots that labels must avoid (faded context pins don't count)
     const labels: [number, number, number, number][] = [];
     const isSel = (m: M) => m.p.id === current?.id || m.p.id === routeFrom?.id;
+    // college names take the space they need on the overview; pins underneath step aside
+    const showAreas = z < AREA_Z;
+    const areaBoxes: [number, number, number, number][] = [];
+    for (const a of areas) {
+      a.el.classList.toggle('hidden', !showAreas);
+      a.el.tabIndex = showAreas ? 0 : -1;
+      if (!showAreas) continue;
+      const pt = map.project(a.c), w = a.el.offsetWidth / 2 + 8;
+      areaBoxes.push([pt.x - w, pt.y - 24, pt.x + w, pt.y + 24]);
+    }
     const off = (m: M) => m.group !== 'entrance' && !passes(m.p); // outside the chosen category
     const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || PRIORITY[b.group] - PRIORITY[a.group]);
     const shown: { m: M; x: number; y: number; sel: boolean }[] = [];
@@ -236,6 +267,7 @@ async function main() {
       const x = pt.x + m.offset[0], y = pt.y + m.offset[1];
       const onScreen = x > -40 && x < W + 40 && y > -40 && y < H + 40;
       if (show && onScreen && !sel && dots.some(([a, b]) => Math.hypot(a - x, b - y) < gap)) show = false;
+      if (show && !sel && areaBoxes.some(([a, b, c, d]) => x > a && x < c && y > b && y < d)) show = false;
       m.el.classList.toggle('hidden', !show);
       m.el.tabIndex = show ? 0 : -1;
       m.el.classList.remove('show-label');
@@ -298,6 +330,7 @@ async function main() {
   const visibleGroups = GROUPS.filter((g) => g.id !== 'entrance' && (groupCount.get(g.id) ?? 0) > 0); // never show empty categories
   const visibleFilters = FILTERS.filter((f) => f.groups.some((g) => (groupCount.get(g) ?? 0) > 0));
   chips.innerHTML = `<button class="chip" data-filter="all" aria-pressed="true">All</button>` +
+    `<button class="chip saved-chip" data-filter="saved" aria-pressed="false" aria-label="Your saved places"${saved.size ? '' : ' hidden'}><span class="chip-dot">${icons.bookmark}</span>Saved</button>` +
     visibleFilters.map((f) => `<button class="chip" data-filter="${f.id}" aria-pressed="false" aria-label="${f.full}"><span class="chip-dot g-${f.icon}">${groupIcon(f.icon)}</span>${f.label}</button>`).join('');
   // a fade on the edge that has more chips behind it, so the row reads as scrollable
   const chipEdges = () => {
@@ -328,11 +361,18 @@ async function main() {
   key.innerHTML = `<h3>Key</h3><ul>` +
     visibleGroups.map((g) => `<li><span class="chip-dot g-${g.id}">${groupIcon(g.id)}</span>${g.label}</li>`).join('') +
     `<li><span class="chip-dot g-entrance">${icons.entrance}</span>Campus entrance</li></ul>
-    <h4>Roof colours</h4><ul>
+    <h4>Roof and roof-edge colours: the college</h4><ul>
       <li><span class="swatch roof-digby"></span>Digby Stuart</li>
       <li><span class="swatch roof-froebel"></span>Froebel</li>
       <li><span class="swatch roof-southlands"></span>Southlands</li>
       <li><span class="swatch roof-other"></span>Other university building</li>
+    </ul>
+    <h4>Roof types (from aerial views)</h4><ul>
+      <li><span class="swatch roof-slate"></span>Pitched slate roof</li>
+      <li><span class="swatch roof-tile"></span>Pitched tile roof</li>
+      <li><span class="swatch roof-green"></span>Green (planted) roof</li>
+      <li><span class="swatch roof-solar"></span>Solar panels</li>
+      <li><span class="swatch roof-metal"></span>Metal roof</li>
     </ul>
     <ul><li><span class="swatch line-path"></span>Footpath</li><li><span class="swatch line-road"></span>Road</li><li><span class="swatch line-route"></span>Walking route</li>
       <li><span class="swatch sel-roof"></span>Selected building</li>
@@ -710,6 +750,7 @@ async function main() {
           <h2 id="panel-name" tabindex="-1">${esc(p.name)}</h2>
           <p class="meta">${[p.code && `<span class="code">${esc(p.code)}</span>`, esc(groupLabel(g)), p.college && COLLEGE[p.college]].filter(Boolean).join(' · ')}</p>
         </div>
+        <button class="icon-btn save" aria-pressed="${saved.has(p.id)}" aria-label="Save ${esc(p.name)}">${icons.bookmark}</button>
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
       </div>
       ${p.description ? `<p class="desc${expanded ? '' : ' clamp'}">${esc(p.description)}</p>` : ''}
@@ -738,6 +779,7 @@ async function main() {
     panelBody.classList.add('panel-body-in');
     setExpanded(expanded);
     panelBody.querySelector('.close')!.addEventListener('click', closePanel);
+    panelBody.querySelector('.save')!.addEventListener('click', (e) => toggleSaved(p, e.currentTarget as HTMLElement));
     panelBody.querySelector('.dir')!.addEventListener('click', () => openDirections(p));
     panelBody.querySelector('.more-info')!.addEventListener('click', () => setExpanded(!panel.classList.contains('expanded')));
     panelBody.querySelector('.share')!.addEventListener('click', () => share(p));
@@ -747,6 +789,17 @@ async function main() {
     });
     // a missing photo simply disappears
     panelBody.querySelector<HTMLImageElement>('.photo')?.addEventListener('error', (e) => (e.target as HTMLElement).remove());
+  }
+
+  function toggleSaved(p: Place, btn: HTMLElement) {
+    const on = !saved.has(p.id);
+    if (on) saved.add(p.id); else saved.delete(p.id);
+    store.set('roam.saved', JSON.stringify([...saved]));
+    btn.setAttribute('aria-pressed', String(on));
+    $('.saved-chip').hidden = !saved.size;
+    if (!saved.size && filter === 'saved') setFilter('all');
+    requestAnimationFrame(chipEdges);
+    toast(on ? `Saved ${p.name}. Find it under Saved.` : `Removed ${p.name} from Saved.`, 3000);
   }
 
   /** Bottom sheet: compact by default, taller with details. The handle and "View details" both toggle it. */
@@ -812,6 +865,7 @@ async function main() {
   const showDoor = (p: Place | null) => { if (map && p?.entrance) doorMarker.setLngLat(p.entrance).addTo(map); else doorMarker.remove(); };
 
   function select(p: Place, opts: { source: 'marker' | 'building' | 'search' | 'link' | 'list' }) {
+    if (!welcome.hidden) dismissWelcome();
     if (current?.id !== p.id) clearRoute();
     current = p;
     directionsOpen = false;

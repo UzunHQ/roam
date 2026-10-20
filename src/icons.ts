@@ -36,6 +36,8 @@ export const icons = {
   accessible: svg('<circle cx="12" cy="4.5" r="1.8"/><path d="M8 9h8M12 9v5h4l2 5"/><path d="M8.5 13a5 5 0 1 0 6.7 6.2"/>'),
   clock: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
   close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
+  bookmark: svg('<path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/>'),
+  campus: svg('<path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-5h6v5M9 11h.01M15 11h.01"/>'),
   locate: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>'),
   compass: svg('<path d="M12 3 8 13h8z" fill="#ff6b8b" stroke="none"/><path d="M12 21l4-8H8z" fill="currentColor" stroke="none" opacity=".35"/>'),
   walk: svg('<circle cx="13" cy="4" r="2"/><path d="m9 21 3-7 3 3v4M7 12l3-4 4 1 2 4M12 14l-1-5"/>'),
