@@ -33,7 +33,8 @@ function textScore(query: string, text: string): number {
   if (!t) return 0;
   if (t === query) return 1;
   if (t.startsWith(query)) return 0.9;
-  if (t.includes(query)) return 0.75;
+  if ((' ' + t).includes(' ' + query)) return 0.85; // starts a later word
+  if (t.includes(query)) return 0.6;
   const words = t.split(' ');
   let total = 0;
   for (const q of query.split(' ')) {
@@ -91,15 +92,16 @@ export function search(raw: string, places: Place[], limit = 8): Hit[] {
     if (name) add({ place: p, score: name });
     for (const a of p.aliases) {
       // an alias typed in full (e.g. "QB054" for the prayer rooms) beats the room-code rule
-      const s = norm(a) === q && q.length >= 4 ? 1.25 : textScore(q, a) * 0.95;
+      const s = norm(a) === q && q.length >= 4 ? 1.25 : textScore(q, a) * 0.9;
       if (s) add({ place: p, score: s, via: a });
     }
     for (const sv of p.services ?? []) {
-      const s = textScore(q, sv) * 0.7;
-      if (s) add({ place: p, score: s, via: sv });
+      // every query word must start a word of the service, so "shop" doesn't find "workshop"
+      const words = norm(sv).split(' ');
+      if (q.split(' ').every((w) => words.some((x) => x.startsWith(w)))) add({ place: p, score: 0.6, via: sv });
     }
-    const d = textScore(q, p.description) * 0.6;
-    if (d) add({ place: p, score: d });
+    const dw = norm(p.description).split(' ');
+    if (q.length >= 3 && q.split(' ').every((w) => dw.some((x) => x.startsWith(w)))) add({ place: p, score: 0.45 });
   }
   return [...hits.values()]
     // ties: entrances last, then the shorter (closer) name, so "libary" → Library before Library Café

@@ -24,7 +24,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "southlands",
-      "description": "Student halls",
+      "description": "Southlands College halls with 118 single rooms in flats of five to eight, sharing bathroom, kitchen and living space.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -36,7 +36,29 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629207323",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Single rooms with washbasin",
+        "Shared bathroom, kitchen and living space",
+        "Desk, chair, wardrobe",
+        "Laundry",
+        "Bills and Wi-Fi included",
+        "Accessible rooms"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/epworth-court/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/epworth-court/",
+          "title": "Epworth Court (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "wesley-court",
@@ -47,7 +69,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "southlands",
-      "description": "Student halls",
+      "description": "Southlands College halls with 66 en-suite single rooms in flats of five to eight, sharing a kitchen and living space.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -59,7 +81,36 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629207326",
-      "photo": null
+      "photo": null,
+      "services": [
+        "En-suite single rooms",
+        "Shared kitchen and living space",
+        "Desk, chair, wardrobe",
+        "Laundry",
+        "Bills and Wi-Fi included"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/wesley-hall/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/wesley-court",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/wesley-hall/",
+          "title": "Wesley Hall (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/wesley-court",
+          "title": "AccessAble: Wesley Court",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "aldersgate-court",
@@ -70,7 +121,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "southlands",
-      "description": "Student halls",
+      "description": "Southlands College halls for postgraduate and continuing students, with 96 single rooms in flats of five to eight.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -82,7 +133,28 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/1339072173",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Single rooms with washbasin",
+        "Shared bathroom, kitchen and living space",
+        "Desk, chair, wardrobe",
+        "Laundry",
+        "Bills and Wi-Fi included"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/aldersgate-court/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/aldersgate-court/",
+          "title": "Aldersgate Court (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "shaw-house",
@@ -93,7 +165,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "digby-stuart",
-      "description": "Student halls",
+      "description": "Digby Stuart College halls with standard and en-suite single rooms in flats of six.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -105,7 +177,34 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613442",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Standard single rooms (shared bathroom, washbasin)",
+        "En-suite single rooms",
+        "Shared kitchen and living space",
+        "Desk, chair, wardrobe",
+        "Laundry",
+        "Bills and Wi-Fi included"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/shaw-house/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/shaw-house/",
+          "title": "Shaw House (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+          "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "elm-grove-hall",
@@ -116,7 +215,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "digby-stuart",
-      "description": "Student halls",
+      "description": "Digby Stuart College halls with 358 en-suite rooms with small double beds, in flats of four to eleven.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -128,7 +227,37 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "relation/8673532",
-      "photo": null
+      "photo": null,
+      "services": [
+        "En-suite rooms with small double bed",
+        "Shared kitchen and living space",
+        "Desk, chair, wardrobe",
+        "Laundry",
+        "Bills and Wi-Fi included",
+        "Accessible rooms"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/elm-grove-hall/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/elm-grove-hall",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/elm-grove-hall/",
+          "title": "Elm Grove Hall (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/elm-grove-hall",
+          "title": "AccessAble: Elm Grove Hall",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "bede-house",
@@ -139,7 +268,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "digby-stuart",
-      "description": "Student halls",
+      "description": "Budget Digby Stuart College halls with 107 single rooms, sharing bathrooms, kitchen and living space with up to 28 people per floor.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -151,7 +280,36 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/653472807",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Single rooms with washbasin",
+        "Shared bathroom, kitchen and living space",
+        "Desk, chair, wardrobe",
+        "Laundry",
+        "Bills and Wi-Fi included"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/bede-house/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/bede-house",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/bede-house/",
+          "title": "Bede House (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/bede-house",
+          "title": "AccessAble: Bede House",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "newman-house",
@@ -162,7 +320,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "digby-stuart",
-      "description": "Student halls",
+      "description": "Digby Stuart College halls; the published room option is a twin room shared with one other student.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -174,7 +332,33 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613445",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Twin (double-occupancy) rooms with two single beds",
+        "Shared showers, toilets, kitchen and living space",
+        "Wash basin",
+        "Laundry",
+        "Bills and Wi-Fi included"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/newman-house-twin-room/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/newman-house-twin-room/",
+          "title": "Newman House (Twin Room) (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+          "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "new-old-garden-court",
@@ -189,7 +373,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "froebel",
-      "description": "Student halls",
+      "description": "Three small Froebel College halls (New Court 22, Old Court 15, Garden Court 40 rooms) with private rooms and shared facilities.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -201,7 +385,41 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/623519883",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Single rooms with washbasin (New Court, Garden Court)",
+        "Small double rooms (Old Court)",
+        "Shared bathroom, kitchen and living space",
+        "Laundry",
+        "Bills and Wi-Fi included"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/garden-court/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/old-court",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/new-court/",
+          "title": "New Court (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/old-court/",
+          "title": "Old Court (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/garden-court/",
+          "title": "Garden Court (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "willow-house",
@@ -212,7 +430,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "froebel",
-      "description": "Student halls",
+      "description": "Froebel College halls for continuing students, with 59 en-suite rooms in flats of seven to eight.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -224,7 +442,28 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613428",
-      "photo": null
+      "photo": null,
+      "services": [
+        "En-suite single rooms",
+        "Shared kitchen and living space",
+        "Desk, chair, wardrobe",
+        "Laundry",
+        "Bills and Wi-Fi included"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/willow-house/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/willow-house/",
+          "title": "Willow House (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "aspen-house",
@@ -235,7 +474,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "froebel",
-      "description": "Student halls",
+      "description": "Froebel College halls for new undergraduates, with 56 en-suite rooms in flats of five to eight.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -247,7 +486,29 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613430",
-      "photo": null
+      "photo": null,
+      "services": [
+        "En-suite single rooms",
+        "Shared kitchen and living space",
+        "Desk, chair, wardrobe",
+        "Laundry",
+        "Bills and Wi-Fi included",
+        "Accessible rooms"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/aspen-house/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/aspen-house/",
+          "title": "Aspen House (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "linden-house",
@@ -258,7 +519,7 @@
       "category": "building",
       "kind": "accommodation",
       "college": "froebel",
-      "description": "Student halls",
+      "description": "Froebel College halls for new undergraduates, with en-suite rooms in flats of seven sharing a kitchen and living space.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -270,7 +531,33 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613424",
-      "photo": null
+      "photo": null,
+      "services": [
+        "En-suite single rooms (42)",
+        "Twin rooms with bunk bed (3)",
+        "Shared kitchen and living space",
+        "Laundry",
+        "Bills and Wi-Fi included"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/linden-house/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/linden-house/",
+          "title": "Linden House (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/linden-house-twin-room/",
+          "title": "Linden House (Twin Room) (Find a room)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "mandela-building",
@@ -287,7 +574,7 @@
       "category": "building",
       "kind": "academic",
       "college": "digby-stuart",
-      "description": "Law School",
+      "description": "Home of the Law School.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -299,7 +586,32 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/653472801",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Law School"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/mandela-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/mandela-building",
+          "title": "AccessAble: Mandela Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "mary-seacole",
@@ -315,7 +627,7 @@
       "category": "building",
       "kind": "academic",
       "college": "digby-stuart",
-      "description": "Health and nursing teaching",
+      "description": "A health education facility on Digby Stuart College for students on healthcare programmes, focused on primary and community care.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -327,7 +639,33 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/653483620",
-      "photo": null
+      "photo": null,
+      "services": [
+        "SMOT video-assisted simulation system",
+        "Editing booths",
+        "Simulated apartment",
+        "Semi-fixed plinth suites",
+        "Open access for practice outside timetabled hours, including evenings and weekends"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/study/academic-areas/life-and-health-sciences/facilities/mary-seacole/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/study/academic-areas/life-and-health-sciences/facilities/mary-seacole/",
+          "title": "The Mary Seacole Innovation Centre",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "fincham-building",
@@ -343,7 +681,7 @@
       "category": "building",
       "kind": "academic",
       "college": "digby-stuart",
-      "description": "Teaching rooms; The Coexist Café inside. Google label and official map disagree by about 40 m: check on site",
+      "description": "Digby Stuart College building with ground-floor Islamic prayer rooms and the Coexist Café social space.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -355,7 +693,44 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/1339072171",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Islamic prayer rooms Fi006 (sisters) and Fi007 (brothers)",
+        "The Coexist Cafe (Fi009)",
+        "Teaching room Fi001"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/fincham-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/chaplaincy/",
+          "title": "Digby Stuart College: Chaplaincy",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/fincham-building",
+          "title": "AccessAble: Fincham Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "sir-david-bell-building",
@@ -371,7 +746,7 @@
       "category": "building",
       "kind": "academic",
       "college": "digby-stuart",
-      "description": "Teaching building",
+      "description": "",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -383,7 +758,22 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/624679293",
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/route-guide-roehampton-lane-site-self-guided-tour",
+          "title": "AccessAble: Route Guide: Roehampton Lane Site Self Guided Tour",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "dorothy-buchanan-building",
@@ -401,7 +791,7 @@
       "category": "building",
       "kind": "academic",
       "college": "digby-stuart",
-      "description": "Sustainable Engineering and Technology Centre, opened October 2025; not on OpenStreetMap yet",
+      "description": "The new home of the Sustainable Engineering and Technology Centre (SETEC), with studios, labs and an engineering workshop.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -413,7 +803,33 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/653472802",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Project studios",
+        "Digital and environmental laboratories",
+        "Engineering and fabrication workshop",
+        "CAD suite",
+        "Breakout spaces"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/news/2026/march/university-of-roehampton-unveils-dorothy-buchanan-building-for-engineering-and-technology/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/news/2026/march/university-of-roehampton-unveils-dorothy-buchanan-building-for-engineering-and-technology/",
+          "title": "University of Roehampton unveils new Dorothy Buchanan Building for engineering and technology (March 2026)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "howard-building",
@@ -429,7 +845,7 @@
       "category": "building",
       "kind": "academic",
       "college": "digby-stuart",
-      "description": "Teaching building",
+      "description": "",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -441,7 +857,25 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/624679297",
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/howard-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/howard-building",
+          "title": "AccessAble: Howard Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "michaelis-building",
@@ -457,7 +891,7 @@
       "category": "building",
       "kind": "academic",
       "college": "froebel",
-      "description": "Teaching building",
+      "description": "Froebel College building used by Dance, home to the 350-seat Michaelis Theatre.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -469,7 +903,34 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613417",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Michaelis Theatre (350 seats)",
+        "Dance Department offices",
+        "Michaelis Dance Studio"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/michaelis-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/michaelis-building",
+          "title": "AccessAble: Michaelis Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "brearley-building",
@@ -486,7 +947,7 @@
       "category": "building",
       "kind": "academic",
       "college": "froebel",
-      "description": "Teaching building",
+      "description": "",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -498,7 +959,22 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/294029614",
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/by-003",
+          "title": "AccessAble: BY.003",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "lawrence-building",
@@ -514,7 +990,7 @@
       "category": "building",
       "kind": "academic",
       "college": "froebel",
-      "description": "Teaching building",
+      "description": "Froebel College building that houses Roehampton Students' Union.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -526,7 +1002,32 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/821830636",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Roehampton Students' Union"
+      ],
+      "officialUrl": "https://www.roehamptonstudent.com/union/visit/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/venues/lawrence-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehamptonstudent.com/union/visit/",
+          "title": "Roehampton Students' Union: Visit us",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/venues/lawrence-building",
+          "title": "AccessAble: Lawrence Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "lulham-building",
@@ -542,7 +1043,7 @@
       "category": "building",
       "kind": "academic",
       "college": "froebel",
-      "description": "Teaching building",
+      "description": "Froebel College building with an Islamic prayer room (LU035) for sisters and brothers.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -554,7 +1055,37 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/636497041",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Islamic prayer room LU035 (sisters and brothers)"
+      ],
+      "officialUrl": null,
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/lulham-arts-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/lulham-arts-building",
+          "title": "AccessAble: Lulham - Arts Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "gilroy-building",
@@ -570,7 +1101,7 @@
       "category": "building",
       "kind": "academic",
       "college": "froebel",
-      "description": "Teaching building",
+      "description": "",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -582,7 +1113,17 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/636968856",
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "grove-house",
@@ -597,7 +1138,7 @@
       "category": "building",
       "kind": "academic",
       "college": "froebel",
-      "description": "Historic house at the centre of Froebel College",
+      "description": "Historic house dating from 1792, designed by James Wyatt, at the heart of Froebel College.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -609,7 +1150,40 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/294029608",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Summer away-days and events via Roehampton Venues",
+        "Rooms such as GH.001 Adam Room and GH.002 Terrace Room"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/froebel-college/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/froebel-college/",
+          "title": "Froebel College",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/contact-us/",
+          "title": "Contact details for the University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://roehamptonvenues.co.uk/",
+          "title": "Roehampton Venues (University of Roehampton)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/gh-002-terrace-room",
+          "title": "AccessAble: GH.002 Terrace Room",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "jebb-auditorium",
@@ -626,7 +1200,7 @@
       "category": "building",
       "kind": "academic",
       "college": "froebel",
-      "description": "Lecture theatre",
+      "description": "",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -638,7 +1212,25 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613432",
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/jebb-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/jebb-building",
+          "title": "AccessAble: Jebb Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "queens-building",
@@ -655,7 +1247,7 @@
       "category": "building",
       "kind": "academic",
       "college": "southlands",
-      "description": "Business School",
+      "description": "Southlands College building that houses the Business School, a 24-hour study space and Islamic prayer rooms.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -667,7 +1259,52 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "relation/8758398",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Business School",
+        "24-hour study space",
+        "Islamic prayer rooms QB029/QB055 (sisters) and QB054 (brothers)",
+        "Chapman Hall (Friday Jummu'ah prayers)",
+        "Esports room (QB243–246, top floor)",
+        "University Music Room (QB140)"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/queen-s-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/library/",
+          "title": "Our world-class library",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/southlands-college/",
+          "title": "Southlands College",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/queen-s-building",
+          "title": "AccessAble: Queen's Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "library",
@@ -681,7 +1318,7 @@
       "category": "building",
       "kind": "library",
       "college": "digby-stuart",
-      "description": "University Library with café; Nest student support desk in the foyer",
+      "description": "The main library, with over 1,000 study seats, computers and printing, bookable rooms, a café and the Nest student support desk in the foyer.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -693,7 +1330,52 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/624430550",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Over 1,000 seats",
+        "Free Wi-Fi",
+        "Computers and printing",
+        "Bookable study rooms",
+        "Collaborative, whisper and silent study areas",
+        "Laptop loans (up to six hours a day)"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/library/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/library-london-university-of-roehampton",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/library/",
+          "title": "Our world-class library",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/nest/",
+          "title": "Nest",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/library/visitors-to-the-library/",
+          "title": "Visitors to the Library",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/library",
+          "title": "AccessAble: Library",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "elm-grove",
@@ -709,7 +1391,7 @@
       "category": "building",
       "kind": "careers",
       "college": "digby-stuart",
-      "description": "Roehampton Venues; Careers and Placements Hub",
+      "description": "Home of the Student Futures careers team (The Hub) and the Elm Grove Conference Centre run by Roehampton Venues.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -721,7 +1403,52 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "relation/8673531",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Careers and placements support (Student Futures, The Hub)",
+        "URJobs part-time work support",
+        "Conference and meeting rooms (up to 140 guests)",
+        "Rooftop balcony",
+        "En-suite bedrooms for event guests",
+        "Careers team contactable Mon–Fri, 9am–5pm"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/careers/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/venues/elm-grove",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/careers/",
+          "title": "Careers (Student Futures)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/contact-us/",
+          "title": "Contact details for the University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://roehamptonvenues.co.uk/",
+          "title": "Roehampton Venues (University of Roehampton)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/venues/elm-grove",
+          "title": "AccessAble: Elm Grove",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "campus-safety",
@@ -734,7 +1461,7 @@
       "category": "building",
       "kind": "security",
       "college": "digby-stuart",
-      "description": "Campus security office",
+      "description": "The University's 24/7 campus safety and security team; on campus call 020 8392 3333.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -746,7 +1473,36 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/628917102",
-      "photo": null
+      "photo": null,
+      "services": [
+        "24/7 campus safety and security",
+        "Out-of-hours Warden support requested via Security (020 8392 3333)",
+        "Changing Places key (Queen's Building) held by security"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/wellbeing-support/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/wellbeing-support/",
+          "title": "Wellbeing support",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+          "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/route-guide-welcome-centre-main-campus-to-security-reception-post-room-main-campus",
+          "title": "AccessAble: Route Guide: Welcome Centre to Security Reception & Post Room",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "laundry",
@@ -769,7 +1525,25 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/624435278",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Free laundry facilities",
+        "Laundry included in accommodation fees"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "the-base",
@@ -782,7 +1556,7 @@
       "category": "building",
       "kind": "service",
       "college": "digby-stuart",
-      "description": "Chaplaincy social area",
+      "description": "Digby Stuart's chaplaincy social space and kitchen on the ground floor of Erasmus House, with books, games and tea and coffee.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -794,7 +1568,38 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/653472808",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Social space and kitchen",
+        "Books, games and puzzles",
+        "Tea and coffee making facilities",
+        "Bookable for afternoon and evening social groups (via College Chaplain)",
+        "Open every day"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/chaplaincy/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/chaplaincy/",
+          "title": "Digby Stuart College: Chaplaincy",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+          "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "richardson",
@@ -810,7 +1615,7 @@
       "category": "building",
       "kind": "service",
       "college": "digby-stuart",
-      "description": "Disabilities and Dyslexia, Post Room, Student Finance Office, Wellbeing",
+      "description": "Digby Stuart building housing the Wellbeing Centre, Disability and Dyslexia Services and the Post Room.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -822,7 +1627,42 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/653472791",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Wellbeing Centre (counselling and Wellbeing Officer appointments)",
+        "Disability and Dyslexia Services",
+        "Post Room",
+        "Student Finance Office"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/wellbeing-support/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/wellbeing-support/",
+          "title": "Wellbeing support",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/disability-services/",
+          "title": "Disability and Dyslexia Services",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+          "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "student-medical-centre",
@@ -837,8 +1677,40 @@
       "category": "building",
       "kind": "health",
       "college": "froebel",
-      "description": "NHS GP surgery for students",
-      "hours": null,
+      "description": "The on-campus NHS GP surgery for students, part of Putneymead Group Medical Practice, at Old Court in Froebel College.",
+      "hours": {
+        "mon": [
+          [
+            "09:30",
+            "13:00"
+          ]
+        ],
+        "tue": [
+          [
+            "09:30",
+            "13:00"
+          ]
+        ],
+        "wed": [
+          [
+            "09:30",
+            "13:00"
+          ]
+        ],
+        "thu": [
+          [
+            "09:30",
+            "13:00"
+          ]
+        ],
+        "fri": [
+          [
+            "09:30",
+            "13:00"
+          ]
+        ],
+        "notes": "Term-time only. Closed during Easter, Christmas and summer breaks (patients seen at Putneymead Group Medical Practice, Putney, or online)."
+      },
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -849,7 +1721,42 @@
       "positionAccuracyM": 6,
       "entrance": null,
       "footprintId": "way/623548451",
-      "photo": null
+      "photo": null,
+      "services": [
+        "NHS GP services",
+        "Physical and mental health",
+        "Sexual health and contraception",
+        "Health checks and dressings",
+        "Injections and immunisations",
+        "Face-to-face, telephone and video consultations"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/study/september-induction/student-medical-centre/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/medical-centre",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/study/september-induction/student-medical-centre/",
+          "title": "September induction: Student Medical Centre",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/wellbeing-support/",
+          "title": "Wellbeing support",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/medical-centre",
+          "title": "AccessAble: Medical Centre",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "students-union",
@@ -865,7 +1772,7 @@
       "category": "building",
       "kind": "union",
       "college": "froebel",
-      "description": "Roehampton Students’ Union",
+      "description": "The student-led Students' Union, based in the Lawrence Building, Froebel College.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -877,7 +1784,40 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/821830635",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Advice service",
+        "Student groups and societies",
+        "Growhampton",
+        "Representation"
+      ],
+      "officialUrl": "https://www.roehamptonstudent.com/union/visit/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/roehampton-students-union",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehamptonstudent.com/union/visit/",
+          "title": "Roehampton Students' Union: Visit us",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehamptonstudent.com/union/contactus/",
+          "title": "Roehampton Students' Union: Contact us",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/roehampton-students-union",
+          "title": "AccessAble: Roehampton Students' Union",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "gym",
@@ -892,7 +1832,7 @@
       "category": "sport",
       "kind": "gym",
       "college": "froebel",
-      "description": "Campus gym run by Lifestyle Fitness; the 2025 map calls it Gym Roehampton",
+      "description": "The on-campus gym at Froebel College, with strength zones, free weights and a group exercise studio.",
       "hours": {
         "mon": [
           [
@@ -936,7 +1876,39 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613419",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Strength training zones",
+        "Free weights area",
+        "Functional training rig",
+        "Group exercise studio and unlimited classes",
+        "Recovery space",
+        "Personal training"
+      ],
+      "officialUrl": "https://www.lifestylefitness.co.uk/club/roehampton",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.lifestylefitness.co.uk/club/roehampton",
+          "title": "Lifestyle Fitness University of Roehampton (operator page)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/sports-and-activities/sport-roehampton/",
+          "title": "Sport and Active Communities",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "muga",
@@ -952,7 +1924,7 @@
       "category": "sport",
       "kind": "court",
       "college": "froebel",
-      "description": "Outdoor hard court: basketball, tennis, football, netball",
+      "description": "An outdoor hard court on Froebel for basketball, tennis, football and netball.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -964,7 +1936,27 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": null,
-      "photo": null
+      "photo": null,
+      "services": [
+        "Basketball",
+        "Tennis",
+        "Football",
+        "Netball"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "davies-sports-hall",
@@ -981,7 +1973,7 @@
       "category": "sport",
       "kind": "sports-hall",
       "college": "froebel",
-      "description": "Indoor sports hall",
+      "description": "The University's indoor sports hall at Froebel College.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -993,7 +1985,29 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "relation/8763239",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Sports hall"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/sports-and-activities/sport-roehampton/",
+          "title": "Sport and Active Communities",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "sport-active-communities",
@@ -1007,7 +2021,7 @@
       "category": "building",
       "kind": "service",
       "college": "froebel",
-      "description": "University sport team office",
+      "description": "The University sport team's office in the Davies Building (Room DA.001).",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1019,7 +2033,27 @@
       "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": "relation/8763239",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Sport Roehampton clubs",
+        "Active Roehampton social sport",
+        "Sport and esports scholarships",
+        "Enquiries: sportandactive@roehampton.ac.uk"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/sports-and-activities/sport-roehampton/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/sports-and-activities/sport-roehampton/",
+          "title": "Sport and Active Communities",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "southlands-chapel",
@@ -1033,7 +2067,7 @@
       "category": "building",
       "kind": "faith",
       "college": "southlands",
-      "description": "Chapel (The Well)",
+      "description": "The round building by the lake, a Methodist chapel and drop-in chaplaincy space with tea and coffee and a small garden.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1045,7 +2079,34 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/629613410",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Drop-in space",
+        "Tea and coffee making facilities",
+        "Small garden",
+        "Spiritual reflection and prayer",
+        "Exhibitions, music rehearsals and community activities",
+        "Open on weekdays"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/southlands-college/chaplaincy/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/southlands-college/chaplaincy/",
+          "title": "Southlands College: Chaplaincy",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "southlands-prayer-rooms",
@@ -1062,7 +2123,7 @@
       "category": "building",
       "kind": "faith",
       "college": "southlands",
-      "description": "Prayer rooms and wudu: QB054 (brothers), QB029 (sisters)",
+      "description": "Islamic prayer rooms on the ground floor of the Queen's Building, open with an ID card and welcoming people of all faiths.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1074,7 +2135,38 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/1339072172",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Brothers: QB054",
+        "Sisters: QB029 or QB055",
+        "Wudu (ablution) facilities nearby",
+        "Prayer mats and copies of the Qur'an",
+        "Open with your ID card, 8.30am–8pm"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/southlands-college/chaplaincy/",
+          "title": "Southlands College: Chaplaincy",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "digby-chapel",
@@ -1089,7 +2181,7 @@
       "category": "building",
       "kind": "faith",
       "college": "digby-stuart",
-      "description": "Sacred Heart Chapel and St Thomas Chapel",
+      "description": "Digby Stuart's chapels: the Sacred Heart Chapel hosts weekly Mass and, with St Thomas Chapel, is open daily for quiet prayer.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1101,7 +2193,40 @@
       "positionAccuracyM": 5,
       "entrance": null,
       "footprintId": "way/624679296",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Weekly Mass (Sacred Heart Chapel)",
+        "Quiet personal prayer and reflection",
+        "Annual University Carol Service (Digby Chapel)",
+        "Digby Chapel also used for lectures"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/chaplaincy/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/venues/digby-chapel",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/chaplaincy/",
+          "title": "Digby Stuart College: Chaplaincy",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/venues/digby-chapel",
+          "title": "AccessAble: Digby Chapel",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "fincham-prayer-rooms",
@@ -1116,7 +2241,7 @@
       "category": "building",
       "kind": "faith",
       "college": "digby-stuart",
-      "description": "Prayer rooms for brothers and sisters in the Fincham Building (D3)",
+      "description": "Islamic prayer rooms on the ground floor of the Fincham Building, with a dedicated ablution space.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1128,7 +2253,46 @@
       "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": "way/1339072171",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Sisters: Fi006",
+        "Brothers: Fi007",
+        "Ablution space",
+        "Prayer mats and copies of the Qur'an",
+        "Open with your ID card, 8.30am–8pm"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/fincham-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/chaplaincy/",
+          "title": "Digby Stuart College: Chaplaincy",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/fincham-building",
+          "title": "AccessAble: Fincham Building",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "old-court-prayer-room",
@@ -1142,7 +2306,7 @@
       "category": "building",
       "kind": "faith",
       "college": "froebel",
-      "description": "In Old Court",
+      "description": "A sisters' Islamic prayer room in Old Court, next to the Medical Centre in Froebel College.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1154,7 +2318,31 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/623548451",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Sisters' prayer room",
+        "Sisters' Study nearby",
+        "Open with your ID card, 8.30am–8pm"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "medical-centre-annex-prayer-room",
@@ -1168,7 +2356,7 @@
       "category": "building",
       "kind": "faith",
       "college": "froebel",
-      "description": "In the Medical Centre Annex",
+      "description": "Shown on the September 2025 campus map. The chaplaincy now lists the Froebel prayer room as LU035 in the Lulham Building, for sisters and brothers.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1180,21 +2368,40 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/623548451",
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "the-reef",
       "code": "",
       "name": "The Reef",
       "aliases": [
-        "Reef",
-        "Quad"
+        "Reef"
       ],
       "roomCodePrefixes": [],
-      "category": "food",
-      "kind": "restaurant",
+      "category": "building",
+      "kind": "service",
       "college": "southlands",
-      "description": "Southlands social space with food",
+      "description": "A student social space in Southlands with a table tennis table, next door to the Quad Café.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1206,7 +2413,35 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/629613413",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Table tennis",
+        "Film nights and games (college events)"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/southlands-college/",
+          "title": "Southlands College",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "digby-den-diner",
@@ -1221,7 +2456,7 @@
       "category": "food",
       "kind": "restaurant",
       "college": "digby-stuart",
-      "description": "Diner with seasonal meals, pizza and salad bar; social space with TVs",
+      "description": "A social space with sofas, TVs and a kitchen, alongside a diner serving seasonal meals, pizza, salad bar and food cooked to order.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1233,7 +2468,39 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/629613445",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Seasonal main meals",
+        "Pizza",
+        "Salad bar",
+        "Food cooked to order",
+        "Sofas and large-screen TVs",
+        "Kitchen to warm your own food"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+          "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/chaplaincy/",
+          "title": "Digby Stuart College: Chaplaincy",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "hive-cafe",
@@ -1247,7 +2514,7 @@
       "category": "food",
       "kind": "cafe",
       "college": "digby-stuart",
-      "description": "Main vegan outlet; weekly Market Day in Digby Square",
+      "description": "The Students' Union-run café in Digby Square, built from recycled shipping containers, and the main vegan outlet on campus.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1259,7 +2526,38 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/653472809",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Hot and cold speciality drinks",
+        "Toasties, pastries and soups",
+        "Four milk alternatives at no extra cost",
+        "Weekly Market Day with produce grown on campus",
+        "Events (film screenings, thrift pop-up, bike workshop, live music)"
+      ],
+      "officialUrl": "https://www.roehamptonstudent.com/hive/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehamptonstudent.com/hive/",
+          "title": "Roehampton Students' Union: The Hive Cafe",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+          "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "froebel-diner",
@@ -1272,7 +2570,7 @@
       "category": "food",
       "kind": "restaurant",
       "college": "froebel",
-      "description": "Hot food, salad bar and dishes cooked to order",
+      "description": "A diner serving hot food and snacks, a salad bar and rotating dishes cooked to order such as curries and Thai food.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1284,7 +2582,31 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/294029609",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Hot food and snacks",
+        "Salad bar",
+        "Food cooked to order on rotation"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "quad-cafe",
@@ -1299,7 +2621,7 @@
       "category": "food",
       "kind": "cafe",
       "college": "southlands",
-      "description": "Café in Southlands; name from the university café page, check on site",
+      "description": "The Quad in Southlands serves piri-piri chicken and hot food.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1311,7 +2633,20 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/629613442",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Piri-piri chicken",
+        "Hot food"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "library-cafe",
@@ -1325,7 +2660,7 @@
       "category": "food",
       "kind": "cafe",
       "college": "digby-stuart",
-      "description": "Café inside the Library",
+      "description": "A café inside the University Library.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1337,7 +2672,24 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/624430550",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Café"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/library/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/library/",
+          "title": "Our world-class library",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "digby-cafe",
@@ -1351,7 +2703,7 @@
       "category": "food",
       "kind": "cafe",
       "college": "digby-stuart",
-      "description": "Shown as Café on the official map; check its name on site",
+      "description": "A café shown on the official campus map. Its name has not been confirmed yet.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1363,7 +2715,22 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/624679297",
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "froebel-cafe",
@@ -1377,7 +2744,7 @@
       "category": "food",
       "kind": "cafe",
       "college": "froebel",
-      "description": "Shown as Café on the official map; check its name on site",
+      "description": "A café shown on the official campus map. Its name has not been confirmed yet.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1389,7 +2756,22 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/294029609",
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "union-bar",
@@ -1404,7 +2786,7 @@
       "category": "food",
       "kind": "bar",
       "college": "froebel",
-      "description": "Main social hub: Pub Grub, events and THE BOP on Fridays",
+      "description": "The University's main social hub, with a fully stocked bar, food, a daily Pub Grub menu and events such as karaoke, open mic and DJ slots.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1416,7 +2798,32 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/294029609",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Fully stocked bar",
+        "Daily 'Pub Grub' menu",
+        "Karaoke, open mic and DJ events",
+        "THE BOP club night every Friday in term (with adjoining Monte Hall)"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "digby-shop",
@@ -1430,7 +2837,7 @@
       "category": "food",
       "kind": "shop",
       "college": "digby-stuart",
-      "description": "Student shop: food, snacks and essentials",
+      "description": "The student shop just off Digby Square, selling food to cook in halls, sandwiches, hot snacks, confectionery and student essentials.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1442,7 +2849,37 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": "way/624679297",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Groceries for cooking in halls",
+        "Sandwiches and hot snacks",
+        "Confectionery",
+        "Student essentials"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
+          "title": "Facilities on campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+          "title": "Digby Stuart College",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "gate-main",
@@ -1453,7 +2890,7 @@
       "category": "entrance",
       "kind": "entrance",
       "college": null,
-      "description": "Vehicle and pedestrian entrance on Roehampton Lane",
+      "description": "The University's main entrance on Roehampton Lane; buses stop outside and Open Day parking permits are issued here.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1465,7 +2902,30 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": null,
-      "photo": null
+      "photo": null,
+      "services": [
+        "Bus stops outside (about 21 buses an hour)",
+        "Open Day parking permit allocation"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/study/open-days/find-our-campus/main-campus/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/study/open-days/find-our-campus/main-campus/",
+          "title": "Find our campus: Main campus",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "gate-southlands",
@@ -1476,7 +2936,7 @@
       "category": "entrance",
       "kind": "entrance",
       "college": null,
-      "description": "Pedestrian entrance",
+      "description": "A pedestrian entrance by Southlands College.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1488,7 +2948,22 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": null,
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "gate-stuart-lodge",
@@ -1499,7 +2974,7 @@
       "category": "entrance",
       "kind": "entrance",
       "college": null,
-      "description": "Pedestrian entrance",
+      "description": "A pedestrian entrance by Digby Stuart College.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1511,7 +2986,22 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": null,
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "gate-clarence-lane",
@@ -1534,7 +3024,22 @@
       "positionAccuracyM": 20,
       "entrance": null,
       "footprintId": null,
-      "photo": null
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        }
+      ]
     },
     {
       "id": "coexist-cafe",
@@ -1549,7 +3054,7 @@
       "category": "food",
       "kind": "cafe",
       "college": "digby-stuart",
-      "description": "Café inside the Fincham Building (D3)",
+      "description": "A chaplaincy social space in Fincham Building room Fi009, open to all for relaxing, heating food, making a drink and meeting people.",
       "hours": null,
       "lastVerified": null,
       "status": "confirmed",
@@ -1561,7 +3066,30 @@
       "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": "way/1339072171",
-      "photo": null
+      "photo": null,
+      "services": [
+        "Space to heat food and make a drink",
+        "Social and community space"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
+          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
+          "checked": "2026-10-20"
+        }
+      ]
     }
   ]
 }

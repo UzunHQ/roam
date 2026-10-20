@@ -151,6 +151,7 @@ export function createMap(opts: {
       { id: 'route', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 3.5, 19, 8] } },
       { id: 'accuracy', type: 'fill', source: 'user', paint: { 'fill-opacity': 0.14 } },
       { id: 'accuracy-line', type: 'line', source: 'user', paint: { 'line-width': 1.5, 'line-opacity': 0.5 } },
+      { id: 'building-shadow', type: 'fill', source: 'buildings', paint: { 'fill-color': 'rgba(40,50,30,0.16)', 'fill-translate': [4, 4], 'fill-antialias': false } },
       {
         id: 'building-walls', type: 'fill-extrusion', source: 'buildings',
         paint: { 'fill-extrusion-height': ['+', HEIGHT, BOUNCE], 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 1, 'fill-extrusion-vertical-gradient': true },
