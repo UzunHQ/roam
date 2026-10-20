@@ -440,7 +440,12 @@ async function main() {
 
   function renderCard(p: Place) {
     const g = groupOf(p);
-    const mail = `mailto:${config.reportEmail}?subject=${encodeURIComponent(`Roam mistake: ${p.name}`)}&body=${encodeURIComponent(`What's wrong?\n\n\n(place id: ${p.id})`)}`;
+    const placeLabel = p.code ? `${p.name} (${p.code})` : p.name;
+    const report = config.reportForm.url
+      ? `${config.reportForm.url}?usp=pp_url&${config.reportForm.placeField}=${encodeURIComponent(placeLabel)}`
+      : config.reportEmail
+        ? `mailto:${config.reportEmail}?subject=${encodeURIComponent(`Roam mistake: ${placeLabel}`)}&body=${encodeURIComponent(`What's wrong?\n\n\n(place id: ${p.id})`)}`
+        : '';
     const src = p.sources?.[0];
     const checked = src?.checked ?? p.lastVerified;
     panelBody.innerHTML = `
@@ -464,7 +469,7 @@ async function main() {
       ${p.officialUrl ? `<a class="official" href="${esc(p.officialUrl)}" target="_blank" rel="noopener">Official page ${icons.external}</a>` : ''}
       <p class="small">${[
         src ? `Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)}</a>${checked ? `, checked ${fmtDate(checked)}` : ''}` : checked ? `Last checked ${fmtDate(checked)}` : '',
-        config.reportEmail ? `<a href="${mail}">Report a mistake</a>` : '', // hidden until an inbox is set in config.ts
+        report ? `<a href="${esc(report)}"${report.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>Report a mistake</a>` : '', // hidden until a form or inbox is set in config.ts
       ].filter(Boolean).join(' · ')}</p>`;
     panelBody.querySelector('.close')!.addEventListener('click', closePanel);
     panelBody.querySelector('.dir')!.addEventListener('click', () => openDirections(p));

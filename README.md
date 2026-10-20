@@ -89,7 +89,8 @@ Photos lazy-load when a card opens and are cached for offline use.
 Edit `src/config.ts`:
 
 - `links.instagram`, `links.linkedin`: footer icons
-- `reportEmail`: where "Report a mistake" sends mail (the place name and id are prefilled)
+- `reportForm`: the Google Form "Report a mistake" opens, with the place name prefilled (`placeField` is that question's `entry.` id)
+- `reportEmail`: used instead when `reportForm.url` is empty
 - `analytics.umamiWebsiteId`: [Umami](https://umami.is) is cookieless. It records page views and the events `place-tap`, `search` (query text and picked place) and `install`. Location is never sent. Leave it empty to turn analytics off.
 
 ## Deploy
