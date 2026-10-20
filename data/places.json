@@ -1319,8 +1319,52 @@
       "kind": "library",
       "college": "digby-stuart",
       "description": "The main library, with over 1,000 study seats, computers and printing, bookable rooms, a café and the Nest student support desk in the foyer.",
-      "hours": null,
-      "lastVerified": null,
+      "hours": {
+        "mon": [
+          [
+            "08:00",
+            "23:59"
+          ]
+        ],
+        "tue": [
+          [
+            "08:00",
+            "23:59"
+          ]
+        ],
+        "wed": [
+          [
+            "08:00",
+            "23:59"
+          ]
+        ],
+        "thu": [
+          [
+            "08:00",
+            "23:59"
+          ]
+        ],
+        "fri": [
+          [
+            "08:00",
+            "23:59"
+          ]
+        ],
+        "sat": [
+          [
+            "10:00",
+            "16:00"
+          ]
+        ],
+        "sun": [
+          [
+            "10:00",
+            "16:00"
+          ]
+        ],
+        "notes": "Term-time hours from the Library's opening hours page, checked 20 Oct 2026. Hours change in vacations. Outside these times, the 24-hour study space is in Queen's Building."
+      },
+      "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
         -0.244758,
@@ -1374,6 +1418,11 @@
           "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/library",
           "title": "AccessAble: Library",
           "checked": "2026-10-20"
+        },
+        {
+          "url": "https://roehampton.libcal.com/hours/",
+          "title": "Library opening hours",
+          "checked": "2026-10-20"
         }
       ]
     },
@@ -1392,8 +1441,40 @@
       "kind": "careers",
       "college": "digby-stuart",
       "description": "Home of the Student Futures careers team (The Hub) and the Elm Grove Conference Centre run by Roehampton Venues.",
-      "hours": null,
-      "lastVerified": null,
+      "hours": {
+        "mon": [
+          [
+            "09:00",
+            "17:00"
+          ]
+        ],
+        "tue": [
+          [
+            "09:00",
+            "17:00"
+          ]
+        ],
+        "wed": [
+          [
+            "09:00",
+            "17:00"
+          ]
+        ],
+        "thu": [
+          [
+            "09:00",
+            "17:00"
+          ]
+        ],
+        "fri": [
+          [
+            "09:00",
+            "17:00"
+          ]
+        ],
+        "notes": "Careers team: Monday to Friday, 9am to 5pm. Weekend hours not listed."
+      },
+      "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
         -0.244068,
@@ -1462,8 +1543,52 @@
       "kind": "security",
       "college": "digby-stuart",
       "description": "The University's 24/7 campus safety and security team; on campus call 020 8392 3333.",
-      "hours": null,
-      "lastVerified": null,
+      "hours": {
+        "mon": [
+          [
+            "00:00",
+            "24:00"
+          ]
+        ],
+        "tue": [
+          [
+            "00:00",
+            "24:00"
+          ]
+        ],
+        "wed": [
+          [
+            "00:00",
+            "24:00"
+          ]
+        ],
+        "thu": [
+          [
+            "00:00",
+            "24:00"
+          ]
+        ],
+        "fri": [
+          [
+            "00:00",
+            "24:00"
+          ]
+        ],
+        "sat": [
+          [
+            "00:00",
+            "24:00"
+          ]
+        ],
+        "sun": [
+          [
+            "00:00",
+            "24:00"
+          ]
+        ],
+        "notes": "The Campus Safety and Security team works 24/7. Phone 020 8392 3333."
+      },
+      "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
         -0.243046,
@@ -1500,6 +1625,11 @@
         {
           "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/route-guide-welcome-centre-main-campus-to-security-reception-post-room-main-campus",
           "title": "AccessAble: Route Guide: Welcome Centre to Security Reception & Post Room",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/wellbeing-support/",
+          "title": "Wellbeing support",
           "checked": "2026-10-20"
         }
       ]

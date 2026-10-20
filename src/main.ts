@@ -646,11 +646,12 @@ async function main() {
     if (!p.hours) return '';
     const s = openState(p.hours, londonNow());
     const [cls, text] =
-      s.kind === 'open' ? ['open', `Open now · until ${s.until}`]
+      s.kind === 'open' ? ['open', s.until === '24:00' ? 'Open 24 hours' : `Open now · until ${s.until}`]
       : s.kind === 'opens-later' ? ['closed', `Closed · opens ${s.at}`]
       : s.kind === 'closed-today' ? ['closed', 'Closed today']
       : ['unknown', "Today's hours not published"];
-    return `<div class="hours"><span class="badge ${cls}">${text}</span><span class="today">${todayText(p.hours)}</span></div>
+    const today = text === 'Open 24 hours' ? '' : `<span class="today">${todayText(p.hours)}</span>`;
+    return `<div class="hours"><span class="badge ${cls}">${text}</span>${today}</div>
       ${p.hours.notes ? `<p class="notes">${esc(p.hours.notes)}</p>` : ''}`;
   }
   // places where people would expect opening hours; for these we say plainly when we don't have them

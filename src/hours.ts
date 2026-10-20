@@ -46,9 +46,13 @@ export function openState(hours: Hours | null, now = londonNow()): OpenState {
   return next ? { kind: 'opens-later', at: next[0] } : { kind: 'closed-today' };
 }
 
+/** "00:00"–"24:00" in the data means open all day (e.g. Campus Safety). */
+export const isAllDay = (range: [string, string]) => range[0] === '00:00' && range[1] === '24:00';
+
 export function todayText(hours: Hours | null, now = londonNow()): string {
   const today = hours?.[now.day];
   if (!hours || !today) return 'Today: hours not listed';
   if (!today.length) return 'Today: closed';
+  if (today.some(isAllDay)) return 'Today: open 24 hours';
   return 'Today: ' + today.map(([o, c]) => `${o}–${c}`).join(', ');
 }
