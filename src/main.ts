@@ -95,7 +95,7 @@ document.addEventListener('keydown', (e) => {
 
 const linkedId = new URLSearchParams(location.search).get('place');
 const welcome = $('#welcome');
-// The welcome card shows until you close it (X, Find me or Explore), then never again on this
+// The welcome card shows until you close it (X, Esc, Find me or Explore), then never again on this
 // device. Direct links to a building skip it. While it's open the mascot waves now and then.
 const welcomeMascot = $('.welcome-mascot');
 welcomeMascot.innerHTML = avatarSvg.replace('width="48" height="63"', '');
@@ -1462,6 +1462,7 @@ async function main() {
     if (e.key !== 'Escape') return;
     if (!about.hidden) closeDialog(about);
     else if (!settings.hidden) closeDialog(settings);
+    else if (!welcome.hidden) dismissWelcome(); // same as X: remembered on this device
     else if (navigating) endNavigation();
     else if (!$('#ask').hidden) { $('#ask').hidden = true; pendingLocate?.(false); pendingLocate = null; }
     else if (!key.hidden) { toggleKey(false); keyBtn.focus(); }
