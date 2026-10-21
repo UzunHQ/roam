@@ -25,7 +25,6 @@
       "kind": "accommodation",
       "college": "southlands",
       "description": "Southlands College halls with 118 single rooms in flats of five to eight, sharing bathroom, kitchen and living space.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -70,7 +69,6 @@
       "kind": "accommodation",
       "college": "southlands",
       "description": "Southlands College halls with 66 en-suite single rooms in flats of five to eight, sharing a kitchen and living space.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -122,7 +120,6 @@
       "kind": "accommodation",
       "college": "southlands",
       "description": "Southlands College halls for postgraduate and continuing students, with 96 single rooms in flats of five to eight.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -166,7 +163,6 @@
       "kind": "accommodation",
       "college": "digby-stuart",
       "description": "Digby Stuart College halls with standard and en-suite single rooms in flats of six.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -216,7 +212,6 @@
       "kind": "accommodation",
       "college": "digby-stuart",
       "description": "Digby Stuart College halls with 358 en-suite rooms with small double beds, in flats of four to eleven.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -269,7 +264,6 @@
       "kind": "accommodation",
       "college": "digby-stuart",
       "description": "Budget Digby Stuart College halls with 107 single rooms, sharing bathrooms, kitchen and living space with up to 28 people per floor.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -321,7 +315,6 @@
       "kind": "accommodation",
       "college": "digby-stuart",
       "description": "Digby Stuart College halls; the published room option is a twin room shared with one other student.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -374,7 +367,6 @@
       "kind": "accommodation",
       "college": "froebel",
       "description": "Three small Froebel College halls (New Court 22, Old Court 15, Garden Court 40 rooms) with private rooms and shared facilities.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -431,7 +423,6 @@
       "kind": "accommodation",
       "college": "froebel",
       "description": "Froebel College halls for continuing students, with 59 en-suite rooms in flats of seven to eight.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -475,7 +466,6 @@
       "kind": "accommodation",
       "college": "froebel",
       "description": "Froebel College halls for new undergraduates, with 56 en-suite rooms in flats of five to eight.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -520,7 +510,6 @@
       "kind": "accommodation",
       "college": "froebel",
       "description": "Froebel College halls for new undergraduates, with en-suite rooms in flats of seven sharing a kitchen and living space.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -575,7 +564,6 @@
       "kind": "academic",
       "college": "digby-stuart",
       "description": "Home of the Law School.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -628,7 +616,6 @@
       "kind": "academic",
       "college": "digby-stuart",
       "description": "A health education facility on Digby Stuart College for students on healthcare programmes, focused on primary and community care.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -682,7 +669,6 @@
       "kind": "academic",
       "college": "digby-stuart",
       "description": "Digby Stuart College building with ground-floor Islamic prayer rooms and the Coexist Café social space.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -747,7 +733,6 @@
       "kind": "academic",
       "college": "digby-stuart",
       "description": "",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -792,7 +777,6 @@
       "kind": "academic",
       "college": "digby-stuart",
       "description": "The new home of the Sustainable Engineering and Technology Centre (SETEC), with studios, labs and an engineering workshop.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -846,7 +830,6 @@
       "kind": "academic",
       "college": "digby-stuart",
       "description": "",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -892,7 +875,6 @@
       "kind": "academic",
       "college": "froebel",
       "description": "Froebel College building used by Dance, home to the 350-seat Michaelis Theatre.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -948,7 +930,6 @@
       "kind": "academic",
       "college": "froebel",
       "description": "",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -991,7 +972,6 @@
       "kind": "academic",
       "college": "froebel",
       "description": "Froebel College building that houses Roehampton Students' Union.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1044,7 +1024,6 @@
       "kind": "academic",
       "college": "froebel",
       "description": "Froebel College building with an Islamic prayer room (LU035) for sisters and brothers.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1102,7 +1081,6 @@
       "kind": "academic",
       "college": "froebel",
       "description": "",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1139,7 +1117,6 @@
       "kind": "academic",
       "college": "froebel",
       "description": "Historic house dating from 1792, designed by James Wyatt, at the heart of Froebel College.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1201,7 +1178,6 @@
       "kind": "academic",
       "college": "froebel",
       "description": "",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1248,7 +1224,6 @@
       "kind": "academic",
       "college": "southlands",
       "description": "Southlands College building that houses the Business School, a 24-hour study space and Islamic prayer rooms.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1319,51 +1294,6 @@
       "kind": "library",
       "college": "digby-stuart",
       "description": "The main library, with over 1,000 study seats, computers and printing, bookable rooms, a café and the Nest student support desk in the foyer.",
-      "hours": {
-        "mon": [
-          [
-            "08:00",
-            "23:59"
-          ]
-        ],
-        "tue": [
-          [
-            "08:00",
-            "23:59"
-          ]
-        ],
-        "wed": [
-          [
-            "08:00",
-            "23:59"
-          ]
-        ],
-        "thu": [
-          [
-            "08:00",
-            "23:59"
-          ]
-        ],
-        "fri": [
-          [
-            "08:00",
-            "23:59"
-          ]
-        ],
-        "sat": [
-          [
-            "10:00",
-            "16:00"
-          ]
-        ],
-        "sun": [
-          [
-            "10:00",
-            "16:00"
-          ]
-        ],
-        "notes": "Term-time hours from the Library's opening hours page, checked 20 Oct 2026. Hours change in vacations. Outside these times, the 24-hour study space is in Queen's Building."
-      },
       "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
@@ -1441,39 +1371,6 @@
       "kind": "careers",
       "college": "digby-stuart",
       "description": "Home of the Student Futures careers team (The Hub) and the Elm Grove Conference Centre run by Roehampton Venues.",
-      "hours": {
-        "mon": [
-          [
-            "09:00",
-            "17:00"
-          ]
-        ],
-        "tue": [
-          [
-            "09:00",
-            "17:00"
-          ]
-        ],
-        "wed": [
-          [
-            "09:00",
-            "17:00"
-          ]
-        ],
-        "thu": [
-          [
-            "09:00",
-            "17:00"
-          ]
-        ],
-        "fri": [
-          [
-            "09:00",
-            "17:00"
-          ]
-        ],
-        "notes": "Careers team: Monday to Friday, 9am to 5pm. Weekend hours not listed."
-      },
       "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
@@ -1543,51 +1440,6 @@
       "kind": "security",
       "college": "digby-stuart",
       "description": "The University's 24/7 campus safety and security team; on campus call 020 8392 3333.",
-      "hours": {
-        "mon": [
-          [
-            "00:00",
-            "24:00"
-          ]
-        ],
-        "tue": [
-          [
-            "00:00",
-            "24:00"
-          ]
-        ],
-        "wed": [
-          [
-            "00:00",
-            "24:00"
-          ]
-        ],
-        "thu": [
-          [
-            "00:00",
-            "24:00"
-          ]
-        ],
-        "fri": [
-          [
-            "00:00",
-            "24:00"
-          ]
-        ],
-        "sat": [
-          [
-            "00:00",
-            "24:00"
-          ]
-        ],
-        "sun": [
-          [
-            "00:00",
-            "24:00"
-          ]
-        ],
-        "notes": "The Campus Safety and Security team works 24/7. Phone 020 8392 3333."
-      },
       "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
@@ -1644,7 +1496,6 @@
       "kind": "laundry",
       "college": "digby-stuart",
       "description": "Student laundry in the long low block between Bede House and Erasmus House, on the north side of the courtyard.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1687,7 +1538,6 @@
       "kind": "service",
       "college": "digby-stuart",
       "description": "Digby Stuart's chaplaincy social space and kitchen on the ground floor of Erasmus House, with books, games and tea and coffee.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1745,7 +1595,6 @@
       "kind": "service",
       "college": "digby-stuart",
       "description": "Digby Stuart building housing the Wellbeing Centre, Disability and Dyslexia Services and the Post Room.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1808,7 +1657,6 @@
       "kind": "post",
       "college": "digby-stuart",
       "description": "Where students collect post and parcels, at the east end of the Richardson Building. Apple Maps also shows an Amazon Locker here.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1848,39 +1696,6 @@
       "kind": "health",
       "college": "froebel",
       "description": "The on-campus NHS GP surgery for students, part of Putneymead Group Medical Practice, at Old Court in Froebel College.",
-      "hours": {
-        "mon": [
-          [
-            "09:30",
-            "13:00"
-          ]
-        ],
-        "tue": [
-          [
-            "09:30",
-            "13:00"
-          ]
-        ],
-        "wed": [
-          [
-            "09:30",
-            "13:00"
-          ]
-        ],
-        "thu": [
-          [
-            "09:30",
-            "13:00"
-          ]
-        ],
-        "fri": [
-          [
-            "09:30",
-            "13:00"
-          ]
-        ],
-        "notes": "Term-time only. Closed during Easter, Christmas and summer breaks (patients seen at Putneymead Group Medical Practice, Putney, or online)."
-      },
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -1943,7 +1758,6 @@
       "kind": "union",
       "college": "froebel",
       "description": "The student-led Students' Union, based in the Lawrence Building, Froebel College.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2003,39 +1817,6 @@
       "kind": "gym",
       "college": "froebel",
       "description": "The on-campus gym at Froebel College, with strength zones, free weights and a group exercise studio.",
-      "hours": {
-        "mon": [
-          [
-            "06:00",
-            "22:00"
-          ]
-        ],
-        "tue": [
-          [
-            "06:00",
-            "22:00"
-          ]
-        ],
-        "wed": [
-          [
-            "06:00",
-            "22:00"
-          ]
-        ],
-        "thu": [
-          [
-            "06:00",
-            "22:00"
-          ]
-        ],
-        "fri": [
-          [
-            "06:00",
-            "22:00"
-          ]
-        ],
-        "notes": "Mon-Fri from lifestylefitness.co.uk/club/roehampton on 2026-10-20; weekend hours not listed"
-      },
       "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
@@ -2095,7 +1876,6 @@
       "kind": "court",
       "college": "froebel",
       "description": "An outdoor hard court on Froebel for basketball, tennis, football and netball.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2144,7 +1924,6 @@
       "kind": "sports-hall",
       "college": "froebel",
       "description": "The University's indoor sports hall at Froebel College.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2192,7 +1971,6 @@
       "kind": "service",
       "college": "froebel",
       "description": "The University sport team's office in the Davies Building (Room DA.001).",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2238,7 +2016,6 @@
       "kind": "faith",
       "college": "southlands",
       "description": "The round building by the lake, a Methodist chapel and drop-in chaplaincy space with tea and coffee and a small garden.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2294,7 +2071,6 @@
       "kind": "faith",
       "college": "southlands",
       "description": "Islamic prayer rooms on the ground floor of the Queen's Building, open with an ID card and welcoming people of all faiths.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2352,7 +2128,6 @@
       "kind": "faith",
       "college": "digby-stuart",
       "description": "Digby Stuart's chapels: the Sacred Heart Chapel hosts weekly Mass and, with St Thomas Chapel, is open daily for quiet prayer.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2412,7 +2187,6 @@
       "kind": "faith",
       "college": "digby-stuart",
       "description": "Islamic prayer rooms on the ground floor of the Fincham Building, with a dedicated ablution space.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2477,7 +2251,6 @@
       "kind": "faith",
       "college": "froebel",
       "description": "A sisters' Islamic prayer room in Old Court, next to the Medical Centre in Froebel College.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2527,7 +2300,6 @@
       "kind": "faith",
       "college": "froebel",
       "description": "Shown on the September 2025 campus map. The chaplaincy now lists the Froebel prayer room as LU035 in the Lulham Building, for sisters and brothers.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2572,7 +2344,6 @@
       "kind": "service",
       "college": "southlands",
       "description": "A student social space in Southlands with a table tennis table, next door to the Quad Café.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2627,7 +2398,6 @@
       "kind": "restaurant",
       "college": "digby-stuart",
       "description": "A social space with sofas, TVs and a kitchen, alongside a diner serving seasonal meals, pizza, salad bar and food cooked to order.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2685,7 +2455,6 @@
       "kind": "cafe",
       "college": "digby-stuart",
       "description": "The Students' Union-run café in Digby Square, built from recycled shipping containers, and the main vegan outlet on campus.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2741,7 +2510,6 @@
       "kind": "restaurant",
       "college": "froebel",
       "description": "A diner serving hot food and snacks, a salad bar and rotating dishes cooked to order such as curries and Thai food.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2792,7 +2560,6 @@
       "kind": "cafe",
       "college": "southlands",
       "description": "The Quad in Southlands serves piri-piri chicken and hot food.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2831,7 +2598,6 @@
       "kind": "cafe",
       "college": "digby-stuart",
       "description": "A café inside the University Library.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2874,7 +2640,6 @@
       "kind": "cafe",
       "college": "digby-stuart",
       "description": "A café shown on the official campus map. Its name has not been confirmed yet.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2915,7 +2680,6 @@
       "kind": "cafe",
       "college": "froebel",
       "description": "A café shown on the official campus map. Its name has not been confirmed yet.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2957,7 +2721,6 @@
       "kind": "bar",
       "college": "froebel",
       "description": "The University's main social hub, with a fully stocked bar, food, a daily Pub Grub menu and events such as karaoke, open mic and DJ slots.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -3008,7 +2771,6 @@
       "kind": "shop",
       "college": "digby-stuart",
       "description": "The student shop just off Digby Square, selling food to cook in halls, sandwiches, hot snacks, confectionery and student essentials.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -3061,7 +2823,6 @@
       "kind": "entrance",
       "college": null,
       "description": "The University's main entrance on Roehampton Lane; buses stop outside and Open Day parking permits are issued here.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -3107,7 +2868,6 @@
       "kind": "entrance",
       "college": null,
       "description": "A pedestrian entrance by Southlands College.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -3145,7 +2905,6 @@
       "kind": "entrance",
       "college": null,
       "description": "A pedestrian entrance by Digby Stuart College.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -3183,7 +2942,6 @@
       "kind": "entrance",
       "college": null,
       "description": "Entrance from Clarence Lane",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -3212,6 +2970,38 @@
       ]
     },
     {
+      "id": "gate-froebel",
+      "code": "",
+      "name": "Froebel Gate",
+      "aliases": [],
+      "roomCodePrefixes": [],
+      "category": "entrance",
+      "kind": "entrance",
+      "college": null,
+      "description": "A gate from Roehampton Lane, near its corner with Clarence Lane.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.2436672,
+        51.4543174
+      ],
+      "positionSource": "osm-node",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/node/2652085282",
+          "title": "OpenStreetMap: Froebel Gate (barrier=gate)",
+          "checked": "2026-10-20"
+        }
+      ]
+    },
+    {
       "id": "coexist-cafe",
       "code": "",
       "name": "The Coexist Café",
@@ -3225,7 +3015,6 @@
       "kind": "cafe",
       "college": "digby-stuart",
       "description": "A chaplaincy social space in Fincham Building room Fi009, open to all for relaxing, heating food, making a drink and meeting people.",
-      "hours": null,
       "lastVerified": null,
       "status": "confirmed",
       "position": [

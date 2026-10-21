@@ -3,8 +3,6 @@ export type Category = 'building' | 'food' | 'sport' | 'entrance';
 export type College = 'digby-stuart' | 'froebel' | 'southlands' | null;
 export type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
-export type Hours = Partial<Record<Day, [string, string][]>> & { notes?: string };
-
 export interface Place {
   id: string;
   code: string;
@@ -20,7 +18,6 @@ export interface Place {
   positionAccuracyM: number;
   entrance: LngLat | null;
   footprintId: string | null;
-  hours: Hours | null;
   photo: string | null;
   lastVerified: string | null;
   status: 'confirmed' | 'pending-legend';

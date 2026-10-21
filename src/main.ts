@@ -9,7 +9,7 @@ import { matchingGroups, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
 import { avatarSvg } from './avatar';
 import { Router, type Route } from './route';
-import { londonNow, openState, todayText } from './hours';
+import { isOpenNow, openState, refreshLiveHours, resolveHours, weekRows } from './hours';
 import { initAnalytics, track } from './analytics';
 import { FILTERS, GROUPS, PRIORITY, chipOf, filterLabel, groupLabel, groupOf, passesFilter, type Filter, type GroupId } from './categories';
 import type { LngLat, Place } from './types';
@@ -233,13 +233,19 @@ async function main() {
     return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
   })();
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
-  map?.jumpTo({ center: campusCenter, zoom: homeZoom() });
+  // The home view faces north-east, like the university's own campus map
+  const HOME = { bearing: 28, pitch: 45 };
+  map?.jumpTo({ center: campusCenter, zoom: homeZoom(), bearing: HOME.bearing });
   // Every deliberate camera move goes through here: live GPS following waits for it to finish
   // instead of cutting it short (MapLibre's easeTo stops whatever move is running).
   let camBusyUntil = 0;
   const camMove = (opts: EaseToOptions) => { camBusyUntil = Date.now() + (opts.duration ?? 0) + 80; map?.easeTo(opts); };
-  // the overview frames every campus building (its footprint's corners), not just the pins
+  // the home view frames the campus itself: its wall and gates, and every campus building (its
+  // footprint's corners). The park to the west and the houses across the road are left out.
   const campusPoints: LngLat[] = places.filter((p) => p.category !== 'entrance').map((p) => p.position);
+  for (const f of walls.features) {
+    if ((f.properties?.part === 'wall' || f.properties?.part === 'gate') && f.geometry.type === 'LineString') campusPoints.push(...(f.geometry.coordinates as LngLat[]));
+  }
   for (const f of campus.features) {
     if (f.properties?.layer !== 'building' || f.properties?.campus === false || f.geometry.type !== 'Polygon') continue;
     const ring = f.geometry.coordinates[0] as LngLat[];
@@ -259,7 +265,11 @@ async function main() {
   let filter: Filter = 'all';
   // saved places live on this phone only
   const saved = new Set<string>((() => { try { return JSON.parse(store.get('roam.saved') ?? '[]') as string[]; } catch { return []; } })().filter((id) => byId.has(id)));
-  const passes = (p: Place) => (filter === 'saved' ? saved.has(p.id) : passesFilter(filter, groupOf(p)));
+  // "Open now" (Food and Study only): places without listed hours can't be shown as open, so they drop out
+  let openOnly = false;
+  const openApplies = () => chipOf(filter) === 'food' || chipOf(filter) === 'study';
+  const inFilter = (p: Place) => (filter === 'saved' ? saved.has(p.id) : passesFilter(filter, groupOf(p)));
+  const passes = (p: Place) => inFilter(p) && (!openOnly || !openApplies() || isOpenNow(p.id));
 
   // ---------- markers ----------
   type M = { p: Place; group: GroupId; marker: maplibregl.Marker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; gate: boolean };
@@ -435,6 +445,8 @@ async function main() {
   requestAnimationFrame(chipEdges);
   function setFilter(f: Filter) {
     filter = f;
+    $('#open-now').hidden = !openApplies();
+    if (!openApplies()) setOpenOnly(false);
     const chip = chipOf(f);
     $$('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.filter === chip)));
     $(`.chip[data-filter="${chip}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: ms(1) ? 'smooth' : 'auto' });
@@ -442,6 +454,21 @@ async function main() {
     if (!$('#list').hidden) renderList();
     if (input.value) showResults();
   }
+  const openToggle = $('#open-toggle');
+  function setOpenOnly(on: boolean) {
+    openOnly = on;
+    openToggle.setAttribute('aria-checked', String(on));
+  }
+  openToggle.addEventListener('click', () => {
+    setOpenOnly(!openOnly);
+    layoutMarkers();
+    if (!$('#list').hidden) renderList();
+    if (input.value) showResults();
+    if (!openOnly || places.some(passes)) return;
+    toast(places.some((p) => inFilter(p) && resolveHours(p.id))
+      ? 'Nothing here with listed hours is open right now.'
+      : "None of these places have listed hours yet, so none can show as open.", 5000);
+  });
   chips.addEventListener('click', (e) => {
     const c = (e.target as HTMLElement).closest<HTMLElement>('.chip');
     // tapping the active chip again resets to All
@@ -488,14 +515,38 @@ async function main() {
     dimBtn.setAttribute('aria-pressed', String(!flat));
     dimBtn.setAttribute('aria-label', flat ? 'Switch to a 3D map' : 'Switch to a flat 2D map');
   });
-  // Phones are tall and the campus runs south-west to north-east, so the phone overview faces
-  // north-east (like the official campus map, turned to portrait). The compass button resets to north.
-  const PHONE_BEARING = 28;
+  /**
+   * Where the home view may draw: clear of everything floating over the map. Desktop: the search
+   * column (and the welcome card under it) on the left, the controls on the right. Phone: the
+   * search and chips on top, the welcome card (or the Key and Find me row) at the bottom.
+   */
+  function homeBox(W: number, H: number) {
+    const r = (el: HTMLElement) => (el.hidden ? null : el.getBoundingClientRect());
+    const hello = r(welcome);
+    // pins stand about 40 px above their point; a little air on every side
+    if (isDesktop()) {
+      const left = Math.max($('.top').getBoundingClientRect().right, hello?.right ?? 0) + 24;
+      const right = Math.min(...[$('.controls'), keyBtn].map(r).filter((x) => x?.width).map((x) => x!.left)) - 24;
+      return { l: left, r: Math.min(right, W - 24), t: 48, b: H - 20 };
+    }
+    const keyRow = r(keyBtn);
+    const bottom = hello ? hello.top : keyRow?.width ? keyRow.top : H;
+    return { l: 16, r: W - 16, t: $('#chips').getBoundingClientRect().bottom + 36, b: Math.min(bottom, H) - 12 };
+  }
+  // The home view is worked out once per screen size and then reused, so the ⛶ button brings back
+  // exactly the opening view (closing the welcome card doesn't move the map either).
+  let home: { size: string; center: maplibregl.LngLat; zoom: number } | null = null;
   function showWholeCampus(duration = 500) {
     if (!map) return;
-    const phone = !isDesktop();
-    // a little more top-down than before, so paths and entrances read clearly
-    fitPoints(campusPoints, { pitch: tilt(phone ? 38 : 45), bearing: phone ? PHONE_BEARING : 0, maxZoom: 17, fullWidth: phone, duration });
+    const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
+    const size = `${W}x${H}`;
+    if (home?.size === size) {
+      setFollowing(false);
+      camMove({ center: home.center, zoom: home.zoom, pitch: tilt(HOME.pitch), bearing: HOME.bearing, padding: { top: 0, bottom: 0, left: 0, right: 0 }, duration: ms(duration) });
+      return;
+    }
+    const end = fitPoints(campusPoints, { pitch: tilt(HOME.pitch), bearing: HOME.bearing, maxZoom: 17.5, box: homeBox(W, H), duration });
+    if (end && !flat) home = { size, center: end.center, zoom: end.zoom };
   }
   if (!linkedId) map?.once('load', () => showWholeCampus(0));
   const northIcon = $('#north svg');
@@ -760,36 +811,43 @@ async function main() {
    * Fit points into the free part of the screen. Projects them at the target tilt, so tilted 3D
    * views fit too (fitBounds ignores the tilt, which pushed routes behind the panel on phones).
    */
-  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; fullWidth?: boolean; duration?: number } = {}) {
-    if (!map || !points.length) return;
+  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number }; duration?: number } = {}) {
+    if (!map || !points.length) return null;
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
     const a = freeArea();
     // pins stand about 20 px either side of their point and 40 px above it
-    // full width (phone overview): keep clear of the Key button and the control column's lower half
-    const box = opts.fullWidth
-      ? { l: 22, r: W - 22, t: a.top + 24, b: Math.min(a.bottom, H) - 60 }
-      : { l: a.left + 20, r: Math.min(a.right, W) - 20, t: a.top + 30, b: Math.min(a.bottom, H) - 8 };
+    const box = opts.box ?? { l: a.left + 20, r: Math.min(a.right, W) - 20, t: a.top + 30, b: Math.min(a.bottom, H) - 8 };
     const zero = { top: 0, bottom: 0, left: 0, right: 0 };
     const before = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), padding: map.getPadding() };
     const b = new maplibregl.LngLatBounds(points[0], points[0]);
     for (const p of points) b.extend(p);
     map.jumpTo({ center: b.getCenter(), zoom: opts.maxZoom ?? 18, pitch: opts.pitch ?? map.getPitch(), bearing: opts.bearing ?? map.getBearing(), padding: zero });
-    for (let i = 0; i < 40; i++) {
-      const xy = points.map((p) => map!.project(p));
-      const xs = xy.map((q) => q.x), ys = xy.map((q) => q.y);
-      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-      const dx = (minX + maxX) / 2 - (box.l + box.r) / 2, dy = (minY + maxY) / 2 - (box.t + box.b) / 2;
-      map.jumpTo({ center: map.unproject([W / 2 + dx, H / 2 + dy]) });
-      const fits = maxX - minX <= box.r - box.l && maxY - minY <= box.b - box.t;
-      const centred = Math.abs(dx) < 2 && Math.abs(dy) < 2;
-      if (fits && centred) break;
-      if (!fits && map.getZoom() > map.getMinZoom()) map.jumpTo({ zoom: Math.max(map.getMinZoom(), map.getZoom() - 0.15) });
-      else if (centred) break;
+    /** centre the points in the box at this zoom (a few steps: the tilt skews it); true if they fit */
+    const fitsAt = (zoom: number) => {
+      map!.jumpTo({ zoom });
+      let fits = false;
+      for (let i = 0; i < 8; i++) {
+        const xy = points.map((p) => map!.project(p));
+        const xs = xy.map((q) => q.x), ys = xy.map((q) => q.y);
+        const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+        const dx = (minX + maxX) / 2 - (box.l + box.r) / 2, dy = (minY + maxY) / 2 - (box.t + box.b) / 2;
+        fits = maxX - minX <= box.r - box.l && maxY - minY <= box.b - box.t;
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) break;
+        map!.jumpTo({ center: map!.unproject([W / 2 + dx, H / 2 + dy]) });
+      }
+      return fits;
+    };
+    // the closest zoom that still fits, to about 1%
+    let lo = map.getMinZoom(), hi = opts.maxZoom ?? 18;
+    if (!fitsAt(hi)) {
+      while (hi - lo > 0.01) { const mid = (lo + hi) / 2; if (fitsAt(mid)) lo = mid; else hi = mid; }
+      fitsAt(lo);
     }
     const after = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
     map.jumpTo(before);
     setFollowing(false); // the view goes somewhere else; the locate button follows you again
     camMove({ ...after, padding: zero, duration: ms(opts.duration ?? 600) });
+    return after;
   }
   const pad = (top: number, bottom: number, left: number, right: number) => {
     const c = (v: number) => Math.max(0, Math.round(v));
@@ -811,20 +869,40 @@ async function main() {
     });
   }
 
+  /** open or closed now, and where the hours come from (src/data/hours.ts). Nothing at all without hours. */
   function hoursBlock(p: Place): string {
-    if (!p.hours) return '';
-    const s = openState(p.hours, londonNow());
+    const h = resolveHours(p.id);
+    if (!h) return '';
+    const s = openState(h);
     const [cls, text] =
-      s.kind === 'open' ? ['open', s.until === '24:00' ? 'Open 24 hours' : `Open now · until ${s.until}`]
-      : s.kind === 'opens-later' ? ['closed', `Closed · opens ${s.at}`]
-      : s.kind === 'closed-today' ? ['closed', 'Closed today']
-      : ['unknown', "Today's hours not published"];
-    const today = text === 'Open 24 hours' ? '' : `<span class="today">${todayText(p.hours)}</span>`;
-    return `<div class="hours"><span class="badge ${cls}">${text}</span>${today}</div>
-      ${p.hours.notes ? `<p class="notes">${esc(p.hours.notes)}</p>` : ''}`;
+      s.kind === 'open' ? (s.closes === null ? ['open', 'Open 24 hours'] : [s.soon ? 'soon' : 'open', `${s.soon ? 'Closing soon' : 'Open now'} · closes ${s.closes}`])
+      : s.kind === 'closed' ? ['closed', s.opens ? `Closed · opens ${s.opens}` : 'Closed']
+      : s.kind === 'stale' ? ['unknown', 'Hours may have changed']
+      : ['unknown', "Today's hours not listed"];
+    return `<div class="hours-wrap"><div class="hours"><span class="badge ${cls}">${text}</span></div>
+      <p class="hours-src">Hours checked ${fmtDate(h.checked)} · Source: <a href="${esc(h.source.url)}" target="_blank" rel="noopener">${esc(h.source.name)}</a></p></div>`;
   }
-  // places where people would expect opening hours; for these we say plainly when we don't have them
-  const expectsHours = (p: Place) => ['food', 'sport', 'library', 'services'].includes(groupOf(p));
+  /** the coming week, under "View details" (not for hours that may have changed) */
+  function weekBlock(p: Place): string {
+    const h = resolveHours(p.id);
+    if (!h || h.stale) return '';
+    return `<div class="week-wrap"><table class="week" aria-label="Opening hours this week">${weekRows(h).map(([d, t], i) => `<tr${i ? '' : ' class="is-today"'}><th scope="row">${d}</th><td>${t}</td></tr>`).join('')}</table>
+      ${h.notes ? `<p class="notes">${esc(h.notes)}</p>` : ''}</div>`;
+  }
+  /** new live hours, or a minute gone by: update the open card and the "Open now" filter in place */
+  function refreshHours() {
+    const wrap = panelBody.querySelector('.hours-wrap');
+    if (current && wrap) {
+      wrap.outerHTML = hoursBlock(current) || '<div class="hours-wrap" hidden></div>';
+      const week = panelBody.querySelector('.week-wrap');
+      if (week) week.outerHTML = weekBlock(current) || '<div class="week-wrap" hidden></div>';
+    }
+    if (openOnly && openApplies()) { layoutMarkers(); if (!$('#list').hidden) renderList(); }
+  }
+  setInterval(() => { if (!document.hidden) refreshHours(); }, 60000);
+  const fetchLive = () => refreshLiveHours().then((changed) => changed && refreshHours());
+  fetchLive();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) fetchLive(); });
 
   /** "About 4 min walk from you", only from a fresh, decent fix on campus and a real path route. */
   function walkHint(p: Place): string {
@@ -856,7 +934,7 @@ async function main() {
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
       </div>
       ${p.description ? `<p class="desc${expanded ? '' : ' clamp'}">${esc(p.description)}</p>` : ''}
-      ${hoursBlock(p)}
+      ${hoursBlock(p) || '<div class="hours-wrap" hidden></div>'}
       ${walk ? `<p class="walk-hint">${icons.walk}<span>${walk}</span></p>` : ''}
       <div class="actions">
         <button class="btn primary dir">${icons.directions}<span>Take me there</span></button>
@@ -865,7 +943,7 @@ async function main() {
       <div id="details" class="details"${expanded ? '' : ' hidden'}>
         ${p.photo ? `<img class="photo" src="/${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy" decoding="async" width="1200" height="675">` : ''}
         ${p.services?.length ? `<ul class="services" aria-label="Services">${p.services.map((s, i) => `<li${i >= 4 ? ' hidden' : ''}>${esc(s)}</li>`).join('')}${p.services.length > 4 ? `<li><button class="more" aria-label="Show ${p.services.length - 4} more services">+${p.services.length - 4} more</button></li>` : ''}</ul>` : ''}
-        ${!p.hours && expectsHours(p) ? `<p class="detail-row">${icons.clock}<span>Opening hours aren't listed here yet. Check the official page.</span></p>` : ''}
+        ${weekBlock(p) || '<div class="week-wrap" hidden></div>'}
         ${p.accessibility ? `<p class="access"><a href="${esc(p.accessibility.url)}" target="_blank" rel="noopener">${icons.accessible}<span>${esc(p.accessibility.summary)}</span></a></p>` : ''}
         <div class="detail-links">
           <button class="btn ghost share" aria-label="Share a link to ${esc(p.name)}">${icons.share}<span>Share</span></button>
@@ -946,10 +1024,13 @@ async function main() {
   }
   // the desktop side card and list start just under the search + chips block, whatever its height
   // (measured at the chips; while search suggestions hide them the last value stays)
-  new ResizeObserver(() => {
+  const topObserver = new ResizeObserver(() => {
     const r = $('#chips').getBoundingClientRect();
-    if (r.height) document.documentElement.style.setProperty('--top-b', `${Math.round(r.bottom)}px`);
-  }).observe($('#chips'));
+    const o = $('#open-now').getBoundingClientRect();
+    if (r.height) document.documentElement.style.setProperty('--top-b', `${Math.round(Math.max(r.bottom, o.bottom))}px`);
+  });
+  topObserver.observe($('#chips'));
+  topObserver.observe($('#open-now'));
   // keep the floating controls above the sheet on phones
   new ResizeObserver(() => {
     const h = panel.hidden ? 0 : panel.offsetHeight;

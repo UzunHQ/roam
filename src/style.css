@@ -18,6 +18,8 @@
   --closed: #b3372d;
   --closed-bg: #fde3df;
   --unknown-bg: #ece8f3;
+  --soon: #8a5300;
+  --soon-bg: #fdecc8;
   /* category accents: icon + colour together */
   --g-academic: #3f7fe0;
   --g-library: #7b5fd6;
@@ -60,6 +62,8 @@
   --closed: #ffa59a;
   --closed-bg: #4a2b2a;
   --unknown-bg: #3b3a4a;
+  --soon: #ffcf7a;
+  --soon-bg: #4a3a1c;
   --roof-digby: #5689b0;
   --roof-froebel: #b39545;
   --roof-southlands: #7666a8;
@@ -166,7 +170,22 @@ svg { display: block; flex: none; }
   mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 44px), transparent);
 }
 /* search suggestions open under the search bar: keep the chips out of the way */
-.top:has(#results:not([hidden])) .chips { display: none; }
+.top:has(#results:not([hidden])) .chips, .top:has(#results:not([hidden])) .open-now { display: none; }
+/* "Open now", under the chips while Food or Study is chosen */
+.open-now { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
+.open-toggle {
+  flex: none; min-height: 40px; padding: 0 12px 0 6px; display: inline-flex; align-items: center; gap: 8px;
+  border: 0; border-radius: 18px; background: var(--surface); box-shadow: 0 2px 0 rgba(36, 35, 46, 0.1);
+  font-size: 14px; font-weight: 700;
+}
+.knob { position: relative; width: 34px; height: 20px; border-radius: 10px; background: var(--line); transition: background-color 0.15s; }
+.knob::after {
+  content: ""; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); transition: transform 0.15s var(--ease);
+}
+.open-toggle[aria-checked="true"] .knob { background: var(--open); }
+.open-toggle[aria-checked="true"] .knob::after { transform: translateX(14px); }
+.open-hint { padding: 3px 8px; border-radius: 8px; background: color-mix(in srgb, var(--surface) 85%, transparent); color: var(--muted); font-size: 12.5px; font-weight: 650; }
 .chip {
   flex: none; min-height: 44px; padding: 0 13px 0 8px; display: inline-flex; align-items: center; gap: 6px;
   border: 0; border-radius: 22px; background: var(--surface); box-shadow: 0 2px 0 rgba(36, 35, 46, 0.1);
@@ -472,7 +491,13 @@ svg { display: block; flex: none; }
 .badge.open { background: var(--open-bg); color: var(--open); }
 .badge.closed { background: var(--closed-bg); color: var(--closed); }
 .badge.unknown { background: var(--unknown-bg); color: var(--muted); }
-.today { color: var(--muted); font-size: 14px; font-weight: 600; }
+.badge.soon { background: var(--soon-bg); color: var(--soon); }
+.hours-src { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; }
+.hours-src a { font-weight: 700; }
+.week { margin-top: 12px; border-collapse: collapse; font-size: 14px; }
+.week th { padding: 2px 16px 2px 0; text-align: left; font-weight: 650; color: var(--muted); }
+.week td { padding: 2px 0; font-variant-numeric: tabular-nums; }
+.week .is-today th, .week .is-today td { color: var(--text); font-weight: 750; }
 .notes { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 .access a { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 14px; font-weight: 650; }
 .access svg { width: 20px; height: 20px; }

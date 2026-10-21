@@ -612,7 +612,7 @@ export function createMap(opts: {
     maxBounds: [w - 0.006, s - 0.004, e + 0.006, n + 0.004],
     pitch: 55,
     maxPitch: 65,
-    minZoom: 15,
+    minZoom: 14.5, // the whole campus fits a phone held upright at about 14.9
     maxZoom: 19.5,
     attributionControl: false,
     dragRotate: true,

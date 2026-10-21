@@ -31,7 +31,8 @@ src/config.ts          author, LinkedIn/GitHub, report e-mail, analytics
 src/main.ts            UI: markers, sheet, search, filters, location, deep links
 src/map.ts             MapLibre style: extrusions, roofs, low-poly trees, colours
 src/search.ts          fuzzy search (names, codes, aliases, room codes)
-src/hours.ts           open/closed in Europe/London time
+src/data/hours.ts      opening hours: one entry per place and period, with source and check date
+src/hours.ts           open/closed in Europe/London time, live Library hours from LibCal
 src/route.ts           walking directions: shortest route over data/paths.json
 src/categories.ts      user-facing categories (derived from category + kind)
 public/                manifest, icons, photos
@@ -48,7 +49,6 @@ Each place keeps the shape below. Only change what you've checked.
 | `roomCodePrefixes` | e.g. `["Ma"]`, so timetable room `Ma101` opens Mandela Building. Never guess these. |
 | `position` | `[lng, lat]`, the building point (use the picker) |
 | `entrance` | `[lng, lat]` of the door. "Show me the way" walks here. Until it's set, it walks to `position`. |
-| `hours` | `{ "mon": [["08:00","18:00"]], "sat": [], "notes": "…" }`. A missing day shows "hours not listed". `[]` means closed. Ranges past midnight work (`["20:00","02:00"]`). Never invent hours. |
 | `lastVerified` | `"2026-10-20"`. Shows as "Last checked 20 Oct 2026" on the card. |
 | `photo` | `"photos/<id>.webp"` (see below) |
 | `footprintId` | filled in by the build script; you can override it with an id from the picker |
@@ -69,6 +69,14 @@ npm run build:campus -- --cache  # re-snap using the last download
 After rebuilding, also run `npm run build:paths` to refresh the walking graph, and `npm run build:walls` to refresh the campus wall. The wall is one continuous line: the university boundary along Roehampton Lane, then the `barrier=wall` ways along Clarence Lane. It opens only at entrances: a garden gate at each named one (the entrances in `places.json` and named OSM gates), a closed iron gate at other OSM gates, and a doorway at `entrance=*` doors on the line. Where a building stands on the line, the wall runs round its street side. The script prints every opening and why it is there.
 
 The script prints each match. Anything it couldn't match by name goes to `data/unmatched.txt`. Note that it overwrites `footprintId` values you set by hand. The app never calls Overpass itself.
+
+## Opening hours
+
+All hours live in `src/data/hours.ts`: weekly hours, the period they apply to (`from`/`to`), the source and the date you checked them. Only use the official source: LibCal for the Library, a Nest screenshot for cafés and everything else. Never Google or AI summaries, never a guess. A place with no entry shows no hours at all.
+
+- The Library is read live from LibCal's public hours feed (cached for 6 hours on the phone). Its entry in `hours.ts` is only the fallback when LibCal can't be reached.
+- Typed-in hours stop showing "Open now" once they were checked more than 30 days ago or their period is over: the card says "Hours may have changed" instead.
+- The "Open now" switch (Food and Study) only counts places with listed hours.
 
 ## Add photos
 
