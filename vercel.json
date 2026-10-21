@@ -7,7 +7,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://cloud.umami.is; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://roehampton.libcal.com https://cloud.umami.is https://api-gateway.umami.dev; worker-src 'self' blob:; child-src blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+          "value": "default-src 'self'; script-src 'self' https://cloud.umami.is; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://roehampton.libcal.com https://cloud.umami.is https://api-gateway.umami.dev https://gateway.umami.is; worker-src 'self' blob:; child-src blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
         },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },

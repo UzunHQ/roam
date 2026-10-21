@@ -18,7 +18,7 @@ export const config = {
   // Umami Cloud: https://cloud.umami.is/script.js
   analytics: {
     umamiScript: 'https://cloud.umami.is/script.js',
-    umamiWebsiteId: '',
+    umamiWebsiteId: '86225c01-6aeb-4f62-8c81-fca0638d6e1b',
   },
 
   walkingSpeedMps: 1.3, // ~4.7 km/h
