@@ -14,6 +14,8 @@ import type { Day } from '../types';
  *   no end date: then only the 30-day rule below applies.
  * checked: the day you read them. Once it is more than 30 days ago, or `to` has passed, the card
  *   says "Hours may have changed" instead of "Open now".
+ * unknown: what the card says on a day with no listed hours ("Check with the gym"). Such a day is
+ *   never "Open now". An entry with an empty `weekly` says only this.
  */
 export interface HoursEntry {
   place: string; // id in data/places.json
@@ -21,12 +23,13 @@ export interface HoursEntry {
   from: string; // YYYY-MM-DD
   to?: string; // YYYY-MM-DD
   weekly: Partial<Record<Day, [string, string][]>>;
-  source: { name: string; url: string };
+  source?: { name: string; url: string }; // left out when there is no verified source at all
   checked: string; // YYYY-MM-DD
   notes?: string;
+  unknown?: string;
 }
 
-const LIBCAL = { name: 'LibCal', url: 'https://roehampton.libcal.com/hours' };
+const LIBCAL = { name: 'LibCal', url: 'https://roehampton.libcal.com/hours/' };
 const WEEKDAYS = (open: string, close: string) => Object.fromEntries((['mon', 'tue', 'wed', 'thu', 'fri'] as const).map((d) => [d, [[open, close]]])) as HoursEntry['weekly'];
 const EVERY_DAY = (open: string, close: string) => Object.fromEntries((['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const).map((d) => [d, [[open, close]]])) as HoursEntry['weekly'];
 
@@ -34,23 +37,19 @@ const EVERY_DAY = (open: string, close: string) => Object.fromEntries((['mon', '
  * Places whose hours are read live on the phone. The entries below are only the fallback for
  * when LibCal can't be reached (and nothing was saved from an earlier visit).
  */
-export const LIVE: Record<string, { iid: number; lid: number; source: HoursEntry['source'] }> = {
+export const LIVE: Record<string, { iid: number; lid: number; source: NonNullable<HoursEntry['source']> }> = {
   library: { iid: 4033, lid: 6082, source: LIBCAL },
 };
 
 export const HOURS: HoursEntry[] = [
   {
     place: 'library',
-    period: 'Week of 19 Oct 2026',
-    from: '2026-10-19',
-    to: '2026-10-25',
-    weekly: {
-      mon: [['08:00', '23:59']], tue: [['08:00', '23:59']], wed: [['08:00', '23:59']], thu: [['08:00', '23:59']], fri: [['08:00', '23:59']],
-      sat: [['10:00', '16:00']], sun: [['10:00', '16:00']],
-    },
+    period: 'Term time',
+    from: '2026-10-21',
+    weekly: { ...WEEKDAYS('08:00', '23:59'), sat: [['10:00', '16:00']], sun: [['10:00', '16:00']] },
     source: LIBCAL,
-    checked: '2026-10-20',
-    notes: "Outside these times, the 24-hour study space is in Queen's Building.",
+    checked: '2026-10-21',
+    notes: "Term-time hours. Outside these times, the 24-hour study space is in Queen's Building.",
   },
   {
     place: 'elm-grove',
@@ -82,10 +81,33 @@ export const HOURS: HoursEntry[] = [
   {
     place: 'gym',
     period: 'All year',
-    from: '2026-10-20',
+    from: '2026-10-21',
     weekly: WEEKDAYS('06:00', '22:00'), // weekends not listed
     source: { name: 'Lifestyle Fitness', url: 'https://www.lifestylefitness.co.uk/club/roehampton' },
-    checked: '2026-10-20',
-    notes: 'Weekend hours are not listed on the club page.',
+    checked: '2026-10-21',
+    unknown: 'Check with the gym',
   },
+  {
+    place: 'union-bar',
+    period: 'All year',
+    from: '2026-10-21',
+    weekly: { ...WEEKDAYS('17:00', '23:00'), sat: [], sun: [] },
+    source: { name: "Students' Union", url: 'https://www.roehamptonstudent.com/' },
+    checked: '2026-10-21',
+    notes: 'Event nights may run later',
+  },
+  {
+    place: 'hive-cafe',
+    period: 'Term time',
+    from: '2026-10-21',
+    weekly: WEEKDAYS('08:00', '16:00'), // weekends not listed
+    source: { name: 'The Hive (roehamptonstudent.com)', url: 'https://www.roehamptonstudent.com/hive/' },
+    checked: '2026-10-21',
+    notes: 'Term-time · summer hours shorter',
+    unknown: 'Weekend hours not listed. Check before you go.',
+  },
+  // no verified hours: the card sends people to Nest
+  ...['digby-den-diner', 'froebel-diner'].map((place): HoursEntry => ({
+    place, period: 'All year', from: '2026-10-21', weekly: {}, checked: '2026-10-21', unknown: 'Hours: check on Nest',
+  })),
 ];

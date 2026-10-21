@@ -878,14 +878,15 @@ async function main() {
       s.kind === 'open' ? (s.closes === null ? ['open', 'Open 24 hours'] : [s.soon ? 'soon' : 'open', `${s.soon ? 'Closing soon' : 'Open now'} · closes ${s.closes}`])
       : s.kind === 'closed' ? ['closed', s.opens ? `Closed · opens ${s.opens}` : 'Closed']
       : s.kind === 'stale' ? ['unknown', 'Hours may have changed']
-      : ['unknown', "Today's hours not listed"];
-    return `<div class="hours-wrap"><div class="hours"><span class="badge ${cls}">${text}</span></div>
-      <p class="hours-src">Hours checked ${fmtDate(h.checked)} · Source: <a href="${esc(h.source.url)}" target="_blank" rel="noopener">${esc(h.source.name)}</a></p></div>`;
+      : ['unknown', h.unknown ?? "Today's hours not listed"];
+    const src = h.source ? ` · Source: <a href="${esc(h.source.url)}" target="_blank" rel="noopener">${esc(h.source.name)}</a>` : '';
+    return `<div class="hours-wrap"><div class="hours"><span class="badge ${cls}">${esc(text)}</span></div>
+      <p class="hours-src">Last checked: ${fmtDate(h.checked)}${src}</p></div>`;
   }
-  /** the coming week, under "View details" (not for hours that may have changed) */
+  /** the coming week, under "View details" (not for hours that may have changed, or none listed at all) */
   function weekBlock(p: Place): string {
     const h = resolveHours(p.id);
-    if (!h || h.stale) return '';
+    if (!h || h.stale || !weekRows(h).some(([, t]) => t !== (h.unknown ?? 'Not listed'))) return '';
     return `<div class="week-wrap"><table class="week" aria-label="Opening hours this week">${weekRows(h).map(([d, t], i) => `<tr${i ? '' : ' class="is-today"'}><th scope="row">${d}</th><td>${t}</td></tr>`).join('')}</table>
       ${h.notes ? `<p class="notes">${esc(h.notes)}</p>` : ''}</div>`;
   }

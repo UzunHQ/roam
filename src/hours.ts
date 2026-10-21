@@ -30,6 +30,7 @@ export interface Resolved {
   live: boolean;
   stale: boolean; // typed-in hours that are too old, or whose period is over
   notes?: string;
+  unknown?: string; // what to say on a day with no listed hours
 }
 
 // ---------- live hours (LibCal): fetched on the phone, saved for the next visit ----------
@@ -104,7 +105,7 @@ export function resolveHours(placeId: string, now = londonNow()): Resolved | nul
   if (l && l.days[now.date] !== undefined) {
     return {
       on: (d) => l.days[d] ?? undefined, source: LIVE[placeId].source, live: true, stale: false,
-      checked: londonNow(new Date(l.fetched)).date, notes: entries[0]?.notes,
+      checked: londonNow(new Date(l.fetched)).date, notes: entries[0]?.notes, unknown: entries[0]?.unknown,
     };
   }
   if (!entries.length) return null;
@@ -114,7 +115,7 @@ export function resolveHours(placeId: string, now = londonNow()): Resolved | nul
   const stale = !within(e, now.date) || dayNumber(now.date) - dayNumber(e.checked) > STALE_DAYS;
   return {
     on: (d) => (within(e, d) ? e.weekly[dayOf(d)] : undefined),
-    source: e.source, checked: e.checked, live: false, stale, notes: e.notes,
+    source: e.source, checked: e.checked, live: false, stale, notes: e.notes, unknown: e.unknown,
   };
 }
 
@@ -122,7 +123,7 @@ export function resolveHours(placeId: string, now = londonNow()): Resolved | nul
 export type OpenState =
   | { kind: 'open'; closes: string | null; soon: boolean } // closes null: open round the clock
   | { kind: 'closed'; opens: string | null } // "10:00" (today), "Mon 08:00", or null: not listed
-  | { kind: 'unlisted' } // no hours listed for today
+  | { kind: 'unknown' } // no hours listed for today: never counts as open
   | { kind: 'stale' }; // hours may have changed
 
 const SOON_MIN = 30;
@@ -146,7 +147,7 @@ export function openState(h: Resolved, now = londonNow()): OpenState {
     if (end - t >= 2 * 1440) return { kind: 'open', closes: null, soon: false };
     return { kind: 'open', closes: toHHMM(end % 1440), soon: end - t <= SOON_MIN };
   }
-  if (h.on(now.date) === undefined) return { kind: 'unlisted' };
+  if (h.on(now.date) === undefined) return { kind: 'unknown' };
   // the next opening, unless a day with no listed hours comes first
   for (let i = 0; i <= 7; i++) {
     const date = addDays(now.date, i);
@@ -157,7 +158,7 @@ export function openState(h: Resolved, now = londonNow()): OpenState {
   return { kind: 'closed', opens: null };
 }
 
-/** Only places with hours can be open: no hours (or out-of-date ones) never count. */
+/** Only places with hours can be open: unknown (or out-of-date) hours never count. */
 export function isOpenNow(placeId: string, now = londonNow()): boolean {
   const h = resolveHours(placeId, now);
   return !!h && openState(h, now).kind === 'open';
@@ -168,7 +169,7 @@ export function weekRows(h: Resolved, now = londonNow()): [string, string][] {
   return Array.from({ length: 7 }, (_, i) => {
     const date = addDays(now.date, i);
     const r = h.on(date);
-    const text = r === undefined ? 'Not listed' : !r.length ? 'Closed'
+    const text = r === undefined ? h.unknown ?? 'Not listed' : !r.length ? 'Closed'
       : r.some(([o, c]) => o === '00:00' && c === '24:00') ? 'Open 24 hours' : r.map(([o, c]) => `${o}–${c}`).join(', ');
     return [i === 0 ? 'Today' : DAY_NAME[dayOf(date)], text];
   });
