@@ -1,6 +1,11 @@
-import maplibregl, { type ExpressionSpecification as Expr, type Map as MLMap, type StyleSpecification } from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
+import { type ExpressionSpecification as Expr, type Map as MLMap, type StyleSpecification } from 'maplibre-gl';
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import type { LngLat } from './types';
 import { ROOFS, isPitched } from './roofs';
+
+// maplibre-gl 6 looks for its worker next to its own module, which Vite bundles away; point it at the emitted file.
+maplibregl.setWorkerUrl(workerUrl);
 
 export type Theme = 'light' | 'dark';
 
@@ -289,7 +294,7 @@ function updateWindows(map: MLMap) {
   const want = map.getZoom() >= WINDOW_ZOOM;
   const has = map.getPaintProperty('building-walls', 'fill-extrusion-pattern') != null;
   if (want === has) return;
-  map.setPaintProperty('building-walls', 'fill-extrusion-pattern', want ? ['case', ['coalesce', ['get', 'campus'], true], 'win', 'win-off'] : null);
+  map.setPaintProperty('building-walls', 'fill-extrusion-pattern', want ? ['case', ['coalesce', ['get', 'campus'], true], 'win', 'win-off'] : undefined);
 }
 
 /**
@@ -635,6 +640,7 @@ export function createMap(opts: {
   return map;
 }
 
+type PaintArgs = Parameters<MLMap['setPaintProperty']>;
 let currentTheme: Theme = 'light';
 export function applyTheme(map: MLMap, theme: Theme) {
   currentTheme = theme;
@@ -643,7 +649,7 @@ export function applyTheme(map: MLMap, theme: Theme) {
   const paints = themedPaint(PALETTE[theme]);
   for (const [layer, props] of Object.entries(paints)) {
     if (!map.getLayer(layer)) continue;
-    for (const [k, v] of Object.entries(props)) map.setPaintProperty(layer, k, v);
+    for (const [k, v] of Object.entries(props)) map.setPaintProperty(layer, k as PaintArgs[1], v as PaintArgs[2]);
   }
 }
 

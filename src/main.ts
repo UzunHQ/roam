@@ -1,6 +1,7 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
-import maplibregl, { type EaseToOptions, type Map as MLMap } from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
+import { type EaseToOptions, type Map as MLMap } from 'maplibre-gl';
 import { config } from './config';
 import { loadData } from './data';
 import { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, selectBuilding, setGeoJSON, setXray, type Theme } from './map';

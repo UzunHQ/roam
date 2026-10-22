@@ -1,7 +1,7 @@
 // Dev-only page (npm run dev -> /picker.html). Click the map -> [lng, lat] copied to the clipboard.
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
 import { campusUrl, placesUrl } from './data';
 import { createMap } from './map';
 import type { PlacesDoc } from './types';
