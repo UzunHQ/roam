@@ -4,7 +4,24 @@ import { config } from './config';
 type Umami = { track: (event: string, data?: Record<string, string | number>) => void };
 const umami = () => (window as unknown as { umami?: Umami }).umami;
 
+// ?notrack opts this browser out of Umami (its script honours umami.disabled), ?track opts back in.
+function applyTrackingParam() {
+  const url = new URL(location.href);
+  const optOut = url.searchParams.has('notrack');
+  if (!optOut && !url.searchParams.has('track')) return;
+  try {
+    if (optOut) localStorage.setItem('umami.disabled', '1');
+    else localStorage.removeItem('umami.disabled');
+  } catch {
+    /* storage blocked */
+  }
+  url.searchParams.delete('notrack');
+  url.searchParams.delete('track');
+  history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+}
+
 export function initAnalytics() {
+  applyTrackingParam();
   const { umamiScript, umamiWebsiteId } = config.analytics;
   if (!umamiWebsiteId || !import.meta.env.PROD) return;
   const s = document.createElement('script');
