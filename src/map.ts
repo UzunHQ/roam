@@ -629,8 +629,8 @@ export function createMap(opts: {
   map.touchPitch.disable();
   currentTheme = theme;
   // pattern images are drawn on demand, so the first frame never asks for a missing one
-  map.on('styleimagemissing', (e: { id: string }) => {
-    if (e.id === 'solar-cells' || e.id === 'win' || e.id === 'win-off') setWindowImages(map, PALETTE[currentTheme]);
+  map.setMissingStyleImageResolver((id) => {
+    if (id === 'solar-cells' || id === 'win' || id === 'win-off') setWindowImages(map, PALETTE[currentTheme]);
   });
   map.once('load', () => {
     setWindowImages(map, PALETTE[currentTheme]);
