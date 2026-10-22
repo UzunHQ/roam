@@ -6,3 +6,8 @@
 - Deploy'u `git push` ile yap. `vercel --prod` gibi CLI deploy'ları kullanma; canlı site her zaman `origin/main` ile aynı olmalı.
 - Her iş bitince: `npx tsc --noEmit` ve `npm run build` geçsin, sonra commit + push et. İş yerelde commit'siz ya da push'suz bırakılmaz.
 - Push'tan sonra Vercel deploy'unun READY olduğunu (`npx vercel ls roam-roehampton`) ve canlı sitenin yeni build'i sunduğunu kontrol et.
+
+## Canlı sitede test
+
+- Canlı siteyi (tarayıcı, Playwright, curl) test için açarken URL'ye her zaman `?notrack` ekle, örn. `https://roam-roehampton.vercel.app/?notrack` veya `/?place=library&notrack`. Böylece Umami istatistikleri test ziyaretleriyle kirlenmez.
+- Her yeni tarayıcı oturumu boş localStorage ile başlar; bu yüzden `?notrack`'i sadece ilk sayfada değil, her yeni oturumda/bağlamda açılan ilk URL'de kullan.
