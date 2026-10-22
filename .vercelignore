@@ -4,6 +4,5 @@ dist
 scripts/.overpass-cache.json
 scripts/.overpass-walls-cache.json
 photos-src
-.roam-backup
 PROMPT.md
 .env*
