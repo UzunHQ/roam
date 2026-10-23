@@ -881,53 +881,57 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   }
   console.log(`seating area: ${benches} benches`);
 
-  // a row of tall pines along the path from in front of Fincham, past Sir David Bell, Dorothy
-  // Buchanan and Howard, along the north of the lake, to the Hive Café (layer "pine", drawn in the
-  // app). The path is OSM's footways; the row runs on the side drawn on the 04:32 screenshot.
-  const PINE_PATH = [[48, 236], [37, 172], [35.5, 150], [38, 133], [51, 124], [64, 112], [67, 103], [69, 95], [69, 82], [70.3, 72], [82, 67], [112, 59]];
-  const PINE_SIDE = [[50, 233.7], [49.4, 208.1], [46.9, 169.8], [50.4, 144.2], [61.6, 122], [72.4, 100.6], [79.8, 78.4], [101.1, 67.1]];
+  // a row of trees along the path from in front of Fincham, past Sir David Bell, Dorothy Buchanan
+  // and Howard, along the north of the lake, to the Hive Café: the same big, dark trees as the wall
+  // along the golf course (belt). The path is OSM's footways; the row runs on the side drawn on the
+  // 04:32 screenshot.
+  const ROW_PATH = [[48, 236], [37, 172], [35.5, 150], [38, 133], [51, 124], [64, 112], [67, 103], [69, 95], [69, 82], [70.3, 72], [82, 67], [112, 59]];
+  const ROW_SIDE = [[50, 233.7], [49.4, 208.1], [46.9, 169.8], [50.4, 144.2], [61.6, 122], [72.4, 100.6], [79.8, 78.4], [101.1, 67.1]];
   const toLine = (m, line) => line.reduce((d, a, i) => (i < line.length - 1 ? Math.min(d, segDist(m, a, line[i + 1])) : d), Infinity);
-  let pines = 0;
-  const pineM = [];
-  for (let i = 0; i < PINE_PATH.length - 1; i++) {
-    const a = PINE_PATH[i], b = PINE_PATH[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const placePts = placesDoc.places.map((p) => toM(p.position));
+  const rowM = [];
+  let rowTrees = 0;
+  const rowTree = (m) => {
+    const size = Math.round((1.15 + ((rowTrees * 29) % 30) / 100) * 100) / 100; // 1.15-1.44
+    if (bldg.some((ring) => pointInRing(m, ring) || ring.some((q, k) => k < ring.length - 1 && segDist(m, q, ring[k + 1]) < 2.6 * size + 0.5))) return false;
+    if (near(roads.map((q) => q.pts), m, 5.5) || near(foot.map((q) => q.pts), m, 3)) return false;
+    if (water.some((r) => pointInRing(fromM(m), r) || distToRing(fromM(m), r) < 3)) return false;
+    if (rowM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 5)) return false;
+    if (placePts.some((q) => Math.hypot(q[0] - m[0], q[1] - m[1]) < 4)) return false; // not on a pin
+    features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size, belt: true }, geometry: { type: 'Point', coordinates: fromM(m) } });
+    rowM.push(m);
+    rowTrees++;
+    return true;
+  };
+  for (let i = 0; i < ROW_PATH.length - 1; i++) {
+    const a = ROW_PATH[i], b = ROW_PATH[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
     const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
     for (let d = 3; d < len; d += 6.5) {
       const p = [a[0] + u[0] * d, a[1] + u[1] * d];
-      const sides = [[-u[1], u[0]], [u[1], -u[0]]].sort((n1, n2) => toLine([p[0] + n1[0] * 5, p[1] + n1[1] * 5], PINE_SIDE) - toLine([p[0] + n2[0] * 5, p[1] + n2[1] * 5], PINE_SIDE));
-      for (const n of sides) {
-        const m = [p[0] + n[0] * 5, p[1] + n[1] * 5];
-        if (bldg.some((ring) => pointInRing(m, ring) || ring.some((q, k) => k < ring.length - 1 && segDist(m, q, ring[k + 1]) < 4))) continue;
-        if (near(roads.map((q) => q.pts), m, 5.5) || near(foot.map((q) => q.pts), m, 3)) continue;
-        if (water.some((r) => pointInRing(fromM(m), r) || distToRing(fromM(m), r) < 3)) continue;
-        if (pineM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 5)) continue;
-        features.push({ type: 'Feature', properties: { layer: 'pine', s: Math.round((1.05 + ((pines * 29) % 25) / 100) * 100) / 100 }, geometry: { type: 'Point', coordinates: fromM(m) } });
-        pineM.push(m);
-        pines++;
-        break;
-      }
+      const sides = [[-u[1], u[0]], [u[1], -u[0]]].sort((n1, n2) => toLine([p[0] + n1[0] * 5, p[1] + n1[1] * 5], ROW_SIDE) - toLine([p[0] + n2[0] * 5, p[1] + n2[1] * 5], ROW_SIDE));
+      for (const n of sides) if (rowTree([p[0] + n[0] * 5, p[1] + n[1] * 5])) break;
     }
   }
-  // ordinary trees standing where a pine now is make way
+  // and on from the Hive Café, south of it and along the west side of the path south-east, past the
+  // Growhampton chicken coop to the lawn just south of it (east of the coop is Old Court; where the
+  // garden wall stood before)
+  const ROW_ON = [[112, 59], [126, 60.5], [140, 62], [148.8, 63.5], [151.8, 53.5], [155.3, 37], [156.4, 31.5], [155.4, 24], [152, 11], [149, 3]];
+  for (let i = 0; i < ROW_ON.length - 1; i++) {
+    const a = ROW_ON[i], b = ROW_ON[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len], nrm = [-u[1], u[0]];
+    for (let d = 0; d < len; d += 6) {
+      const p = [a[0] + u[0] * d, a[1] + u[1] * d];
+      // on the line, or nudged up to 3 m either side if something is in the way
+      [0, 1.5, -1.5, 3, -3].some((o) => rowTree([p[0] + nrm[0] * o, p[1] + nrm[1] * o]));
+    }
+  }
+  // ordinary trees standing where a row tree now is make way
   for (let i = features.length - 1; i >= 0; i--) {
     const f = features[i];
-    if (f.properties.layer === 'tree' && pineM.some((t) => Math.hypot(...toM(f.geometry.coordinates).map((v, k) => v - t[k])) < 4)) features.splice(i, 1);
+    if (f.properties.layer === 'tree' && !f.properties.belt && rowM.some((t) => Math.hypot(...toM(f.geometry.coordinates).map((v, k) => v - t[k])) < 4)) features.splice(i, 1);
   }
-  console.log(`pine row: ${pines} pines`);
+  console.log(`tree row Fincham - Hive Café - chicken coop: ${rowTrees} trees`);
 
-  // a low garden wall from south of the Hive Café, along the west side of the path running south-east,
-  // to beside the Growhampton chicken coop (drawn in the app like the campus wall, at under half its
-  // height); no tree stands on it
-  const GARDEN_WALL = [[148.8, 63.5], [151.8, 53.5], [155.3, 37], [156.4, 31.5], [155.4, 24]];
-  features.push({ type: 'Feature', properties: { layer: 'gardenwall', scale: 0.45 }, geometry: { type: 'LineString', coordinates: GARDEN_WALL.map(fromM) } });
-  let offWall = 0;
-  for (let i = features.length - 1; i >= 0; i--) {
-    const f = features[i];
-    if (f.properties.layer !== 'tree' && f.properties.layer !== 'pine') continue;
-    const m = toM(f.geometry.coordinates);
-    if (GARDEN_WALL.some((a, k) => k < GARDEN_WALL.length - 1 && segDist(m, a, GARDEN_WALL[k + 1]) < 2.6 * (f.properties.s ?? 1) + 0.5)) { features.splice(i, 1); offWall++; }
-  }
-  console.log(`garden wall: ${offWall} trees cleared`);
 
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches

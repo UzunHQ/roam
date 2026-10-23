@@ -28,7 +28,7 @@ const PALETTE = {
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
     cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
     fencePost: '#3d5a49', fenceMesh: '#4a6656',
-    golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', benchWood: '#b98559', pines: ['#2f6b45', '#3a7a50'], pineTrunk: '#7a5a40', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
+    golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', benchWood: '#b98559', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -45,7 +45,7 @@ const PALETTE = {
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
     cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
     fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
-    golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', benchWood: '#8a6446', pines: ['#1f4a31', '#28583a'], pineTrunk: '#5a4232', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
+    golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', benchWood: '#8a6446', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
   },
 } as const;
 
@@ -118,7 +118,6 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'roof-solar-far': { 'fill-extrusion-color': p.solar },
     'building-ghost': { 'fill-extrusion-color': ['case', SELECTED, p.selected, roofColor(p)] },
     'tree-trunk': { 'fill-extrusion-color': p.trunk },
-    pine: { 'fill-extrusion-color': ['match', ['get', 'part'], 'trunk', p.pineTrunk, ['match', ['%', ['get', 'tier'], 2], 0, p.pines[0], p.pines[1]]] },
     'tree-leaf': { 'fill-extrusion-color': ['match', ['get', 'tone'], 0, p.tones[0], 1, p.tones[1], 2, p.tones[2], 3, p.tones[3], 4, p.tones[4], p.blossom] },
     accuracy: { 'fill-color': p.accuracy },
     'accuracy-line': { 'line-color': p.accuracy },
@@ -682,24 +681,6 @@ function fenceParts(lines: GeoJSON.Feature[]): { mesh: GeoJSON.FeatureCollection
 }
 
 /**
- * Low-poly pines (layer "pine"): a thin trunk under five stacked octagonal tiers that narrow towards
- * the top, like a cone, about 10 m tall at size 1 (taller than the round trees), in two dark greens.
- */
-function pineParts(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
-  const out: GeoJSON.Feature[] = [];
-  for (const f of points) {
-    const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
-    const s = Number(f.properties?.s) || 1, rot = (lng * 1e6) % 1;
-    const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
-    const oct = (r: number) => Array.from({ length: 9 }, (_, i) => { const a = rot + ((i % 8) * Math.PI) / 4; return [lng + (r * Math.cos(a)) / kx, lat + (r * Math.sin(a)) / ky]; });
-    out.push({ type: 'Feature', properties: { part: 'trunk', base: 0, top: 2.2 * s }, geometry: { type: 'Polygon', coordinates: [oct(0.32 * s)] } });
-    [[1.6, 3.6, 2.6], [3.2, 5.2, 2.1], [4.8, 6.8, 1.6], [6.4, 8.3, 1.1], [7.9, 10, 0.55]].forEach(([b, t, r], tier) =>
-      out.push({ type: 'Feature', properties: { part: 'tier', tier, base: b * s, top: t * s }, geometry: { type: 'Polygon', coordinates: [oct(r * s)] } }));
-  }
-  return { type: 'FeatureCollection', features: out };
-}
-
-/**
  * The campus wall along Roehampton Lane and Clarence Lane (data/walls.geojson), low-poly and
  * well under the buildings: a dark plinth, a course of warm stone blocks in three tones and a
  * light coping that overhangs both faces; a thicker pier every ~17 m; a pillar wherever it
@@ -833,15 +814,13 @@ function wallParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
       const r = [pointAt(d0, -half), ...inner.map((i) => mitre(i, -half)), pointAt(d1, -half)];
       return [...l, ...r.reverse()];
     };
-    // a low garden wall (scale < 1) is the same build, shorter and a little thinner
-    const hk = Number(pr.scale) || 1, t = 0.5 + hk / 2;
-    put(band(0, L, WALL.plinthHalf * t), 'plinth', 0, WALL.plinth * hk);
+    put(band(0, L, WALL.plinthHalf), 'plinth', 0, WALL.plinth);
     const nBlocks = Math.max(1, Math.round(L / WALL.block));
     for (let k = 0; k < nBlocks; k++) {
       const d0 = (L * k) / nBlocks, d1 = (L * (k + 1)) / nBlocks, mid = pointAt((d0 + d1) / 2, 0);
-      put(band(d0, d1, WALL.half * t), 'stone', WALL.plinth * hk, (WALL.plinth + WALL.course) * hk, { tone: tone(mid[0] + lng0 * 1e4, mid[1]) });
+      put(band(d0, d1, WALL.half), 'stone', WALL.plinth, WALL.plinth + WALL.course, { tone: tone(mid[0] + lng0 * 1e4, mid[1]) });
     }
-    put(band(0, L, WALL.copeHalf * t), 'cope', (WALL.plinth + WALL.course) * hk, WALL.cope * hk);
+    put(band(0, L, WALL.copeHalf), 'cope', WALL.plinth + WALL.course, WALL.cope);
   }
   return { type: 'FeatureCollection', features: out };
 }
@@ -889,12 +868,10 @@ export function createMap(opts: {
       roofparts: { type: 'geojson', data: roofParts(buildings), promoteId: 'osmId' },
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
-      // the campus wall, and low garden walls on campus (layer "gardenwall") in the same stone
-      wallparts: { type: 'geojson', data: wallParts({ type: 'FeatureCollection', features: [...walls.features, ...byLayer('gardenwall').features] }) },
+      wallparts: { type: 'geojson', data: wallParts(walls) },
       props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
       fence: { type: 'geojson', data: fences.mesh, tolerance: 0 },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
-      pines: { type: 'geojson', data: pineParts(byLayer('pine').features) },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       route: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
@@ -1020,10 +997,6 @@ export function createMap(opts: {
       {
         id: 'fence-mesh', type: 'fill-extrusion', source: 'fence', minzoom: DETAIL_ZOOM,
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-opacity': 0.22 },
-      },
-      {
-        id: 'pine', type: 'fill-extrusion', source: 'pines',
-        paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'] },
       },
       {
         id: 'tree-trunk', type: 'fill-extrusion', source: 'trees', filter: ['==', ['get', 'part'], 'trunk'],
