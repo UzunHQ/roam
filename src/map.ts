@@ -28,6 +28,7 @@ const PALETTE = {
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
     cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
     fencePost: '#3d5a49', fenceMesh: '#4a6656',
+    plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -44,6 +45,7 @@ const PALETTE = {
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
     cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
     fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
+    plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
   },
 } as const;
 
@@ -125,6 +127,8 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     props: {
       'fill-extrusion-color': ['match', ['get', 'part'],
         'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet, 'post', p.fencePost,
+        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil,
+        'bloom', ['match', ['get', 'c'], 0, p.blooms[0], 1, p.blooms[1], 2, p.blooms[2], p.blooms[3]],
         ['match', ['get', 'c'], 0, p.cars[0], 1, p.cars[1], 2, p.cars[2], 3, p.cars[3], 4, p.cars[4], p.cars[5]]],
     },
   };
@@ -426,6 +430,56 @@ function fountainParts(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
 }
 
 /**
+ * The garden statue (layer "statue"): a stepped stone plinth, a low-poly figure (body, shoulders,
+ * head) in bronze, and a knee-high iron fence round it, square to the garden (`a`, radians).
+ * Flower beds (layer "flowerbed"): a low bed of soil with a mound of colour `c` on top.
+ */
+function gardenParts(statues: GeoJSON.Feature[], beds: GeoJSON.Feature[]): GeoJSON.Feature[] {
+  const out: GeoJSON.Feature[] = [];
+  const put = (part: string, base: number, top: number, ring: number[][], c = 0) =>
+    out.push({ type: 'Feature', properties: { part, base, top, c }, geometry: { type: 'Polygon', coordinates: [ring] } });
+  for (const f of statues) {
+    const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+    const a = Number(f.properties?.a) || 0, u = [Math.cos(a), Math.sin(a)];
+    const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
+    const ll = (x: number, y: number) => [lng + x / kx, lat + y / ky];
+    const box = (cx: number, cy: number, hx: number, hy = hx) =>
+      [[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([i, j]) => ll(cx + u[0] * hx * i - u[1] * hy * j, cy + u[1] * hx * i + u[0] * hy * j));
+    const oct = (r: number) => Array.from({ length: 9 }, (_, i) => ll(r * Math.cos(((i % 8) * Math.PI) / 4 + a), r * Math.sin(((i % 8) * Math.PI) / 4 + a)));
+    put('plinth', 0, 0.3, box(0, 0, 1.25));
+    put('plinth', 0.3, 1.5, box(0, 0, 0.9));
+    put('plinth', 1.5, 1.65, box(0, 0, 1.02));
+    put('figure', 1.65, 2.9, oct(0.42)); // body
+    put('figure', 2.9, 3.1, box(0, 0, 0.5, 0.22)); // shoulders
+    put('figure', 3.1, 3.5, oct(0.22)); // head
+    // the fence: a post every metre or so and two rails, 4.5 m out from the statue
+    const R = 4.5, corners = [[-R, -R], [R, -R], [R, R], [-R, R]];
+    corners.forEach(([x0, y0], k) => {
+      const [x1, y1] = corners[(k + 1) % 4];
+      const n = 8;
+      for (let j = 0; j < n; j++) {
+        const t = j / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+        put('iron', 0, 0.95, box(u[0] * x - u[1] * y, u[1] * x + u[0] * y, 0.04));
+      }
+      const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, along = Math.abs(x1 - x0) > 0.1;
+      for (const [b0, b1] of [[0.18, 0.24], [0.85, 0.93]]) {
+        const hx = along ? R + 0.04 : 0.03, hy = along ? 0.03 : R + 0.04;
+        put('iron', b0, b1, box(u[0] * mx - u[1] * my, u[1] * mx + u[0] * my, hx, hy));
+      }
+    });
+  }
+  for (const f of beds) {
+    const ring = (f.geometry as GeoJSON.Polygon).coordinates[0];
+    const c = f.properties?.c ?? 0;
+    put('soil', 0, 0.22, ring);
+    // the blooms sit a little in from the bed's edge
+    const mid = ring.slice(0, -1).reduce(([x, y], p) => [x + p[0] / (ring.length - 1), y + p[1] / (ring.length - 1)], [0, 0]);
+    put('bloom', 0.22, 0.42, ring.map(([x, y]) => [mid[0] + (x - mid[0]) * 0.82, mid[1] + (y - mid[1]) * 0.82]), c);
+  }
+  return out;
+}
+
+/**
  * Wire fences (layer "fence", the MUGA's): a thin see-through mesh `height` metres tall, drawn in
  * its own half-transparent layer, and a solid post about every 2.5 m (in the props layer).
  */
@@ -642,7 +696,7 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts] } },
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features)] } },
       fence: { type: 'geojson', data: fences.mesh },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },

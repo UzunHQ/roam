@@ -400,6 +400,26 @@ if (loop.length) noTrees.push([...loop, loop[0]].map(([x, y]) => [round(x), roun
 features.push({ type: 'Feature', properties: { layer: 'fountain' }, geometry: { type: 'Point', coordinates: fromM(FOUNTAIN) } });
 console.log(`fountain at ${JSON.stringify(fromM(FOUNTAIN))}`);
 
+// the garden east of Grove House: a statue on a plinth in the middle, a low iron fence round it,
+// and flower beds on the lawn around (drawn in map.ts); no decorative trees inside
+const GARDEN = { area: [[54, -36.5], [85.5, -45.5], [80, -71], [50.5, -62]], statue: [66.6, -52.3] };
+{
+  noTrees.push(ringLL(GARDEN.area));
+  const [a, b] = GARDEN.area;
+  const angle = Math.round(Math.atan2(b[1] - a[1], b[0] - a[0]) * 1000) / 1000; // along the garden's north edge
+  features.push({ type: 'Feature', properties: { layer: 'statue', a: angle }, geometry: { type: 'Point', coordinates: fromM(GARDEN.statue) } });
+  // beds: rectangles in the garden's own frame (u along the north edge, v across), clear of the fence
+  const u = [Math.cos(angle), Math.sin(angle)], v = [-u[1], u[0]];
+  const at = (x, y) => [GARDEN.statue[0] + u[0] * x + v[0] * y, GARDEN.statue[1] + u[1] * x + v[1] * y];
+  // [x, y, half length, half width] in metres; the garden runs about -14..17 along u and -13..11 across
+  const BEDS = [[-9.5, 6, 3.5, 2], [11, 6, 5, 2], [-9.5, -7, 3.5, 2], [11, -7, 5, 2], [0, 9, 4, 1.5], [0, -10.5, 4, 1.5], [-12, 0, 1, 3], [13.5, 0, 1.5, 3.5]];
+  BEDS.forEach(([x, y, hx, hy], i) => {
+    const ring = [[x - hx, y - hy], [x + hx, y - hy], [x + hx, y + hy], [x - hx, y + hy]].map(([p, q]) => at(p, q));
+    if (!ring.every((p) => pointInRing(p, GARDEN.area))) { console.warn(`flower bed ${i} leaves the garden`); return; }
+    features.push({ type: 'Feature', properties: { layer: 'flowerbed', c: i % 4 }, geometry: { type: 'Polygon', coordinates: [ringLL(ring)] } });
+  });
+}
+
 // ---------- sports grounds ----------
 // The MUGA's fenced courts and the big playing field west of Davies are grass in OSM
 // (landuse=recreation_ground): draw them like pitches and keep decorative trees off them.
@@ -468,7 +488,7 @@ for (const g of green) {
     }
   }
 }
-console.log(`generated ${trees} decorative trees (${cleared} left out of courts, fields, car parks and the fountain lawn)`);
+console.log(`generated ${trees} decorative trees (${cleared} left out of courts, fields, car parks, the fountain lawn and the garden)`);
 
 const fc = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10), attribution: '© OpenStreetMap contributors (ODbL)', bounds: placesDoc.bounds, features };
 await writeFile(OUT, JSON.stringify(fc));

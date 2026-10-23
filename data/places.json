@@ -1230,26 +1230,31 @@
       "code": "",
       "name": "Garden",
       "aliases": [
+        "Flower garden",
         "Froebel garden",
-        "Grove House garden"
+        "Grove House garden",
+        "Statue"
       ],
       "roomCodePrefixes": [],
       "category": "building",
       "kind": "garden",
       "college": "froebel",
-      "description": "A small lawn garden between Grove House and Old Court, Froebel College.",
+      "description": "A small garden east of Grove House, Froebel College, with a statue in the middle behind a low iron fence and flower beds around it.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.24463,
-        51.455024
+        -0.24504,
+        51.4551
       ],
       "positionSource": "campus-tour",
       "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": null,
       "photo": null,
-      "services": [],
+      "services": [
+        "Statue",
+        "Flower beds"
+      ],
       "officialUrl": null,
       "accessibility": null,
       "sources": []
