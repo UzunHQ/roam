@@ -730,9 +730,9 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   let belt = 0;
   if (courseRing) {
     const edge = [];
-    // the course's east side, from where it enters the map in the north down to the Playing Field's
-    // north-west corner (the outline runs south along campus, then west above the field)
-    for (const p of courseRing.map(toM)) { if (p[1] > y1 + 1) { if (edge.length) break; continue; } edge.push(p); if (p[0] < -170) break; }
+    // the course's east side, from where it enters the map in the north down past the Playing Field's
+    // north-west corner and on south along its west side to the campus wall on Clarence Lane
+    for (const p of courseRing.map(toM)) { if (p[1] > y1 + 1) { if (edge.length) break; continue; } edge.push(p); if (p[1] < -60) break; }
     let seed4 = 23;
     const rand4 = () => ((seed4 = (seed4 * 1664525 + 1013904223) % 4294967296) / 4294967296);
     const courseM = courseRing.map(toM);
@@ -747,16 +747,22 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
         for (const [row, off] of [[0, 3], [1, 7.5], [2, 12]]) {
           const jx = (rand4() - 0.5) * 2.4, jy = (rand4() - 0.5) * 2, size = Math.round((1.25 + rand4() * 0.5) * 100) / 100;
           const along = d + (row % 2) * 2.1 + jx;
-          const m = [a[0] + u[0] * along + nrm[0] * (off + jy), a[1] + u[1] * along + nrm[1] * (off + jy)], ll = fromM(m);
-          if (m[0] < x0 || m[0] > x1 || m[1] < y0 || m[1] > y1) continue;
-          if (noTrees.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3)) continue;
-          if (water.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3)) continue;
-          if (bldg.some((r) => pointInRing(m, r) || r.some((p, k) => k < r.length - 1 && segDist(m, p, r[k + 1]) < 6))) continue;
-          if (near(roads.map((r) => r.pts), m, 7) || near(foot.map((r) => r.pts), m, 4) || near(wallLines, m, 4)) continue;
-          if (treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 3.2)) continue;
-          features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size, belt: true }, geometry: { type: 'Point', coordinates: ll } });
-          treesM.push(m);
-          belt++;
+          // a row slot in the course; where a tee, green or path takes it, the same slot on the campus
+          // side of the edge instead, so the wall carries on unbroken
+          for (const side of [1, -1]) {
+            const o = side * (off + jy);
+            const m = [a[0] + u[0] * along + nrm[0] * o, a[1] + u[1] * along + nrm[1] * o], ll = fromM(m);
+            if (m[0] < x0 || m[0] > x1 || m[1] < y0 || m[1] > y1) continue;
+            if (noTrees.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3)) continue;
+            if (water.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3)) continue;
+            if (bldg.some((r) => pointInRing(m, r) || r.some((p, k) => k < r.length - 1 && segDist(m, p, r[k + 1]) < 6))) continue;
+            if (near(roads.map((r) => r.pts), m, 7) || near(foot.map((r) => r.pts), m, 4) || near(wallLines, m, 4)) continue;
+            if (treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 3.2)) continue;
+            features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size, belt: true }, geometry: { type: 'Point', coordinates: ll } });
+            treesM.push(m);
+            belt++;
+            break;
+          }
         }
       }
     }
