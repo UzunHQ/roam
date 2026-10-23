@@ -657,7 +657,7 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   const treesM = features.filter((f) => f.properties.layer === 'tree').map((f) => toM(f.geometry.coordinates));
   // campus: OSM's university outlines leave out many lawns, so use the hull of the campus wall and
   // every place on campus instead (the wall is the edge on the Roehampton Lane and Clarence Lane sides)
-  const hullPts = [...wallLines.flat(), ...placesDoc.places.filter((p) => p.category !== 'entrance').map((p) => toM(p.position))];
+  const hullPts = [...wallLines.flat(), ...placesDoc.places.filter((p) => p.category !== 'entrance' && p.college).map((p) => toM(p.position))]; // campus places only (not the golf course next door)
   const hull = (() => {
     const q = [...hullPts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
     const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
@@ -763,6 +763,24 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
     }
   }
   console.log(`tree wall: ${belt} trees along the golf course edge`);
+
+  // a few trees on the open lawn between the Student Medical Centre and the Lyne-Stephens Mausoleum
+  // (hand-placed, metres; each is checked against paths, roads, buildings, car parks and the mausoleum)
+  const LAWN_TREES = [[172, -30, 1.05], [182, -34, 0.9], [170, -40, 1.15], [178, -45, 1], [187, -42, 0.85], [168, -50, 0.95], [176, -54, 1.1]];
+  const mausoleum = buildings.filter((b) => b.monument).map((b) => b.ring.map(toM));
+  const lots = features.filter((f) => f.properties.layer === 'parking').map((f) => f.geometry.coordinates[0].map(toM));
+  let lawnTrees = 0;
+  for (const [x, y, size] of LAWN_TREES) {
+    const m = [x, y];
+    const clear = (rings, d) => !rings.some((r) => pointInRing(m, r) || r.some((p, k) => k < r.length - 1 && segDist(m, p, r[k + 1]) < d));
+    if (!clear(bldg, 5) || !clear(mausoleum, 5) || !clear(lots, 3)) continue;
+    if (near(roads.map((r) => r.pts), m, 6) || near(foot.map((r) => r.pts), m, 3.5)) continue;
+    if (treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 5)) continue;
+    features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size }, geometry: { type: 'Point', coordinates: fromM(m) } });
+    treesM.push(m);
+    lawnTrees++;
+  }
+  console.log(`lawn by the Medical Centre: ${lawnTrees} of ${LAWN_TREES.length} trees placed`);
 
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
