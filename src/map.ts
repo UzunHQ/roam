@@ -28,7 +28,7 @@ const PALETTE = {
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
     cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
     fencePost: '#3d5a49', fenceMesh: '#4a6656',
-    stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
+    golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -45,7 +45,7 @@ const PALETTE = {
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
     cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
     fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
-    stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
+    golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
   },
 } as const;
 
@@ -102,6 +102,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     green: { 'fill-color': ['case', ['coalesce', ['get', 'field'], false], p.pitch, p.wood] },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
     parking: { 'fill-color': p.road }, // the same asphalt as the roads
+    golf: { 'fill-color': ['match', ['get', 'kind'], 'fairway', p.golf.fairway, 'tee', p.golf.tee, 'green', p.golf.green, 'bunker', p.golf.bunker, 'water', p.golf.water, p.golf.rough] },
     courtline: { 'line-color': p.pitchLine },
     'fence-mesh': { 'fill-extrusion-color': p.fenceMesh },
     monument: { 'fill-extrusion-color': ['match', ['get', 'part'], 'roof', p.stoneRoof, 'base', p.stoneDark, 'band', p.stoneDark, p.stone] },
@@ -845,6 +846,8 @@ export function createMap(opts: {
     layers: [
       { id: 'background', type: 'background', paint: {} },
       { id: 'green', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'green'], paint: {} },
+      // the golf course west of campus: rough, fairways, tees, greens and bunkers, flat on the grass
+      { id: 'golf', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'golf'], paint: { 'fill-antialias': true } },
       { id: 'pitch', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'pitch'], paint: {} },
       { id: 'parking', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'parking'], paint: {} },
       // tennis court markings on the MUGA (about 5 cm lines, so they only show up close)

@@ -33,6 +33,7 @@ const query = `[out:json][timeout:90];
   way["waterway"](${bbox});
   node["natural"="tree"](${bbox});
   way["amenity"="university"](${bbox});
+  way["golf"](${s - 0.002},${w - 0.003},${n + 0.004},${e});
   relation["amenity"="university"](${bbox});
 );
 out body geom;`;
@@ -332,6 +333,27 @@ for (const { f, monument } of buildings) {
   f.properties.campus ??= true;
 }
 
+// ---------- the golf course west of campus (Roehampton Club, OSM way/4268543) ----------
+// Fairways, greens, tees, bunkers and rough inside the course become their own layer ("golf"),
+// drawn under everything else; their playing surfaces are kept clear of decorative trees below.
+const GOLF_KINDS = new Set(['fairway', 'green', 'tee', 'bunker', 'rough', 'water_hazard', 'lateral_water_hazard']);
+const course = osm.elements.find((el) => el.type === 'way' && el.id === 4268543 && el.geometry);
+const courseRing = course ? ring(course.geometry) : null;
+const golfFeatures = [];
+for (const el of osm.elements) {
+  const kind = el.tags?.golf;
+  if (!courseRing || el.type !== 'way' || !el.geometry || !GOLF_KINDS.has(kind)) continue;
+  const r = ring(el.geometry);
+  if (!closed(r) || !pointInRing(centroid(r), courseRing)) continue;
+  const f = { type: 'Feature', id: `way/${el.id}`, properties: { layer: 'golf', kind: kind.includes('water') ? 'water' : kind }, geometry: { type: 'Polygon', coordinates: [r] } };
+  golfFeatures.push(f);
+}
+// rough first, then fairways, tees, greens, bunkers and water on top
+const GOLF_ORDER = ['rough', 'fairway', 'tee', 'green', 'bunker', 'water'];
+golfFeatures.sort((a, b) => GOLF_ORDER.indexOf(a.properties.kind) - GOLF_ORDER.indexOf(b.properties.kind));
+features.push(...golfFeatures);
+console.log(`golf: ${golfFeatures.length} areas (${GOLF_ORDER.map((k) => `${golfFeatures.filter((f) => f.properties.kind === k).length} ${k}`).join(', ')})`);
+
 // ---------- hand-mapped outdoor areas ----------
 // OSM has no car parks here. Shapes are in metres east/north of ORIGIN, traced against the
 // campus tour and the aerial view; the aisles cars park off are OSM ways. A lot beside a road
@@ -381,7 +403,7 @@ const segDist = (p, a, b) => {
   return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
 };
 const onPath = (corners) => pathSegs.some(({ road, pts }) => pts.some((a, i) => i < pts.length - 1 && corners.some((c) => segDist(c, a, pts[i + 1]) < (road ? 2.9 : 1.6))));
-const noTrees = []; // rings (lng/lat) where no decorative tree should stand
+const noTrees = golfFeatures.filter((f) => f.properties.kind !== 'rough').map((f) => f.geometry.coordinates[0]); // rings (lng/lat) where no decorative tree should stand
 let cars = 0;
 PARKING.forEach((lot, i) => {
   const li = lot.seed ?? i;
@@ -646,15 +668,23 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   const meadowF = features.find((f) => f.id === 'way/4268543' && f.properties.layer === 'green');
   if (meadowF) meadowF.properties.unveil = true; // runs past the map's edge: the app keeps it out of the dimmed frame
   const meadow = meadowF?.geometry.coordinates[0];
+  // It is Roehampton Club's golf course: trees stand in belts between the holes, thickest along the
+  // edges of the fairways and greens, never on them (noTrees). The whole course is covered, also the
+  // part beyond the map's edge that shows past the frame.
   let seed3 = 11, more = 0;
   const rand3 = () => ((seed3 = (seed3 * 1664525 + 1013904223) % 4294967296) / 4294967296);
-  const M = 12; // metres between candidates
-  for (let y = y0 + M / 2; meadow && y < y1; y += M) {
-    for (let x = x0 + M / 2; x < x1; x += M) {
-      const keep = rand3() < 0.5, jx = (rand3() - 0.5) * M * 0.8, jy = (rand3() - 0.5) * M * 0.8, size = Math.round((0.75 + rand3() * 0.6) * 100) / 100;
-      if (!keep) continue;
+  const M = 11; // metres between candidates
+  const play = golfFeatures.filter((f) => ['fairway', 'green', 'tee'].includes(f.properties.kind)).map((f) => f.geometry.coordinates[0].map(toM));
+  const toPlay = (m) => Math.min(Infinity, ...play.map((r) => r.reduce((d, a, i) => (i < r.length - 1 ? Math.min(d, segDist(m, a, r[i + 1])) : d), Infinity)));
+  const mm = (meadow ?? []).map(toM), mx = mm.map((p) => p[0]), my = mm.map((p) => p[1]);
+  const [gx0, gx1, gy0, gy1] = mm.length ? [Math.min(...mx), Math.max(...mx), Math.min(...my), Math.max(...my)] : [0, 0, 0, 0];
+  for (let y = gy0 + M / 2; meadow && y < gy1; y += M) {
+    for (let x = gx0 + M / 2; x < gx1; x += M) {
+      const r = rand3(), jx = (rand3() - 0.5) * M * 0.8, jy = (rand3() - 0.5) * M * 0.8, size = Math.round((0.75 + rand3() * 0.6) * 100) / 100;
       const m = [x + jx, y + jy], ll = fromM(m);
       if (!pointInRing(ll, meadow)) continue;
+      const edge = play.length ? toPlay(m) : 99;
+      if (r >= (edge < 14 ? 0.78 : edge < 30 ? 0.5 : 0.3)) continue; // thick along the holes, thinner further off
       if (noTrees.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 2)) continue;
       if (water.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3)) continue;
       if (bldg.some((r) => pointInRing(m, r) || r.some((a, i) => i < r.length - 1 && segDist(m, a, r[i + 1]) < 6))) continue;
