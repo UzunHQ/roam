@@ -30,6 +30,7 @@ export interface Resolved {
   live: boolean;
   stale: boolean; // typed-in hours that are too old, or whose period is over
   notes?: string;
+  serving?: string;
   unknown?: string; // what to say on a day with no listed hours
 }
 
@@ -115,7 +116,7 @@ export function resolveHours(placeId: string, now = londonNow()): Resolved | nul
   const stale = !within(e, now.date) || dayNumber(now.date) - dayNumber(e.checked) > STALE_DAYS;
   return {
     on: (d) => (within(e, d) ? e.weekly[dayOf(d)] : undefined),
-    source: e.source, checked: e.checked, live: false, stale, notes: e.notes, unknown: e.unknown,
+    source: e.source, checked: e.checked, live: false, stale, notes: e.notes, serving: e.serving, unknown: e.unknown,
   };
 }
 

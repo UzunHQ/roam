@@ -496,6 +496,7 @@ svg { display: block; flex: none; }
 .badge.soon { background: var(--soon-bg); color: var(--soon); }
 .hours-src { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; }
 .hours-src a { font-weight: 700; }
+.hours-serving { margin: 6px 0 0; font-size: 13.5px; font-weight: 600; color: var(--text); }
 .week { margin-top: 12px; border-collapse: collapse; font-size: 14px; }
 .week th { padding: 2px 16px 2px 0; text-align: left; font-weight: 650; color: var(--muted); }
 .week td { padding: 2px 0; font-variant-numeric: tabular-nums; }

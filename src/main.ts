@@ -901,8 +901,11 @@ async function main() {
       : s.kind === 'closed' ? ['closed', s.opens ? `Closed · opens ${s.opens}` : 'Closed']
       : s.kind === 'stale' ? ['unknown', 'Hours may have changed']
       : ['unknown', h.unknown ?? "Today's hours not listed"];
-    const src = h.source ? ` · Source: <a href="${esc(h.source.url)}" target="_blank" rel="noopener">${esc(h.source.name)}</a>` : '';
+    const src = !h.source ? '' : h.source.url
+      ? ` · Source: <a href="${esc(h.source.url)}" target="_blank" rel="noopener">${esc(h.source.name)}</a>`
+      : ` · Source: ${esc(h.source.name)}`;
     return `<div class="hours-wrap"><div class="hours"><span class="badge ${cls}">${esc(text)}</span></div>
+      ${h.serving ? `<p class="hours-serving">${esc(h.serving)}</p>` : ''}
       <p class="hours-src">Last checked: ${fmtDate(h.checked)}${src}</p></div>`;
   }
   /** the coming week, under "View details" (not for hours that may have changed, or none listed at all) */

@@ -4,7 +4,8 @@ import type { Day } from '../types';
  * Opening hours: the one place they live. Each entry is one place for one period (term time,
  * vacation, a single week). Only add hours you have read yourself on an official source: the
  * university's own pages (roehampton.ac.uk, roehamptonstudent.com, roehampton.libcal.com), the
- * business's own website (e.g. lifestylefitness.co.uk for the gym), or a Nest screenshot.
+ * business's own website (e.g. lifestylefitness.co.uk for the gym), a Nest screenshot, or the
+ * opening-hours sign at the place itself, read on campus (a source with no `url`).
  * Never hours from Google, an AI summary or any other unverified source, and never a guess.
  * A place with no entry shows no hours.
  *
@@ -23,9 +24,10 @@ export interface HoursEntry {
   from: string; // YYYY-MM-DD
   to?: string; // YYYY-MM-DD
   weekly: Partial<Record<Day, [string, string][]>>;
-  source?: { name: string; url: string }; // left out when there is no verified source at all
+  source?: { name: string; url?: string }; // left out when there is no verified source at all; no url for a sign read on site
   checked: string; // YYYY-MM-DD
   notes?: string;
+  serving?: string; // a short line on the card under the open/closed badge, e.g. meal times
   unknown?: string;
 }
 
@@ -37,7 +39,7 @@ const EVERY_DAY = (open: string, close: string) => Object.fromEntries((['mon', '
  * Places whose hours are read live on the phone. The entries below are only the fallback for
  * when LibCal can't be reached (and nothing was saved from an earlier visit).
  */
-export const LIVE: Record<string, { iid: number; lid: number; source: NonNullable<HoursEntry['source']> }> = {
+export const LIVE: Record<string, { iid: number; lid: number; source: { name: string; url: string } }> = {
   library: { iid: 4033, lid: 6082, source: LIBCAL },
 };
 
@@ -112,8 +114,25 @@ export const HOURS: HoursEntry[] = [
     notes: 'Term-time · summer hours shorter',
     unknown: 'Weekend hours not listed. Check before you go.',
   },
+  {
+    place: 'froebel-cafe', // Costa
+    period: 'All year',
+    from: '2026-10-23',
+    weekly: { ...WEEKDAYS('08:00', '17:00'), sat: [], sun: [] },
+    source: { name: 'Opening hours sign at the café, checked by Hüseyin' },
+    checked: '2026-10-23',
+  },
+  {
+    place: 'froebel-diner',
+    period: 'All year',
+    from: '2026-10-23',
+    weekly: { ...WEEKDAYS('08:00', '15:00'), sat: [], sun: [] },
+    source: { name: 'Opening hours sign at the café, checked by Hüseyin' },
+    checked: '2026-10-23',
+    serving: 'Breakfast 8–11 · Lunch 11:30–2',
+  },
   // no verified hours: the card sends people to Nest
-  ...['digby-den-diner', 'froebel-diner'].map((place): HoursEntry => ({
+  ...['digby-den-diner'].map((place): HoursEntry => ({
     place, period: 'All year', from: '2026-10-21', weekly: {}, checked: '2026-10-21', unknown: 'Hours: check on Nest',
   })),
 ];
