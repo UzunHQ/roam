@@ -490,6 +490,58 @@ for (const g of green) {
 }
 console.log(`generated ${trees} decorative trees (${cleared} left out of courts, fields, car parks, the fountain lawn and the garden)`);
 
+// ---------- more trees on the open campus lawns ----------
+// The lawns between buildings are plain background (no OSM green area), so the pass above never
+// reaches them. A sparser scatter there, with its own seed so every tree above keeps its place.
+// Kept off buildings, roads and paths, water, the campus wall and everything in noTrees.
+{
+  let seed2 = 7;
+  const rand2 = () => ((seed2 = (seed2 * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const wallsDoc = JSON.parse(await readFile(new URL('data/walls.geojson', ROOT), 'utf8'));
+  const wallLines = wallsDoc.features.filter((f) => f.geometry.type === 'LineString').map((f) => f.geometry.coordinates.map(toM));
+  const water = features.filter((f) => f.properties.layer === 'water').map((f) => f.geometry.coordinates[0]);
+  const roads = pathSegs.filter((p) => p.road), foot = pathSegs.filter((p) => !p.road);
+  const near = (lines, p, d) => lines.some((pts) => pts.some((a, i) => i < pts.length - 1 && segDist(p, a, pts[i + 1]) < d));
+  const outline = (b) => b.ring.map(toM);
+  const bldg = buildings.map(outline);
+  const treesM = features.filter((f) => f.properties.layer === 'tree').map((f) => toM(f.geometry.coordinates));
+  // campus: OSM's university outlines leave out many lawns, so use the hull of the campus wall and
+  // every place on campus instead (the wall is the edge on the Roehampton Lane and Clarence Lane sides)
+  const hullPts = [...wallLines.flat(), ...placesDoc.places.filter((p) => p.category !== 'entrance').map((p) => toM(p.position))];
+  const hull = (() => {
+    const q = [...hullPts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lower = [], upper = [];
+    for (const p of q) { while (lower.length > 1 && cross(lower.at(-2), lower.at(-1), p) <= 0) lower.pop(); lower.push(p); }
+    for (const p of q.reverse()) { while (upper.length > 1 && cross(upper.at(-2), upper.at(-1), p) <= 0) upper.pop(); upper.push(p); }
+    return [...lower.slice(0, -1), ...upper.slice(0, -1)];
+  })();
+  // and the open OSM lawns and meadows around it (not woods, which are dense already, and not the playing fields)
+  const lawns = features.filter((f) => f.properties.layer === 'green' && !f.properties.wooded && !f.properties.field).map((f) => f.geometry.coordinates[0]);
+  const inCampus = (ll) => pointInRing(toM(ll), hull) || campusRings.some((r) => pointInRing(ll, r)) || lawns.some((r) => pointInRing(ll, r));
+  const STEP = 19, KEEP = 0.42; // metres between candidates, share kept
+  const [x0, y0] = toM([w, s]), [x1, y1] = toM([e, n]);
+  let added = 0; const why = {};
+  const no = (k) => { why[k] = (why[k] ?? 0) + 1; return true; };
+  for (let y = y0 + STEP / 2; y < y1; y += STEP) {
+    for (let x = x0 + STEP / 2; x < x1; x += STEP) {
+      const keep = rand2() < KEEP, jx = (rand2() - 0.5) * STEP * 0.8, jy = (rand2() - 0.5) * STEP * 0.8, size = Math.round((0.75 + rand2() * 0.6) * 100) / 100;
+      if (!keep) continue;
+      const m = [x + jx, y + jy], ll = fromM(m);
+      if (!inCampus(ll) && no('outside campus')) continue;
+      if (noTrees.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 2) && no('no-tree area')) continue;
+      if (water.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3) && no('water')) continue;
+      if (bldg.some((r) => pointInRing(m, r) || r.some((a, i) => i < r.length - 1 && segDist(m, a, r[i + 1]) < 6)) && no('building')) continue;
+      if ((near(roads.map((r) => r.pts), m, 7) || near(foot.map((r) => r.pts), m, 4) || near(wallLines, m, 4)) && no('road, path or wall')) continue;
+      if (treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 7) && no('next to a tree')) continue; // not crowding a tree already there
+      features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size }, geometry: { type: 'Point', coordinates: ll } });
+      treesM.push(m);
+      added++;
+    }
+  }
+  console.log(`added ${added} trees on open lawns; left out: ${JSON.stringify(why)}`);
+}
+
 const fc = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10), attribution: '© OpenStreetMap contributors (ODbL)', bounds: placesDoc.bounds, features };
 await writeFile(OUT, JSON.stringify(fc));
 await writeFile(PLACES, JSON.stringify(placesDoc, null, 2) + '\n');
