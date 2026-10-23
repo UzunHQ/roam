@@ -787,6 +787,36 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   }
   console.log(`lawn by the Medical Centre: ${lawnTrees} of ${LAWN_TREES.length} trees placed`);
 
+  // the two open lawns east of Froebel (marked 4 and 5): east of the garden towards the drive, and
+  // between the drive and the mausoleum. A loose scatter over each, with the same checks as above
+  // plus the garden.
+  const EAST_LAWNS = [
+    { area: [[84, -46], [124, -46], [124, -74], [84, -74]] }, // 5
+    { area: [[140, -40], [162, -40], [162, -72], [140, -72]] }, // 4
+  ];
+  const gardenM = GARDEN.area;
+  let seed5 = 31, eastTrees = 0;
+  const rand5 = () => ((seed5 = (seed5 * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  for (const { area } of EAST_LAWNS) {
+    const xs = area.map((p) => p[0]), ys = area.map((p) => p[1]);
+    for (let y = Math.min(...ys) + 3; y < Math.max(...ys); y += 7) {
+      for (let x = Math.min(...xs) + 3; x < Math.max(...xs); x += 7) {
+        const r = rand5(), jx = (rand5() - 0.5) * 4, jy = (rand5() - 0.5) * 4, size = Math.round((0.85 + rand5() * 0.4) * 100) / 100;
+        if (r > 0.7) continue;
+        const m = [x + jx, y + jy];
+        const clear = (rings, d) => !rings.some((ring) => pointInRing(m, ring) || ring.some((p, k) => k < ring.length - 1 && segDist(m, p, ring[k + 1]) < d));
+        if (!pointInRing(m, area) || pointInRing(m, gardenM) || !clear([gardenM.concat([gardenM[0]])], 3)) continue;
+        if (!clear(bldg, 5) || !clear(mausoleum, 5) || !clear(lots, 3)) continue;
+        if (near(roads.map((q) => q.pts), m, 6) || near(foot.map((q) => q.pts), m, 3.5)) continue;
+        if (treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 5.5)) continue;
+        features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size }, geometry: { type: 'Point', coordinates: fromM(m) } });
+        treesM.push(m);
+        eastTrees++;
+      }
+    }
+  }
+  console.log(`lawns east of Froebel: ${eastTrees} trees`);
+
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
   // (stretched over the west meadow and the playing field too, so no pale strip is left between them
