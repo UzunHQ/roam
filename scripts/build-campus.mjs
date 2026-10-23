@@ -694,7 +694,6 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   // the big meadow west of campus (OSM way/4268543): a denser scatter of its own, so it reads as
   // parkland like the grounds round the lake
   const meadowF = features.find((f) => f.id === 'way/4268543' && f.properties.layer === 'green');
-  if (meadowF) meadowF.properties.unveil = true; // runs past the map's edge: the app keeps it out of the dimmed frame
   const meadow = meadowF?.geometry.coordinates[0];
   // It is Roehampton Club's golf course: trees stand in belts between the holes, thickest along the
   // edges of the fairways and greens, never on them (noTrees), and only inside the map's bounds.
@@ -793,6 +792,60 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   for (const p of sorted.reverse()) { while (hi.length > 1 && cross(hi.at(-2), hi.at(-1), p) <= 0) hi.pop(); hi.push(p); }
   const lawn = [...lo.slice(0, -1), ...hi.slice(0, -1)];
   features.unshift({ type: 'Feature', properties: { layer: 'green', wooded: false, campus: true }, geometry: { type: 'Polygon', coordinates: [ringLL(lawn)] } });
+}
+
+// ---------- the map's own edge ----------
+// The map ends at the campus and the strip of golf course beside it. West of the tree wall's far
+// side and north of Southlands there is nothing to show: everything there is cut away, and the
+// app dims it like the rest of the world outside the map (layer "mapedge"). Metres, a convex ring
+// that holds every campus building, wall and place: its north-west side runs down the golf course
+// from north of Southlands to the west end of the Clarence Lane wall.
+const MAP_EDGE = [[-42, 565], [-177, 497], [-244, 378], [-304, 244], [-360, 98], [-386, -67], [-386, -181], [296, -181], [296, 565]];
+{
+  const orient = Math.sign(MAP_EDGE.reduce((a, p, i) => { const q = MAP_EDGE[(i + 1) % MAP_EDGE.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0));
+  const keepSide = (a, b, p) => orient * ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) >= 0;
+  const inEdge = (m) => MAP_EDGE.every((a, i) => keepSide(a, MAP_EDGE[(i + 1) % MAP_EDGE.length], m));
+  // Sutherland-Hodgman against each side of the (convex) edge ring
+  const clip = (ringLLIn) => {
+    let pts = ringLLIn.slice(0, -1).map(toM);
+    for (let i = 0; i < MAP_EDGE.length && pts.length; i++) {
+      const a = MAP_EDGE[i], b = MAP_EDGE[(i + 1) % MAP_EDGE.length], out = [];
+      pts.forEach((p, k) => {
+        const q = pts[(k + 1) % pts.length], pin = keepSide(a, b, p), qin = keepSide(a, b, q);
+        if (pin) out.push(p);
+        if (pin !== qin) {
+          const d1 = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]), d2 = (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]);
+          const t = d1 / (d1 - d2);
+          out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+        }
+      });
+      pts = out;
+    }
+    return pts.length >= 3 ? [...pts, pts[0]].map(fromM) : null;
+  };
+  let dropped = 0, cut = 0;
+  for (let i = features.length - 1; i >= 0; i--) {
+    const f = features[i], layer = f.properties.layer;
+    if (['tree', 'golfflag'].includes(layer)) {
+      if (!inEdge(toM(f.geometry.coordinates))) { features.splice(i, 1); dropped++; }
+    } else if (['green', 'golf'].includes(layer) && f.geometry.type === 'Polygon') {
+      const r = f.geometry.coordinates[0];
+      if (r.every((p) => inEdge(toM(p)))) continue;
+      const c = clip(r);
+      if (c) { f.geometry.coordinates = [c]; cut++; } else { features.splice(i, 1); dropped++; }
+    }
+  }
+  features.push({ type: 'Feature', properties: { layer: 'mapedge' }, geometry: { type: 'Polygon', coordinates: [ringLL(MAP_EDGE)] } });
+  // the golf course's pin: the middle of what is left of the course (area-weighted)
+  const course = features.find((f) => f.id === 'way/4268543');
+  const golfPlace = placesDoc.places.find((p) => p.id === 'roehampton-club-golf-course');
+  if (course && golfPlace) {
+    const r = course.geometry.coordinates[0].map(toM);
+    let A = 0, cx = 0, cy = 0;
+    r.forEach((p, k) => { if (k === r.length - 1) return; const q = r[k + 1], x = p[0] * q[1] - q[0] * p[1]; A += x; cx += (p[0] + q[0]) * x; cy += (p[1] + q[1]) * x; });
+    golfPlace.position = fromM([cx / (3 * A), cy / (3 * A)]).map((v) => Math.round(v * 1e6) / 1e6);
+  }
+  console.log(`map edge: ${dropped} trees, flags and areas left out, ${cut} areas cut; golf pin at ${JSON.stringify(golfPlace?.position)}`);
 }
 
 const fc = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10), attribution: '© OpenStreetMap contributors (ODbL)', bounds: placesDoc.bounds, features };

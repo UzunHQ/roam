@@ -3727,8 +3727,8 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.248883,
-        51.457836
+        -0.248056,
+        51.458161
       ],
       "positionSource": "osm-footprint",
       "positionAccuracyM": 30,

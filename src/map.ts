@@ -813,33 +813,17 @@ export function createMap(opts: {
   halfLayer.features = halfLayer.features.map((f) => ({ ...f, geometry: { type: 'Polygon', coordinates: [grown((f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[], 0.12)] } }));
   buildings.features = buildings.features.map((f) => ({ ...f, properties: { ...f.properties, roof: ROOFS[f.properties?.osmId] ?? 'flat' } }));
   const [w, s, e, n] = bounds;
-  // a big frame around campus, so the edge of the world reads as "off the map". Areas that run on past
-  // the edge (the golf course and meadow west of campus, flagged "unveil") are cut out of it too, so
-  // they don't end in a pale band: the parts of them west of the map, and north of it.
+  // a big frame around campus, so the edge of the world reads as "off the map". Its hole is the map's
+  // own edge (layer "mapedge", from build-campus.mjs: campus plus the strip of golf course beside it),
+  // or the bounds when there is none.
   const pad = 0.02;
-  const clipHalf = (ring: number[][], keep: (p: number[]) => number, ) => {
-    const out: number[][] = [];
-    const pts = ring.slice(0, -1);
-    pts.forEach((p, i) => {
-      const q = pts[(i + 1) % pts.length], a = keep(p), b = keep(q);
-      if (a >= 0) out.push(p);
-      if ((a >= 0) !== (b >= 0)) { const t = a / (a - b); out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]); }
-    });
-    if (out.length > 2) out.push(out[0]);
-    return out;
-  };
-  const unveiled = campus.features.filter((f) => f.properties?.unveil && f.geometry.type === 'Polygon').flatMap((f) => {
-    const r = (f.geometry as GeoJSON.Polygon).coordinates[0];
-    const west = clipHalf(r, (p) => w - p[0]);
-    const north = clipHalf(clipHalf(r, (p) => p[0] - w), (p) => p[1] - n);
-    return [west, north].filter((x) => x.length > 3);
-  });
+  const edge = campus.features.find((f) => f.properties?.layer === 'mapedge' && f.geometry.type === 'Polygon');
+  const hole = edge ? [...(edge.geometry as GeoJSON.Polygon).coordinates[0]].reverse() : [[w, s], [w, n], [e, n], [e, s], [w, s]];
   const outside: GeoJSON.Feature = {
     type: 'Feature', properties: {},
     geometry: { type: 'Polygon', coordinates: [
       [[w - pad, s - pad], [e + pad, s - pad], [e + pad, n + pad], [w - pad, n + pad], [w - pad, s - pad]],
-      [[w, s], [w, n], [e, n], [e, s], [w, s]],
-      ...unveiled,
+      hole,
     ] },
   };
 
@@ -1003,8 +987,9 @@ export function createMap(opts: {
     style,
     bounds: [w, s, e, n],
     fitBoundsOptions: { padding: 10 },
-    // room to pan a little past the edge, so places near it can sit mid-screen above a panel
-    maxBounds: [w - 0.006, s - 0.004, e + 0.006, n + 0.004],
+    // room to pan a little past the edge, so places near it can sit mid-screen above a panel; only a
+    // little to the west and north, where there is nothing but golf course and the world beyond the map
+    maxBounds: [w - 0.0015, s - 0.004, e + 0.006, n + 0.0012],
     pitch: 55,
     maxPitch: 65,
     minZoom: 14.5, // the whole campus fits a phone held upright at about 14.9
