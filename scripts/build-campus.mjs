@@ -830,6 +830,46 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   features.unshift({ type: 'Feature', properties: { layer: 'green', wooded: false, campus: true }, geometry: { type: 'Polygon', coordinates: [ringLL(lawn)] } });
 }
 
+// ---------- keep trees off the campus wall ----------
+// Trees standing on the wall along Roehampton Lane and Clarence Lane, leaning over it, or just
+// outside it, move straight in until their canopy clears the wall by a metre and they stand at
+// least 3 m inside; where that spot is on a building, road or path, the tree goes.
+{
+  const wallDoc = JSON.parse(await readFile(new URL('data/walls.geojson', ROOT), 'utf8'));
+  const segs = wallDoc.features.filter((f) => f.geometry.type === 'LineString').flatMap((f) => {
+    const pts = f.geometry.coordinates.map(toM);
+    return pts.slice(1).map((b, i) => [pts[i], b]);
+  });
+  const INSIDE = [-20, 160]; // the lake, well inside campus
+  const side = (a, b, p) => Math.sign((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]));
+  const blds = buildings.map((b) => b.ring.map(toM));
+  const pathPts = features.filter((f) => f.properties.layer === 'path').map((f) => ({ road: f.properties.kind !== 'footpath', pts: f.geometry.coordinates.map(toM) }));
+  let moved = 0, removed = 0;
+  // a few passes: near a corner, moving off one stretch of wall can bring a tree close to the next
+  for (let pass = 0; pass < 3; pass++) for (let i = features.length - 1; i >= 0; i--) {
+    const f = features[i];
+    if (f.properties.layer !== 'tree') continue;
+    const m = toM(f.geometry.coordinates);
+    let best = null;
+    for (const [a, b] of segs) { const d = segDist(m, a, b); if (!best || d < best.d) best = { d, a, b }; }
+    if (!best) continue;
+    const inward = side(best.a, best.b, m) === side(best.a, best.b, INSIDE);
+    const signed = inward ? best.d : -best.d;
+    const need = Math.max(3, 2.6 * (f.properties.s ?? 1) + 1); // canopy radius (map.ts treePolygons) plus a metre
+    if (signed >= need || signed <= -12) continue;
+    const { a, b } = best, len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    let nrm = [-(b[1] - a[1]) / len, (b[0] - a[0]) / len];
+    if (side(a, b, [a[0] + nrm[0], a[1] + nrm[1]]) !== side(a, b, INSIDE)) nrm = [-nrm[0], -nrm[1]];
+    const to = [m[0] + nrm[0] * (need + 0.5 - signed), m[1] + nrm[1] * (need + 0.5 - signed)];
+    const blocked = blds.some((r) => pointInRing(to, r) || r.some((p, k) => k < r.length - 1 && segDist(to, p, r[k + 1]) < 3))
+      || pathPts.some(({ road, pts }) => pts.some((p, k) => k < pts.length - 1 && segDist(to, p, pts[k + 1]) < (road ? 5 : 2.5)));
+    if (blocked) { features.splice(i, 1); removed++; continue; }
+    f.geometry.coordinates = fromM(to);
+    moved++;
+  }
+  console.log(`campus wall: ${moved} trees moved inside, ${removed} removed`);
+}
+
 // ---------- the map's own edge ----------
 // The map ends at the campus and the strip of golf course beside it. West of the tree wall's far
 // side and north of Southlands there is nothing to show: everything there is cut away, and the
