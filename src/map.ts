@@ -28,7 +28,7 @@ const PALETTE = {
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
     cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
     fencePost: '#3d5a49', fenceMesh: '#4a6656',
-    plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
+    goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -45,7 +45,7 @@ const PALETTE = {
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
     cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
     fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
-    plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
+    goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
   },
 } as const;
 
@@ -135,7 +135,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     props: {
       'fill-extrusion-color': ['match', ['get', 'part'],
         'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet, 'post', p.fencePost,
-        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil,
+        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil, 'goal', p.goalPost,
         'bloom', ['match', ['get', 'c'], 0, p.blooms[0], 1, p.blooms[1], 2, p.blooms[2], p.blooms[3]],
         ['match', ['get', 'c'], 0, p.cars[0], 1, p.cars[1], 2, p.cars[2], 3, p.cars[3], 4, p.cars[4], p.cars[5]]],
     },
@@ -531,6 +531,35 @@ function gardenParts(statues: GeoJSON.Feature[], beds: GeoJSON.Feature[]): GeoJS
 }
 
 /**
+ * Football goals (layer "goal"): two posts and a crossbar `w` x `h` metres, square to the pitch's
+ * long axis `a`, with the net's frame running back a little behind them.
+ */
+function goalParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
+  const out: GeoJSON.Feature[] = [];
+  for (const f of points) {
+    const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+    const a = Number(f.properties?.a) || 0, w = Number(f.properties?.w) || 7.32, h = Number(f.properties?.h) || 2.44;
+    const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
+    const u = [Math.cos(a), Math.sin(a)], v = [u[1], -u[0]];
+    const box = (x: number, y: number, hx: number, hy: number, base: number, top: number) => out.push({
+      type: 'Feature', properties: { part: 'goal', base, top },
+      geometry: { type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([i, j]) => {
+        const px = v[0] * (x + hx * i) + u[0] * (y + hy * j), py = v[1] * (x + hx * i) + u[1] * (y + hy * j);
+        return [lng + px / kx, lat + py / ky];
+      })] },
+    });
+    // which way is behind the goal: away from the pitch centre, i.e. along -u at the south end and +u at the north
+    const back = Math.sign(Number(f.properties?.back) || 0) || 1;
+    for (const x of [-w / 2, w / 2]) {
+      box(x, 0, 0.07, 0.07, 0, h); // post
+      box(x, back * 0.9, 0.04, 0.9, 0, 0.08); // ground bar of the net frame
+    }
+    box(0, 0, w / 2 + 0.07, 0.07, h - 0.12, h); // crossbar
+  }
+  return out;
+}
+
+/**
  * Wire fences (layer "fence", the MUGA's): a thin see-through mesh `height` metres tall, drawn in
  * its own half-transparent layer, and a solid post about every 2.5 m (in the props layer).
  */
@@ -767,7 +796,7 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features)] } },
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features)] } },
       fence: { type: 'geojson', data: fences.mesh },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },

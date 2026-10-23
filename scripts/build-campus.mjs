@@ -430,7 +430,10 @@ const GARDEN = { area: [[54, -36.5], [85.5, -45.5], [80, -71], [50.5, -62]], sta
 // ---------- sports grounds ----------
 // The MUGA's fenced courts and the big playing field west of Davies are grass in OSM
 // (landuse=recreation_ground): draw them like pitches and keep decorative trees off them.
-const FIELDS = new Set(['way/293961403', 'way/1546333125']);
+const FIELDS = new Set(['way/293961403', 'way/1546333125', 'way/653483624']);
+// OSM's grass sprint track down the east side of the Playing Field isn't on the aerial view, and it
+// would cross the east football pitch: leave it out
+{ const i = features.findIndex((f) => f.id === 'way/1546333127'); if (i >= 0) features.splice(i, 1); }
 for (const f of features) {
   if (f.properties.layer === 'green' && FIELDS.has(f.id)) f.properties.field = true;
   if (f.properties.layer === 'pitch' || f.properties.field) noTrees.push(f.geometry.coordinates[0]);
@@ -438,6 +441,9 @@ for (const f of features) {
 // the MUGA's courts sit inside a 3 m wire fence (OSM barrier=fence on the same outline)
 const MUGA = features.find((f) => f.id === 'way/293961403');
 if (MUGA) features.push({ type: 'Feature', properties: { layer: 'fence', height: 3 }, geometry: { type: 'LineString', coordinates: MUGA.geometry.coordinates[0] } });
+// so does the small artificial-turf pitch west of the Playing Field
+const CAGE = features.find((f) => f.id === 'way/653483624');
+if (CAGE) features.push({ type: 'Feature', properties: { layer: 'fence', height: 3 }, geometry: { type: 'LineString', coordinates: CAGE.geometry.coordinates[0] } });
 // tennis court markings on the MUGA's two tennis pitches; Court 1 is the western one
 const TENNIS = { singles: 1.37, service: 6.4 };
 const tennis = features.filter((f) => f.properties.layer === 'pitch' && f.properties.sport === 'tennis')
@@ -461,6 +467,64 @@ tennis.forEach((q, i) => {
   features.push({ type: 'Feature', properties: { layer: 'courtlabel', name: `Court ${i + 1}` }, geometry: { type: 'Point', coordinates: at(0, l - 3.2) } });
 });
 console.log(`tennis courts marked: ${tennis.length}`);
+
+// ---------- football pitches on the Playing Field ----------
+// Two pitches side by side, long sides north-south, measured off the aerial view: a full-size one
+// on the east, a smaller one west of it and a little further south. Lines and goals scale with
+// each pitch. Local metres; `a` is the pitch's long axis (radians), along the field's east hedge.
+const PITCHES = [
+  { c: [-180, 27.5], long: 97, wide: 56 },
+  { c: [-235.5, 20], long: 78, wide: 51 },
+];
+{
+  const field = features.find((f) => f.id === 'way/1546333125')?.geometry.coordinates[0].map(toM);
+  // the east hedge runs from its south-east corner to its north-east one
+  const a = field ? Math.atan2(field[1][1] - field[2][1], field[1][0] - field[2][0]) : Math.PI / 2;
+  const u = [Math.cos(a), Math.sin(a)], v = [u[1], -u[0]]; // u: up the pitch (north), v: across (east)
+  for (const [i, P] of PITCHES.entries()) {
+    const at = (x, y) => fromM([P.c[0] + v[0] * x + u[0] * y, P.c[1] + v[1] * x + u[1] * y]);
+    const line = (pts) => features.push({ type: 'Feature', properties: { layer: 'courtline', pitch: i + 1 }, geometry: { type: 'LineString', coordinates: pts.map(([x, y]) => at(x, y)) } });
+    const ring = (cx, cy, r, a0 = 0, a1 = 2 * Math.PI, n = 36) => Array.from({ length: n + 1 }, (_, k) => { const t = a0 + ((a1 - a0) * k) / n; return [cx + r * Math.cos(t), cy + r * Math.sin(t)]; });
+    const w = P.wide / 2, l = P.long / 2, full = P.long >= 90;
+    const box = (hw, d) => [[-hw, 0], [-hw, d], [hw, d], [hw, 0]];
+    const pen = { hw: Math.min(20.15, w - 6), d: full ? 16.5 : 13 }, six = { hw: full ? 9.15 : 7.5, d: full ? 5.5 : 4.5 };
+    const R = full ? 9.15 : 7.5, spot = full ? 11 : 9;
+    line([[-w, -l], [w, -l], [w, l], [-w, l], [-w, -l]]); // touch and goal lines
+    line([[-w, 0], [w, 0]]); // halfway line
+    line(ring(0, 0, R)); // centre circle
+    for (const end of [-1, 1]) {
+      const flip = (pts) => pts.map(([x, d]) => [x, end * (l - d)]);
+      line(flip(box(pen.hw, pen.d))); // penalty area
+      line(flip(box(six.hw, six.d))); // goal area
+      // the arc at the top of the penalty area: the part of a circle round the spot outside the box
+      const t = Math.acos((pen.d - spot) / R);
+      line(ring(0, 0, R, Math.PI / 2 - t, Math.PI / 2 + t, 12).map(([x, y]) => [x, end * (l - spot - y)]).map(([x, y]) => [x, y]));
+      // the goal, standing on the goal line (drawn in the app)
+      const g = fromM([P.c[0] + u[0] * end * l, P.c[1] + u[1] * end * l]);
+      features.push({ type: 'Feature', properties: { layer: 'goal', a: Math.round(a * 1000) / 1000, w: full ? 7.32 : 5, h: full ? 2.44 : 2, back: end }, geometry: { type: 'Point', coordinates: g } });
+    }
+  }
+  console.log(`football pitches marked: ${PITCHES.length}`);
+}
+
+// ---------- the small fenced pitch west of the Playing Field (way/1546333126) ----------
+// Markings like a small games court: outline, halfway line, centre circle and a box at each end.
+{
+  const q = features.find((f) => f.id === 'way/1546333126')?.geometry.coordinates[0].slice(0, 4).map(toM);
+  if (q) {
+    const c = q.reduce(([x, y], p) => [x + p[0] / 4, y + p[1] / 4], [0, 0]);
+    const e0 = [q[1][0] - q[0][0], q[1][1] - q[0][1]], e1 = [q[2][0] - q[1][0], q[2][1] - q[1][1]];
+    const [lg, sh] = Math.hypot(...e0) > Math.hypot(...e1) ? [e0, e1] : [e1, e0];
+    const L = Math.hypot(...lg), W = Math.hypot(...sh), u = [lg[0] / L, lg[1] / L], v = [-u[1], u[0]];
+    const at = (x, y) => fromM([c[0] + v[0] * x + u[0] * y, c[1] + v[1] * x + u[1] * y]);
+    const line = (pts) => features.push({ type: 'Feature', properties: { layer: 'courtline', court: 'cage' }, geometry: { type: 'LineString', coordinates: pts.map(([x, y]) => at(x, y)) } });
+    const w = W / 2 - 0.8, l = L / 2 - 0.8;
+    line([[-w, -l], [w, -l], [w, l], [-w, l], [-w, -l]]);
+    line([[-w, 0], [w, 0]]);
+    line(Array.from({ length: 33 }, (_, k) => [3 * Math.cos((k * Math.PI) / 16), 3 * Math.sin((k * Math.PI) / 16)]));
+    for (const end of [-1, 1]) line([[-3.5, end * l], [-3.5, end * (l - 4)], [3.5, end * (l - 4)], [3.5, end * l]]);
+  }
+}
 
 // ---------- low-poly trees: scatter deterministic points over green areas ----------
 // (OSM maps very few individual trees here; these are decorative, flagged generated:true)
