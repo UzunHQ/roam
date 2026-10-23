@@ -932,6 +932,56 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   }
   console.log(`tree row Fincham - Hive Café - chicken coop: ${rowTrees} trees`);
 
+  // more trees round Southlands (marked on the 04:56 screenshot): on every side of the pond (north,
+  // east towards the main entrance, south) and in the strip north of Wesley Court and the small
+  // building at the top. Kept off the water, paths, roads, buildings, the car park, the campus wall,
+  // the seating area and pins; the map's north edge trims the strip later.
+  {
+    const SL_SPOTS = [[132.7, 373.7], [133.9, 361.7], [166.8, 363.7], [173.7, 324.4], [174, 295.9], [166.8, 282.6], [178, 286.7], [107, 299.5], [115.9, 293.3], [126.3, 295.2],
+      [66.8, 522.3], [79.9, 532.3], [91.1, 534.8], [102.3, 536.7], [113.8, 548]];
+    const pondM = pond;
+    const okSL = (m) => !(pondM && (pointInRing(m, pondM) || pondM.some((a, i) => i < pondM.length - 1 && segDist(m, a, pondM[i + 1]) < 3)))
+      && !bldg.some((ring) => pointInRing(m, ring) || ring.some((p, k) => k < ring.length - 1 && segDist(m, p, ring[k + 1]) < 5))
+      && !lots.some((ring) => pointInRing(m, ring) || ring.some((p, k) => k < ring.length - 1 && segDist(m, p, ring[k + 1]) < 3))
+      && !near(roads.map((q) => q.pts), m, 6) && !near(foot.map((q) => q.pts), m, 3) && !near(wallLines, m, 5)
+      && Math.hypot(m[0] - SEAT[0], m[1] - SEAT[1]) > 7
+      && !placePts.some((q) => Math.hypot(q[0] - m[0], q[1] - m[1]) < 3.5)
+      && !treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 4.5);
+    let sl = 0;
+    const addSL = (m, size) => { features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size }, geometry: { type: 'Point', coordinates: fromM(m) } }); treesM.push(m); sl++; };
+    SL_SPOTS.forEach(([x, y], i) => {
+      const tries = [[0, 0], ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((k) => [1.5, 3].map((r) => [r * Math.cos((k * Math.PI) / 4), r * Math.sin((k * Math.PI) / 4)]))];
+      const hit = tries.map(([dx, dy]) => [x + dx, y + dy]).find(okSL);
+      if (hit) addSL(hit, Math.round((0.9 + ((i * 41) % 40) / 100) * 100) / 100);
+    });
+    // and a loose ring round the whole pond, 4-14 m from the water
+    if (pondM) {
+      const pc = pondM.reduce(([x, y], p) => [x + p[0] / pondM.length, y + p[1] / pondM.length], [0, 0]);
+      const toWater = (m) => pondM.reduce((d, a, i) => (i < pondM.length - 1 ? Math.min(d, segDist(m, a, pondM[i + 1])) : d), Infinity);
+      let seed7 = 61;
+      const rand7 = () => ((seed7 = (seed7 * 1664525 + 1013904223) % 4294967296) / 4294967296);
+      for (let y = pc[1] - 50; y < pc[1] + 50; y += 5.5) {
+        for (let x = pc[0] - 60; x < pc[0] + 60; x += 5.5) {
+          const r = rand7(), m = [x + (rand7() - 0.5) * 3, y + (rand7() - 0.5) * 3], size = Math.round((0.85 + rand7() * 0.45) * 100) / 100;
+          const dw = toWater(m);
+          if (dw < 4 || dw > 14 || r > 0.5 || !okSL(m)) continue;
+          addSL(m, size);
+        }
+      }
+    }
+    // and the strip north of Wesley Court and the top building, up to the map's edge
+    let seed8 = 73;
+    const rand8 = () => ((seed8 = (seed8 * 1664525 + 1013904223) % 4294967296) / 4294967296);
+    for (let y = 512; y < 565; y += 5.5) {
+      for (let x = 50; x < 170; x += 5.5) {
+        const r = rand8(), m = [x + (rand8() - 0.5) * 3, y + (rand8() - 0.5) * 3], size = Math.round((0.85 + rand8() * 0.4) * 100) / 100;
+        if (r > 0.6 || !okSL(m)) continue;
+        addSL(m, size);
+      }
+    }
+    console.log(`Southlands: ${sl} trees round the pond and north of Wesley Court`);
+  }
+
 
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
