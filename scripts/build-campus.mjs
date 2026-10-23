@@ -987,6 +987,25 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
     console.log(`Southlands: ${sl} trees round the pond and north of Wesley Court`);
   }
 
+  // three picnic tables on the lawn south-east of the big lake (marked on the 05:00 screenshot), each
+  // nudged up to 3 m to stay clear of paths, the water and tree canopies (layer "picnic"; no pin)
+  {
+    const lake = features.filter((f) => f.properties.layer === 'water').map((f) => f.geometry.coordinates[0].map(toM)).find((r) => pointInRing([-20, 120], r));
+    const canopies = features.filter((f) => f.properties.layer === 'tree').map((f) => [toM(f.geometry.coordinates), 2.6 * (f.properties.s ?? 1)]);
+    let tables = 0;
+    for (const [x, y, a] of [[32.9, 47.9, 0.35], [-11.8, 43.7, 1.2], [27, 62.7, 2.4]]) {
+      const ok = (m) => !(lake && (pointInRing(m, lake) || lake.some((p, k) => k < lake.length - 1 && segDist(m, p, lake[k + 1]) < 3)))
+        && !near(roads.map((q) => q.pts), m, 6) && !near(foot.map((q) => q.pts), m, 3)
+        && !canopies.some(([t, r]) => Math.hypot(t[0] - m[0], t[1] - m[1]) < r + 1.8);
+      const hit = [[0, 0], ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((k) => [1.5, 3].map((r) => [r * Math.cos((k * Math.PI) / 4), r * Math.sin((k * Math.PI) / 4)]))]
+        .map(([dx, dy]) => [x + dx, y + dy]).find(ok);
+      if (!hit) continue;
+      features.push({ type: 'Feature', properties: { layer: 'picnic', a }, geometry: { type: 'Point', coordinates: fromM(hit) } });
+      tables++;
+    }
+    console.log(`picnic tables: ${tables}`);
+  }
+
   // the hens' run west of the chicken coop, between it and the path: a low wire fence (layer "fence",
   // 1 m) and five hens (layer "hen", drawn in the app); no tree inside
   {

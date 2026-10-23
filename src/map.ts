@@ -620,6 +620,30 @@ function benchParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
 }
 
 /**
+ * Picnic tables (layer "picnic"): one wooden piece, a table top on two A-frame legs with a bench
+ * along each side, 1.8 m long, turned by `a`.
+ */
+function picnicParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
+  const out: GeoJSON.Feature[] = [];
+  for (const f of points) {
+    const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+    const a = Number(f.properties?.a) || 0, kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
+    const u = [Math.cos(a), Math.sin(a)], v = [-u[1], u[0]];
+    const box = (x: number, y: number, hx: number, hy: number, base: number, top: number) => out.push({
+      type: 'Feature', properties: { part: 'bench', base, top },
+      geometry: { type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([i, j]) => {
+        const px = u[0] * (x + hx * i) + v[0] * (y + hy * j), py = u[1] * (x + hx * i) + v[1] * (y + hy * j);
+        return [lng + px / kx, lat + py / ky];
+      })] },
+    });
+    box(0, 0, 0.9, 0.38, 0.68, 0.75); // table top
+    for (const s of [-0.7, 0.7]) box(s, 0, 0.05, 0.78, 0, 0.68); // legs (A-frames, from above a bar across)
+    for (const y of [-0.68, 0.68]) box(0, y, 0.9, 0.14, 0.4, 0.46); // benches
+  }
+  return out;
+}
+
+/**
  * The Growhampton chicken coop (a "monument" of kind coop): a small wooden hen house on short legs,
  * `long` x `wide` metres turned by `a`, under a reddish pitched roof (stepped slabs along the ridge,
  * eaves overhanging), with a little ramp up to a hatch on the side facing the path. Hens (layer
@@ -912,7 +936,7 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features), ...picnicParts(byLayer('picnic').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
       fence: { type: 'geojson', data: fences.mesh, tolerance: 0 },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
       outside: { type: 'geojson', data: outside },
