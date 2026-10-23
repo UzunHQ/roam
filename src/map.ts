@@ -70,7 +70,7 @@ const rimColor = (p: Pal): Expr => [
 /** Roof parts: flat panels keep the college pastel; pitched roofs are slate or tile in three steps. */
 const partColor = (p: Pal): Expr => ['match', ['get', 'part'],
   'panel', ['match', ['get', 'kind'], 'metal', p.metal, roofColor(p)],
-  'patch', ['match', ['get', 'kind'], 'green', p.greenRoof, p.solar],
+  'patch', p.greenRoof,
   'p1', ['match', ['get', 'kind'], 'tile', p.tile1, p.slate1],
   'p2', ['match', ['get', 'kind'], 'tile', p.tile2, p.slate2],
   ['match', ['get', 'kind'], 'tile', p.tile3, p.slate3],
@@ -78,14 +78,19 @@ const partColor = (p: Pal): Expr => ['match', ['get', 'part'],
 const wallColor = (p: Pal): Expr => ['case', ['coalesce', ['get', 'campus'], true], p.wall, p.wallOff];
 const SELECTED: Expr = ['boolean', ['feature-state', 'selected'], false];
 // layer filters, kept here so see-through mode (setXray) can add to them and put them back
-const TOP_FILTER: Expr = ['!', ['all', ['==', ['get', 'part'], 'patch'], ['==', ['get', 'kind'], 'solar']]];
-const SOLAR_FILTER: Expr = ['all', ['==', ['get', 'part'], 'patch'], ['==', ['get', 'kind'], 'solar']];
+const TOP_FILTER: Expr = ['!', ['in', ['get', 'part'], ['literal', ['cells', 'solar']]]];
+const SOLAR_FILTER: Expr = ['==', ['get', 'part'], 'cells'];
+const SOLAR_FAR_FILTER: Expr = ['==', ['get', 'part'], 'solar'];
+/** below this zoom the gaps between panel rows are thinner than a pixel and would shimmer, so the area is drawn whole */
+const SOLAR_ROWS_ZOOM = 17.5;
 const inIds = (ids: string[]): Expr => ['in', ['get', 'osmId'], ['literal', ids]];
 
 // chunky: unknown heights become 2-3 storeys; known ones are kept
 const HEIGHT: Expr = ['coalesce', ['get', 'height'], ['match', ['get', 'building'], ['house', 'detached', 'shed', 'garage'], 6, 9]];
 const BOUNCE: Expr = ['*', ['coalesce', ['feature-state', 'bounce'], 0], 5];
 const ROOF = 1.2; // parapet: full footprint, in the college's rim colour (a low 0.5 m eave on pitched roofs)
+// solar panels stand clear of the roof below, so the two never fight over the same depth at any zoom
+const SOLAR = { base: ROOF + 0.45, top: ROOF + 0.8, row: 1.6, gap: 0.7, length: 5, joint: 0.25, edge: 0.4 };
 const RIM: Expr = ['+', HEIGHT, BOUNCE, ['match', ['get', 'roof'], ['slate', 'tile'], 0.5, ROOF]];
 
 /** Paint properties that change with the theme, applied on load and on theme switch. */
@@ -106,6 +111,8 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'building-walls': { 'fill-extrusion-color': ['case', SELECTED, p.selectedWall, wallColor(p)] },
     'building-roof': { 'fill-extrusion-color': ['case', SELECTED, p.selected, rimColor(p)] },
     'building-top': { 'fill-extrusion-color': ['case', SELECTED, p.selected, partColor(p)] },
+    'roof-solar': { 'fill-extrusion-color': p.solar },
+    'roof-solar-far': { 'fill-extrusion-color': p.solar },
     'building-ghost': { 'fill-extrusion-color': ['case', SELECTED, p.selected, roofColor(p)] },
     'tree-trunk': { 'fill-extrusion-color': p.trunk },
     'tree-leaf': { 'fill-extrusion-color': ['match', ['get', 'tone'], 0, p.tones[0], 1, p.tones[1], 2, p.tones[2], 3, p.tones[3], 4, p.tones[4], p.blossom] },
@@ -283,6 +290,53 @@ function innerRect(ringLL: LngLat[], m: number): LngLat[] | null {
 }
 
 /**
+ * Solar panels filling an area of roof: rows lined up with the area's longest edge, each row cut
+ * into panels about 5 m long. Real boxes instead of a pattern image, so they keep their size and
+ * stay still at every zoom. `area` is a closed ring in lng/lat; returns closed rings.
+ */
+function solarRows(area: LngLat[]): LngLat[][] {
+  const ring = area.slice(0, -1);
+  const lat0 = ring[0][1], kx = 111320 * Math.cos((lat0 * Math.PI) / 180), ky = 111320;
+  const pts = ring.map(([x, y]) => [x * kx, y * ky]);
+  let best = 0, ang = 0;
+  pts.forEach((p, i) => { const q = pts[(i + 1) % pts.length], l = Math.hypot(q[0] - p[0], q[1] - p[1]); if (l > best) { best = l; ang = Math.atan2(q[1] - p[1], q[0] - p[0]); } });
+  const c = Math.cos(-ang), s = Math.sin(-ang);
+  const rot = pts.map(([x, y]) => [x * c - y * s, x * s + y * c]);
+  const back = ([x, y]: number[]): LngLat => [(x * Math.cos(ang) - y * Math.sin(ang)) / kx, (x * Math.sin(ang) + y * Math.cos(ang)) / ky];
+  // where a horizontal line crosses the outline: inside intervals, left to right
+  const span = (y: number) => {
+    const xs: number[] = [];
+    rot.forEach((p, i) => {
+      const q = rot[(i + 1) % rot.length];
+      if ((p[1] > y) !== (q[1] > y)) xs.push(p[0] + ((y - p[1]) / (q[1] - p[1])) * (q[0] - p[0]));
+    });
+    xs.sort((a, b) => a - b);
+    const out: [number, number][] = [];
+    for (let i = 0; i + 1 < xs.length; i += 2) out.push([xs[i], xs[i + 1]]);
+    return out;
+  };
+  const ys = rot.map((p) => p[1]);
+  const out: LngLat[][] = [];
+  for (let y0 = Math.min(...ys) + SOLAR.edge; y0 + SOLAR.row <= Math.max(...ys) - SOLAR.edge; y0 += SOLAR.row + SOLAR.gap) {
+    const y1 = y0 + SOLAR.row;
+    // the part of the row inside the area along both of its long edges
+    for (const [a0, a1] of span(y0)) {
+      for (const [b0, b1] of span(y1)) {
+        const x0 = Math.max(a0, b0) + SOLAR.edge, x1 = Math.min(a1, b1) - SOLAR.edge;
+        if (x1 - x0 < 1.5) continue;
+        const n = Math.max(1, Math.round((x1 - x0) / SOLAR.length)), step = (x1 - x0) / n;
+        for (let k = 0; k < n; k++) {
+          const p0 = x0 + k * step, p1 = p0 + step - SOLAR.joint;
+          const r = [[p0, y0], [p1, y0], [p1, y1], [p0, y1], [p0, y0]].map(back);
+          out.push(r);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * The parts that sit on top of each building's walls and parapet:
  *  - flat roofs: a pastel panel inset 1 m (plus a planted or solar patch where the roof has one)
  *  - pitched roofs: three stepped, shrinking slate/tile layers, a low-poly hip roof
@@ -305,9 +359,16 @@ function roofParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
       if (add(1.2, 'p1', 0.5, 1.7) && add(2.7, 'p2', 1.7, 2.8)) add(4.2, 'p3', 2.8, 3.7);
     } else {
       add(1, 'panel', ROOF, ROOF + 0.45);
-      // planted or solar area: as far in as the outline allows
-      if (kind === 'green' || kind === 'solar') {
-        [3.5, 2.5, 1.6].some((d) => add(d, 'patch', ROOF + 0.45, ROOF + 0.6)) || add(5, 'patch', ROOF + 0.45, ROOF + 0.6, innerRect);
+      // planted area or solar panels: as far in as the outline allows
+      const area = [3.5, 2.5, 1.6].map((d) => inset(ring, d)).find(Boolean) ?? innerRect(ring, 5);
+      if (kind === 'green' && area) out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part: 'patch', base: ROOF + 0.45, top: ROOF + 0.6 }, geometry: { type: 'Polygon', coordinates: [area] } });
+      if (kind === 'solar' && area) {
+        out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part: 'solar', base: SOLAR.base, top: SOLAR.top }, geometry: { type: 'Polygon', coordinates: [area] } });
+        const lng0 = area[0][0], lat0 = area[0][1];
+        const local = area.map(([x, y]) => [x - lng0, y - lat0] as LngLat); // rows are laid out near 0,0, then moved back
+        for (const r of solarRows(local)) {
+          out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part: 'cells', base: SOLAR.base, top: SOLAR.top }, geometry: { type: 'Polygon', coordinates: [r.map(([x, y]) => [x + lng0, y + lat0])] } });
+        }
       }
     }
   }
@@ -324,18 +385,7 @@ function windowTile(wall: string, frame: string, glass: string): ImageData {
   g.fillStyle = glass; g.fillRect(7.5, 7.5, 9, 8);
   return g.getImageData(0, 0, 24, 24);
 }
-function solarTile(cell: string, line: string): ImageData {
-  const c = document.createElement('canvas');
-  c.width = 16; c.height = 12;
-  const g = c.getContext('2d')!;
-  g.fillStyle = line; g.fillRect(0, 0, 16, 12);
-  g.fillStyle = cell; g.fillRect(1, 1, 14, 10);
-  g.fillStyle = line; g.globalAlpha = 0.5; g.fillRect(8, 1, 1, 10); g.fillRect(1, 6, 14, 1);
-  return g.getImageData(0, 0, 16, 12);
-}
 function setWindowImages(map: MLMap, p: Pal) {
-  const solar = solarTile(p.solar, p.frame);
-  if (map.hasImage('solar-cells')) map.updateImage('solar-cells', solar); else map.addImage('solar-cells', solar, { pixelRatio: 2 });
   for (const [id, data] of [['win', windowTile(p.wall, p.frame, p.glass)], ['win-off', windowTile(p.wallOff, p.frame, p.glassOff)]] as const) {
     if (map.hasImage(id)) map.updateImage(id, data); else map.addImage(id, data, { pixelRatio: 2 });
   }
@@ -774,14 +824,23 @@ export function createMap(opts: {
           'fill-extrusion-opacity': 1,
         },
       },
-      // solar panels: rows of cells (pattern image added on load)
+      // solar panels: rows of real panels standing on the roof (solarRows) close up, one block from afar
       {
-        id: 'roof-solar', type: 'fill-extrusion', source: 'roofparts',
+        id: 'roof-solar-far', type: 'fill-extrusion', source: 'roofparts', maxzoom: SOLAR_ROWS_ZOOM,
+        filter: SOLAR_FAR_FILTER,
+        paint: {
+          'fill-extrusion-height': ['+', ['get', 'h'], ['get', 'top'], BOUNCE],
+          'fill-extrusion-base': ['+', ['get', 'h'], ['get', 'base'], BOUNCE],
+          'fill-extrusion-vertical-gradient': false,
+        },
+      },
+      {
+        id: 'roof-solar', type: 'fill-extrusion', source: 'roofparts', minzoom: SOLAR_ROWS_ZOOM,
         filter: SOLAR_FILTER,
         paint: {
           'fill-extrusion-height': ['+', ['get', 'h'], ['get', 'top'], BOUNCE],
           'fill-extrusion-base': ['+', ['get', 'h'], ['get', 'base'], BOUNCE],
-          'fill-extrusion-pattern': 'solar-cells',
+          'fill-extrusion-vertical-gradient': false,
         },
       },
       // the selected half of a split block (selectBuilding): walls and roof in the selection colours
@@ -845,7 +904,7 @@ export function createMap(opts: {
   currentTheme = theme;
   // pattern images are drawn on demand, so the first frame never asks for a missing one
   map.setMissingStyleImageResolver((id) => {
-    if (id === 'solar-cells' || id === 'win' || id === 'win-off') setWindowImages(map, PALETTE[currentTheme]);
+    if (id === 'win' || id === 'win-off') setWindowImages(map, PALETTE[currentTheme]);
   });
   map.once('load', () => {
     setWindowImages(map, PALETTE[currentTheme]);
@@ -860,7 +919,7 @@ let currentTheme: Theme = 'light';
 export function applyTheme(map: MLMap, theme: Theme) {
   currentTheme = theme;
   // (map.loaded() reads false while the route dashes animate, so check for the images instead)
-  if (map.hasImage('win') || map.hasImage('solar-cells')) setWindowImages(map, PALETTE[theme]);
+  if (map.hasImage('win')) setWindowImages(map, PALETTE[theme]);
   const paints = themedPaint(PALETTE[theme]);
   for (const [layer, props] of Object.entries(paints)) {
     if (!map.getLayer(layer)) continue;
@@ -908,6 +967,7 @@ export function setXray(map: MLMap, ids: string[]) {
   map.setFilter('building-roof', any ? out : null);
   map.setFilter('building-top', any ? ['all', TOP_FILTER, out] : TOP_FILTER);
   map.setFilter('roof-solar', any ? ['all', SOLAR_FILTER, out] : SOLAR_FILTER);
+  map.setFilter('roof-solar-far', any ? ['all', SOLAR_FAR_FILTER, out] : SOLAR_FAR_FILTER);
   map.setFilter('building-ghost', inIds(sorted));
 }
 

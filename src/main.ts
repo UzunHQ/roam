@@ -1286,7 +1286,7 @@ async function main() {
   // ---------- see-through buildings: whatever stands between the camera and the route turns glassy ----------
   // Each route point is checked on screen: a building drawn over it (and not the one the route
   // touches) is in the way. Runs after the camera stops, never per frame.
-  const XRAY_LAYERS = ['building-walls', 'building-roof', 'building-top', 'roof-solar', 'building-ghost'];
+  const XRAY_LAYERS = ['building-walls', 'building-roof', 'building-top', 'roof-solar', 'roof-solar-far', 'building-ghost'];
   let xrayKey = '';
   let xrayTimer = 0;
   // waits for the view's tiles (a new zoom level loads first), up to about 3 s
