@@ -28,7 +28,7 @@ const PALETTE = {
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
     cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
     fencePost: '#3d5a49', fenceMesh: '#4a6656',
-    golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
+    golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', benchWood: '#b98559', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -45,7 +45,7 @@ const PALETTE = {
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
     cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
     fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
-    golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
+    golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', benchWood: '#8a6446', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
   },
 } as const;
 
@@ -137,7 +137,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     props: {
       'fill-extrusion-color': ['match', ['get', 'part'],
         'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet, 'post', p.fencePost,
-        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil, 'goal', p.goalPost, 'flag', p.flag,
+        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil, 'goal', p.goalPost, 'flag', p.flag, 'bench', p.benchWood,
         'bloom', ['match', ['get', 'c'], 0, p.blooms[0], 1, p.blooms[1], 2, p.blooms[2], p.blooms[3]],
         ['match', ['get', 'c'], 0, p.cars[0], 1, p.cars[1], 2, p.cars[2], 3, p.cars[3], 4, p.cars[4], p.cars[5]]],
     },
@@ -589,6 +589,31 @@ function flagParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
 }
 
 /**
+ * Park benches (layer "bench"): a wooden seat and backrest on two iron frames, 1.8 m long, facing `a`.
+ */
+function benchParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
+  const out: GeoJSON.Feature[] = [];
+  for (const f of points) {
+    const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+    const a = Number(f.properties?.a) || 0, kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
+    const fwd = [Math.cos(a), Math.sin(a)], side = [-fwd[1], fwd[0]];
+    // a box `along` the bench (side) and `ahead` (fwd) of its centre, with half sizes
+    const box = (part: string, along: number, ahead: number, hs: number, hf: number, base: number, top: number) => out.push({
+      type: 'Feature', properties: { part, base, top },
+      geometry: { type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([i, j]) => {
+        const x = side[0] * (along + hs * i) + fwd[0] * (ahead + hf * j), y = side[1] * (along + hs * i) + fwd[1] * (ahead + hf * j);
+        return [lng + x / kx, lat + y / ky];
+      })] },
+    });
+    for (const s of [-0.75, 0.75]) box('iron', s, 0, 0.04, 0.24, 0, 0.42); // legs
+    box('bench', 0, 0, 0.9, 0.24, 0.42, 0.48); // seat
+    box('bench', 0, -0.22, 0.9, 0.035, 0.55, 0.85); // backrest
+    for (const s of [-0.75, 0.75]) box('iron', s, -0.22, 0.03, 0.03, 0.42, 0.85); // backrest posts
+  }
+  return out;
+}
+
+/**
  * Football goals (layer "goal"): two posts and a crossbar `w` x `h` metres, square to the pitch's
  * long axis `a`, with the net's frame running back a little behind them.
  */
@@ -838,7 +863,7 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features)] } },
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features)] } },
       fence: { type: 'geojson', data: fences.mesh },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
       outside: { type: 'geojson', data: outside },

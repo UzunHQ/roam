@@ -840,6 +840,47 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   }
   console.log(`lawns east of Froebel: ${eastTrees} trees`);
 
+  // round the Southlands pond: trees where they were marked on the 04:28 screenshot, on its north
+  // and west banks and on the lawn east of it towards the main entrance; each spot is nudged up to
+  // 3 m if a path, road, building, the water or another tree is in the way
+  const pond = features.filter((f) => f.properties.layer === 'water').map((f) => f.geometry.coordinates[0].map(toM))
+    .find((r) => pointInRing([150, 350], r));
+  const POND_TREES = [[141.5, 365.9], [154, 356.6], [122.7, 357.7], [112.5, 349], [112.6, 338.4], [121.7, 326], [127.5, 313.8], [126.3, 304.4],
+    [174.3, 324.1], [173, 318.4], [176.1, 314.9], [165.5, 313.6], [168, 306.7], [160.7, 308.9], [158.7, 303.4], [165, 301], [156.7, 294.6]];
+  let pondTrees = 0;
+  const okFor = (m) => !(pond && (pointInRing(m, pond) || pond.some((a, i) => i < pond.length - 1 && segDist(m, a, pond[i + 1]) < 3)))
+    && !bldg.some((ring) => pointInRing(m, ring) || ring.some((p, k) => k < ring.length - 1 && segDist(m, p, ring[k + 1]) < 5))
+    && !near(roads.map((q) => q.pts), m, 6) && !near(foot.map((q) => q.pts), m, 3)
+    && !treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 4.5);
+  POND_TREES.forEach(([x, y], i) => {
+    const tries = [[0, 0], ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((k) => [1.5, 3].map((r) => [r * Math.cos((k * Math.PI) / 4), r * Math.sin((k * Math.PI) / 4)]))];
+    const hit = tries.map(([dx, dy]) => [x + dx, y + dy]).find(okFor);
+    if (!hit) return;
+    features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: Math.round((0.9 + ((i * 37) % 40) / 100) * 100) / 100 }, geometry: { type: 'Point', coordinates: fromM(hit) } });
+    treesM.push(hit);
+    pondTrees++;
+  });
+  console.log(`round the Southlands pond: ${pondTrees} trees`);
+
+  // a little seating area on the lawn between the Library and Elm Grove: four benches round a square,
+  // each facing the middle (drawn in the app, layer "bench"; no pin)
+  const SEAT = [114, 283];
+  let benches = 0;
+  for (const [dx, dy] of [[0, 3.2], [3.2, 0], [0, -3.2], [-3.2, 0]]) {
+    const m = [SEAT[0] + dx, SEAT[1] + dy];
+    if (near(roads.map((q) => q.pts), m, 5) || near(foot.map((q) => q.pts), m, 1.5)) continue;
+    if (bldg.some((ring) => pointInRing(m, ring))) continue;
+    // a: the way the bench faces (towards the middle), radians
+    features.push({ type: 'Feature', properties: { layer: 'bench', a: Math.round(Math.atan2(-dy, -dx) * 1000) / 1000 }, geometry: { type: 'Point', coordinates: fromM(m) } });
+    benches++;
+  }
+  // no tree on the seating area
+  for (let i = features.length - 1; i >= 0; i--) {
+    const f = features[i];
+    if (f.properties.layer === 'tree' && Math.hypot(...toM(f.geometry.coordinates).map((v, k) => v - SEAT[k])) < 7) features.splice(i, 1);
+  }
+  console.log(`seating area: ${benches} benches`);
+
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
   // (stretched over the west meadow and the playing field too, so no pale strip is left between them
