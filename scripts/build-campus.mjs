@@ -272,7 +272,7 @@ function nameScore(place, osmName) {
 const report = [];
 const snapCategories = new Set(['building', 'sport', 'food']);
 // outdoor places keep their point, and so do rooms whose building already has its own pin
-const POINT_ONLY_KINDS = new Set(['court', 'field', 'parking', 'fountain', 'garden', 'square', 'monument', 'golf']);
+const POINT_ONLY_KINDS = new Set(['court', 'field', 'pitch', 'parking', 'fountain', 'garden', 'square', 'monument', 'golf']);
 const POINT_ONLY_IDS = new Set(['convent-parlour']);
 const pointOnly = (p) => POINT_ONLY_KINDS.has(p.kind) || POINT_ONLY_IDS.has(p.id);
 const candidates = placesDoc.places.filter((p) => snapCategories.has(p.category) && !pointOnly(p));
@@ -595,21 +595,30 @@ const PITCHES = [
 }
 
 // ---------- the small fenced pitch west of the Playing Field (way/1546333126) ----------
-// Markings like a small games court: outline, halfway line, centre circle and a box at each end.
+// A five-a-side football pitch (aerial view): touch and goal lines, halfway line, centre circle, a
+// penalty arc in front of each goal and a small goal at each end. The wire fence round it stays.
 {
   const q = features.find((f) => f.id === 'way/1546333126')?.geometry.coordinates[0].slice(0, 4).map(toM);
   if (q) {
     const c = q.reduce(([x, y], p) => [x + p[0] / 4, y + p[1] / 4], [0, 0]);
     const e0 = [q[1][0] - q[0][0], q[1][1] - q[0][1]], e1 = [q[2][0] - q[1][0], q[2][1] - q[1][1]];
     const [lg, sh] = Math.hypot(...e0) > Math.hypot(...e1) ? [e0, e1] : [e1, e0];
-    const L = Math.hypot(...lg), W = Math.hypot(...sh), u = [lg[0] / L, lg[1] / L], v = [-u[1], u[0]];
+    const L = Math.hypot(...lg), W = Math.hypot(...sh), u = [lg[0] / L, lg[1] / L], v = [u[1], -u[0]];
     const at = (x, y) => fromM([c[0] + v[0] * x + u[0] * y, c[1] + v[1] * x + u[1] * y]);
-    const line = (pts) => features.push({ type: 'Feature', properties: { layer: 'courtline', court: 'cage' }, geometry: { type: 'LineString', coordinates: pts.map(([x, y]) => at(x, y)) } });
-    const w = W / 2 - 0.8, l = L / 2 - 0.8;
+    const line = (pts) => features.push({ type: 'Feature', properties: { layer: 'courtline', court: 'five-a-side' }, geometry: { type: 'LineString', coordinates: pts.map(([x, y]) => at(x, y)) } });
+    const arc = (cx, cy, r, a0, a1, n = 24) => Array.from({ length: n + 1 }, (_, k) => { const t = a0 + ((a1 - a0) * k) / n; return [cx + r * Math.cos(t), cy + r * Math.sin(t)]; });
+    const w = W / 2 - 0.8, l = L / 2 - 0.8, R = Math.min(5, w - 1);
     line([[-w, -l], [w, -l], [w, l], [-w, l], [-w, -l]]);
     line([[-w, 0], [w, 0]]);
-    line(Array.from({ length: 33 }, (_, k) => [3 * Math.cos((k * Math.PI) / 16), 3 * Math.sin((k * Math.PI) / 16)]));
-    for (const end of [-1, 1]) line([[-3.5, end * l], [-3.5, end * (l - 4)], [3.5, end * (l - 4)], [3.5, end * l]]);
+    line(arc(0, 0, 2.5, 0, 2 * Math.PI, 32));
+    for (const end of [-1, 1]) {
+      // the penalty arc: a half circle on the goal line, bulging into the pitch
+      line(arc(0, end * l, R, end > 0 ? Math.PI : 0, end > 0 ? 2 * Math.PI : Math.PI));
+      features.push({ type: 'Feature', properties: { layer: 'goal', a: Math.round(Math.atan2(u[1], u[0]) * 1000) / 1000, w: 3, h: 2, back: end }, geometry: { type: 'Point', coordinates: at(0, end * l) } });
+    }
+    const pitchPlace = placesDoc.places.find((p) => p.id === 'five-a-side-pitch');
+    if (pitchPlace) pitchPlace.position = fromM(c).map((x) => Math.round(x * 1e6) / 1e6);
+    console.log(`five-a-side pitch: ${L.toFixed(1)} x ${W.toFixed(1)} m`);
   }
 }
 

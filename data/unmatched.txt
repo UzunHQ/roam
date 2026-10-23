@@ -9,6 +9,7 @@
 ~~  student-medical-centre -> way/623548451 (point inside footprint; OSM calls it "Old Court", verify)
 --  muga: court, no building footprint (uses its point)
 --  playing-field: field, no building footprint (uses its point)
+--  five-a-side-pitch: pitch, no building footprint (uses its point)
 --  south-car-park: parking, no building footprint (uses its point)
 --  froebel-car-park: parking, no building footprint (uses its point)
 --  froebel-gate-car-park: parking, no building footprint (uses its point)

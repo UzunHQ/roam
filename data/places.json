@@ -2216,7 +2216,7 @@
       "photo": null,
       "services": [
         "Two football pitches",
-        "Small fenced artificial-turf pitch on the west side",
+        "Five-a-side pitch on the west side",
         "Football and other outdoor sport"
       ],
       "officialUrl": null,
@@ -2225,6 +2225,48 @@
         {
           "url": "https://www.openstreetmap.org/way/1546333125",
           "title": "OpenStreetMap: recreation ground west of Davies",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "five-a-side-pitch",
+      "code": "",
+      "name": "5-a-side Pitch",
+      "aliases": [
+        "Five-a-side pitch",
+        "5-a-side",
+        "Small pitch",
+        "Football cage",
+        "Astro"
+      ],
+      "roomCodePrefixes": [],
+      "category": "sport",
+      "kind": "pitch",
+      "college": "froebel",
+      "description": "A small fenced five-a-side football pitch with an artificial-turf surface, just west of the Playing Field.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.250474,
+        51.455701
+      ],
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [
+        "Five-a-side football",
+        "Artificial turf",
+        "Wire fence all round"
+      ],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/1546333126",
+          "title": "OpenStreetMap: pitch, artificial turf",
           "checked": "2026-10-23"
         }
       ]
