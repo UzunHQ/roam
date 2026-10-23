@@ -82,19 +82,25 @@ export const HOURS: HoursEntry[] = [
     place: 'gym',
     period: 'All year',
     from: '2026-10-21',
-    weekly: WEEKDAYS('06:00', '22:00'), // weekends not listed
+    weekly: { ...WEEKDAYS('06:00', '22:00'), sat: [['08:00', '18:00']], sun: [['08:00', '18:00']] },
     source: { name: 'Lifestyle Fitness', url: 'https://www.lifestylefitness.co.uk/club/roehampton' },
-    checked: '2026-10-21',
-    unknown: 'Check with the gym',
+    checked: '2026-10-23',
   },
   {
     place: 'union-bar',
     period: 'All year',
-    from: '2026-10-21',
-    weekly: { ...WEEKDAYS('17:00', '23:00'), sat: [], sun: [] },
+    from: '2026-10-23',
+    weekly: { ...WEEKDAYS('15:00', '23:00'), sat: [], sun: [] },
     source: { name: "Students' Union", url: 'https://www.roehamptonstudent.com/' },
-    checked: '2026-10-21',
+    checked: '2026-10-23',
     notes: 'Event nights may run later',
+  },
+  {
+    place: 'pub-grub',
+    period: 'All year',
+    from: '2026-10-23',
+    weekly: { ...WEEKDAYS('15:00', '21:00'), sat: [], sun: [] },
+    checked: '2026-10-23', // checked on campus
   },
   {
     place: 'hive-cafe',

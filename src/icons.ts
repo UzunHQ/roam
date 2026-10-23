@@ -24,6 +24,7 @@ export const icons = {
   restaurant: svg('<path d="M5 3v5a2 2 0 0 0 4 0V3M7 3v18"/><path d="M17 21V3c-2 1-3.5 3.5-3.5 7.5 0 1.4.9 2.5 2.2 2.5H17"/>'),
   bar: svg('<path d="M5 4h14l-7 8z"/><path d="M12 12v8M8 20h8"/>'),
   shop: svg('<path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>'),
+  parking: svg('<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M9.5 17V7h3.5a3 3 0 0 1 0 6H9.5"/>'),
   search: svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
   list: svg('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>'),
   map: svg('<path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13M15 6.5v13"/>'),
@@ -53,7 +54,7 @@ export const icons = {
 const byKind: Record<string, string> = {
   academic: icons.academic, accommodation: icons.accommodation, library: icons.library, health: icons.health,
   union: icons.union, faith: icons.faith, careers: icons.careers, security: icons.security, laundry: icons.laundry, post: icons.post,
-  service: icons.service, cafe: icons.cafe, restaurant: icons.restaurant, bar: icons.bar, shop: icons.shop,
+  service: icons.service, cafe: icons.cafe, restaurant: icons.restaurant, bar: icons.bar, shop: icons.shop, parking: icons.parking,
   gym: icons.gym, court: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
 };
 

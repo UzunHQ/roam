@@ -724,7 +724,11 @@
       "name": "Sir David Bell Building",
       "aliases": [
         "David Bell",
-        "DB"
+        "DB",
+        "AVR",
+        "AV Resources",
+        "Cinema",
+        "Kit Room"
       ],
       "roomCodePrefixes": [
         "DB"
@@ -732,7 +736,7 @@
       "category": "building",
       "kind": "academic",
       "college": "digby-stuart",
-      "description": "",
+      "description": "Home of the School of Arts, Humanities and Social Sciences, with film studios, newsrooms, editing suites and a 100-seat cinema.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -744,10 +748,36 @@
       "entrance": null,
       "footprintId": "way/624679293",
       "photo": null,
-      "services": [],
-      "officialUrl": null,
-      "accessibility": null,
+      "services": [
+        "Sir David Bell Cinema (100 seats)",
+        "AV Resources (AVR), opposite Fincham",
+        "Kit Room (free equipment hire)",
+        "Film studios and editing suites",
+        "Newsrooms",
+        "Study spaces on the top floors",
+        "MacBooks with course software"
+      ],
+      "officialUrl": "https://blog.roehampton.ac.uk/2026/09/08/a-students-guide-to-roehamptons-sir-david-bell-building/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/sir-david-bell-building",
+        "summary": "Access guide on AccessAble"
+      },
       "sources": [
+        {
+          "url": "https://blog.roehampton.ac.uk/2026/09/08/a-students-guide-to-roehamptons-sir-david-bell-building/",
+          "title": "A student's guide to the Sir David Bell Building (Roehampton blog)",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/sir-david-bell-building",
+          "title": "AccessAble: Sir David Bell Building",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.sandybrown.com/case-study/sir-david-bell-building-university-of-roehampton/",
+          "title": "Sandy Brown: Sir David Bell Building",
+          "checked": "2026-10-23"
+        },
         {
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
@@ -1108,7 +1138,9 @@
       "code": "F7",
       "name": "Grove House",
       "aliases": [
-        "GH"
+        "GH",
+        "Clinical Simulation Centre",
+        "Nursing"
       ],
       "roomCodePrefixes": [
         "GH"
@@ -1129,6 +1161,7 @@
       "footprintId": "way/294029608",
       "photo": null,
       "services": [
+        "Nursing: Clinical Simulation Centre",
         "Summer away-days and events via Roehampton Venues",
         "Rooms such as GH.001 Adam Room and GH.002 Terrace Room"
       ],
@@ -1277,6 +1310,51 @@
         {
           "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/queen-s-building",
           "title": "AccessAble: Queen's Building",
+          "checked": "2026-10-20"
+        }
+      ]
+    },
+    {
+      "id": "chapman-hall",
+      "code": "",
+      "name": "Chapman Hall",
+      "aliases": [
+        "Chapman"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "southlands",
+      "description": "A hall in Queen's Building at Southlands, used for events and Friday Jumu'ah prayers.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.24402,
+        51.45975
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "relation/8758398",
+      "photo": null,
+      "services": [
+        "Events",
+        "Friday Jumu'ah prayers"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/queen-s-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
+          "title": "Chaplaincy and faith",
+          "checked": "2026-10-20"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
       ]
@@ -1582,13 +1660,98 @@
       ]
     },
     {
+      "id": "erasmus-house",
+      "code": "",
+      "name": "Erasmus House",
+      "aliases": [
+        "Erasmus",
+        "Registry",
+        "Academic Registry",
+        "College Team"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "digby-stuart",
+      "description": "Digby Stuart building with The Base, the college team offices and the Academic Registry Office.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243064,
+        51.45683
+      ],
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": "way/653472808",
+      "photo": null,
+      "services": [
+        "The Base (ground floor)",
+        "College team offices (first floor)",
+        "Academic Registry Office (second floor)"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/erasmus-house",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/colleges/digby-stuart/digby-college-map-2025---2026.pdf",
+          "title": "Digby Stuart College map 2025-2026 (PDF)",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/erasmus-house",
+          "title": "AccessAble: Erasmus House",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "lee-house",
+      "code": "",
+      "name": "Lee House",
+      "aliases": [
+        "Lee"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "digby-stuart",
+      "description": "The curved Digby Stuart building facing the main entrance.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243284,
+        51.457433
+      ],
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": "way/624435278",
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/624435278",
+          "title": "OpenStreetMap: Lee House",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
       "id": "richardson",
       "code": "8",
       "name": "Richardson Building",
       "aliases": [
         "Richardson",
         "Wellbeing",
-        "Student Finance"
+        "Student Finance",
+        "Disability",
+        "Dyslexia"
       ],
       "roomCodePrefixes": [],
       "category": "building",
@@ -1608,7 +1771,8 @@
       "photo": null,
       "services": [
         "Wellbeing Centre (counselling and Wellbeing Officer appointments)",
-        "Disability and Dyslexia Services",
+        "Quick query appointments (Wellbeing and Disability)",
+        "Disability and Dyslexia Services: disabilities@roehampton.ac.uk, 020 8392 3636",
         "Post Room",
         "Student Finance Office"
       ],
@@ -1623,7 +1787,7 @@
         {
           "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/disability-services/",
           "title": "Disability and Dyslexia Services",
-          "checked": "2026-10-20"
+          "checked": "2026-10-23"
         },
         {
           "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
@@ -1909,6 +2073,45 @@
       ]
     },
     {
+      "id": "south-car-park",
+      "code": "",
+      "name": "South Car Park",
+      "aliases": [
+        "Car park",
+        "Parking",
+        "Froebel car park",
+        "Froebel parking"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "parking",
+      "college": "froebel",
+      "description": "Car park at Froebel College, beside the Montefiore Building and the MUGA courts.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.24745,
+        51.45525
+      ],
+      "positionSource": "estimate",
+      "positionAccuracyM": 30,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [
+        "Parking on campus is very limited"
+      ],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/montefiore-building",
+          "title": "AccessAble: Montefiore Building",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
       "id": "davies-sports-hall",
       "code": "F2",
       "name": "Davies Sports Hall",
@@ -2174,6 +2377,52 @@
       ]
     },
     {
+      "id": "convent-parlour",
+      "code": "",
+      "name": "Convent Parlour",
+      "aliases": [
+        "Covent Parlour",
+        "Parlour"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "academic",
+      "college": "digby-stuart",
+      "description": "A classroom and conference room in the Chapel Building at Digby Stuart, next to Digby Chapel.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.2436,
+        51.45622
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [
+        "Classroom",
+        "Conference room"
+      ],
+      "officialUrl": null,
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/venues/digby-chapel",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/colleges/digby-stuart/digby-college-map-2025---2026.pdf",
+          "title": "Digby Stuart College map 2025-2026 (PDF)",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.accessable.co.uk/venues/digby-chapel",
+          "title": "AccessAble: Digby Chapel",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
       "id": "fincham-prayer-rooms",
       "code": "",
       "name": "Fincham Islamic Prayer Rooms",
@@ -2385,6 +2634,49 @@
       ]
     },
     {
+      "id": "southlands-car-park",
+      "code": "",
+      "name": "Southlands Car Park",
+      "aliases": [
+        "Car park",
+        "Parking",
+        "Southlands parking"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "parking",
+      "college": "southlands",
+      "description": "Permit car park beside Queen's Building, with 6 Blue Badge bays.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.24355,
+        51.45965
+      ],
+      "positionSource": "estimate",
+      "positionAccuracyM": 30,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [
+        "Permit holders and Blue Badge holders",
+        "6 Blue Badge bays",
+        "Parking on campus is very limited"
+      ],
+      "officialUrl": null,
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/aldersgate-court",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/aldersgate-court",
+          "title": "AccessAble: Aldersgate Court (car park)",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
       "id": "digby-den-diner",
       "code": "",
       "name": "The Digby Den and Diner",
@@ -2499,6 +2791,52 @@
       ]
     },
     {
+      "id": "digby-square",
+      "code": "",
+      "name": "Digby Square",
+      "aliases": [
+        "Digby Sq",
+        "Square"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "digby-stuart",
+      "description": "Outdoor social space at Digby Stuart, home of the Hive Café, with outdoor seating and table tennis.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.24395,
+        51.45625
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [
+        "The Hive Café",
+        "Outdoor seating",
+        "Table tennis tables",
+        "Christmas market every year",
+        "The Shop is just off the square"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/colleges/digby-stuart/digby-college-map-2025---2026.pdf",
+          "title": "Digby Stuart College map 2025-2026 (PDF)",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
       "id": "froebel-diner",
       "code": "",
       "name": "Froebel Diner",
@@ -2563,13 +2901,13 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244773,
-        51.45891
+        -0.24445,
+        51.4592
       ],
       "positionSource": "official-map",
       "positionAccuracyM": 20,
       "entrance": null,
-      "footprintId": "way/629613442",
+      "footprintId": "way/629613413",
       "photo": null,
       "services": [
         "Piri-piri chicken",
@@ -2670,8 +3008,9 @@
     {
       "id": "froebel-cafe",
       "code": "",
-      "name": "Café (Froebel)",
+      "name": "Costa",
       "aliases": [
+        "Costa Coffee",
         "Café",
         "Coffee"
       ],
@@ -2679,7 +3018,7 @@
       "category": "food",
       "kind": "cafe",
       "college": "froebel",
-      "description": "A café shown on the official campus map. Its name has not been confirmed yet.",
+      "description": "Costa Coffee in the Montefiore Building, Froebel College.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -2691,18 +3030,25 @@
       "entrance": null,
       "footprintId": "way/294029609",
       "photo": null,
-      "services": [],
-      "officialUrl": null,
+      "services": [
+        "Costa coffee and drinks"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
       "accessibility": null,
       "sources": [
         {
-          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
-          "title": "Campus map (September 2025), University of Roehampton",
-          "checked": "2026-10-20"
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/montefiore-building",
+          "title": "AccessAble: Montefiore Building",
+          "checked": "2026-10-23"
         },
         {
           "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
           "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
+          "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
       ]
@@ -2720,12 +3066,12 @@
       "category": "food",
       "kind": "bar",
       "college": "froebel",
-      "description": "The University's main social hub, with a fully stocked bar, food, a daily Pub Grub menu and events such as karaoke, open mic and DJ slots.",
+      "description": "The University's main social hub in the Montefiore Building, with a fully stocked bar, food and events such as karaoke, open mic and DJ slots.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.246848,
-        51.455297
+        -0.246902,
+        51.455234
       ],
       "positionSource": "official-map",
       "positionAccuracyM": 20,
@@ -2734,7 +3080,6 @@
       "photo": null,
       "services": [
         "Fully stocked bar",
-        "Daily 'Pub Grub' menu",
         "Karaoke, open mic and DJ events",
         "THE BOP club night every Friday in term (with adjoining Monte Hall)"
       ],
@@ -2755,6 +3100,98 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ]
+    },
+    {
+      "id": "montefiore",
+      "code": "",
+      "name": "Montefiore Building",
+      "aliases": [
+        "Montefiore",
+        "Monte Hall",
+        "Montefiore Hall",
+        "Monte"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "service",
+      "college": "froebel",
+      "description": "Froebel College building with Monte Hall, the Union Bar, Pub & Grub, the Froebel Diner and Costa.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.246923,
+        51.455185
+      ],
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": "way/294029609",
+      "photo": null,
+      "services": [
+        "Montefiore Hall (Monte Hall)",
+        "The Union Bar",
+        "Pub & Grub",
+        "Froebel Diner",
+        "Costa"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": {
+        "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/montefiore-building",
+        "summary": "Access guide on AccessAble"
+      },
+      "sources": [
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/montefiore-building",
+          "title": "AccessAble: Montefiore Building",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
+      "id": "pub-grub",
+      "code": "",
+      "name": "Pub & Grub",
+      "aliases": [
+        "Pub Grub",
+        "Pub and Grub",
+        "Grub"
+      ],
+      "roomCodePrefixes": [],
+      "category": "food",
+      "kind": "restaurant",
+      "college": "froebel",
+      "description": "A small food counter next to the Union Bar, in the Montefiore Building.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.246848,
+        51.455297
+      ],
+      "positionSource": "official-map",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "way/294029609",
+      "photo": null,
+      "services": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/montefiore-building",
+          "title": "AccessAble: Montefiore Building",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
+          "title": "Cafés, bars and social spaces",
+          "checked": "2026-10-23"
         }
       ]
     },
