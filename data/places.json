@@ -3188,46 +3188,6 @@
       ]
     },
     {
-      "id": "digby-cafe",
-      "code": "",
-      "name": "Café (Digby Stuart)",
-      "aliases": [
-        "Café",
-        "Coffee"
-      ],
-      "roomCodePrefixes": [],
-      "category": "food",
-      "kind": "cafe",
-      "college": "digby-stuart",
-      "description": "A café shown on the official campus map. Its name has not been confirmed yet.",
-      "lastVerified": null,
-      "status": "confirmed",
-      "position": [
-        -0.244335,
-        51.456537
-      ],
-      "positionSource": "official-map",
-      "positionAccuracyM": 20,
-      "entrance": null,
-      "footprintId": "way/624679297",
-      "photo": null,
-      "services": [],
-      "officialUrl": null,
-      "accessibility": null,
-      "sources": [
-        {
-          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
-          "title": "Campus map (September 2025), University of Roehampton",
-          "checked": "2026-10-20"
-        },
-        {
-          "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
-          "title": "Cafés, bars and social spaces",
-          "checked": "2026-10-20"
-        }
-      ]
-    },
-    {
       "id": "froebel-cafe",
       "code": "",
       "name": "Costa",

@@ -23,7 +23,6 @@
 ~~  froebel-diner -> way/294029609 (point inside footprint; OSM calls it "Montefiore", verify)
 ~~  quad-cafe -> way/629613413 (point inside footprint)
 ~~  library-cafe -> way/624430550 (point inside footprint; OSM calls it "University of Roehampton Library", verify)
-~~  digby-cafe -> way/624679297 (nearest, 5 m away; OSM calls it "Howard", verify)
 ~~  froebel-cafe -> way/294029609 (point inside footprint; OSM calls it "Montefiore", verify)
 ~~  union-bar -> way/294029609 (point inside footprint; OSM calls it "Montefiore", verify)
 ~~  pub-grub -> way/294029609 (point inside footprint; OSM calls it "Montefiore", verify)
