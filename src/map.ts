@@ -146,6 +146,12 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
 }
 
 let treeCenters: LngLat[] = [];
+/**
+ * Small details (cars, pitch and court lines, goals, fences, the garden, statue, fountain, benches,
+ * golf flags) show from here: just under the farthest the map zooms out (14.5), so they are already
+ * there in the opening and whole-campus views, which go down to about 14.9 on a phone.
+ */
+const DETAIL_ZOOM = 14.4;
 
 /**
  * Blocks drawn as one building but selected in halves (layer "half" in campus.geojson, see SPLITS
@@ -885,8 +891,8 @@ export function createMap(opts: {
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       // the campus wall, and low garden walls on campus (layer "gardenwall") in the same stone
       wallparts: { type: 'geojson', data: wallParts({ type: 'FeatureCollection', features: [...walls.features, ...byLayer('gardenwall').features] }) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features)] } },
-      fence: { type: 'geojson', data: fences.mesh },
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
+      fence: { type: 'geojson', data: fences.mesh, tolerance: 0 },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
       pines: { type: 'geojson', data: pineParts(byLayer('pine').features) },
       outside: { type: 'geojson', data: outside },
@@ -903,8 +909,8 @@ export function createMap(opts: {
       { id: 'parking', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'parking'], paint: {} },
       // tennis court markings on the MUGA (about 5 cm lines, so they only show up close)
       {
-        id: 'courtline', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'courtline'], minzoom: 16.5,
-        paint: { 'line-width': ['interpolate', ['exponential', 2], ['zoom'], 16.5, 0.6, 19.5, 3] },
+        id: 'courtline', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'courtline'], minzoom: DETAIL_ZOOM,
+        paint: { 'line-width': ['interpolate', ['exponential', 2], ['zoom'], 14.5, 0.35, 16.5, 0.6, 19.5, 3] },
       },
       { id: 'water', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'water'], paint: {} },
       { id: 'shore', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'water'], paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 1, 19, 5], 'line-blur': 1 } },
@@ -1002,7 +1008,7 @@ export function createMap(opts: {
       },
       // parked cars and the fountain: close up only, and never in the way of a tap (main.ts only asks the building layers)
       {
-        id: 'props', type: 'fill-extrusion', source: 'props', minzoom: 16.5,
+        id: 'props', type: 'fill-extrusion', source: 'props', minzoom: DETAIL_ZOOM,
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'] },
       },
       // historic stone monuments: shown from afar like the buildings, but never tappable as one
@@ -1012,7 +1018,7 @@ export function createMap(opts: {
       },
       // wire mesh: see-through, so it goes in its own layer with a layer-wide opacity
       {
-        id: 'fence-mesh', type: 'fill-extrusion', source: 'fence', minzoom: 16.5,
+        id: 'fence-mesh', type: 'fill-extrusion', source: 'fence', minzoom: DETAIL_ZOOM,
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-opacity': 0.22 },
       },
       {
