@@ -2090,11 +2090,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.24745,
-        51.45525
+        -0.247789,
+        51.455535
       ],
       "positionSource": "estimate",
-      "positionAccuracyM": 30,
+      "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": null,
       "photo": null,
@@ -2110,6 +2110,39 @@
           "checked": "2026-10-23"
         }
       ]
+    },
+    {
+      "id": "froebel-car-park",
+      "code": "",
+      "name": "Froebel Car Park",
+      "aliases": [
+        "Car park",
+        "Parking",
+        "Grove House car park",
+        "Grove House parking"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "parking",
+      "college": "froebel",
+      "description": "Car park at Froebel College, on the south side of the road below Grove House.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.245836,
+        51.454905
+      ],
+      "positionSource": "estimate",
+      "positionAccuracyM": 10,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [
+        "Parking on campus is very limited"
+      ],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": []
     },
     {
       "id": "davies-sports-hall",
@@ -2650,11 +2683,11 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.24355,
-        51.45965
+        -0.243595,
+        51.459552
       ],
       "positionSource": "estimate",
-      "positionAccuracyM": 30,
+      "positionAccuracyM": 10,
       "entrance": null,
       "footprintId": null,
       "photo": null,

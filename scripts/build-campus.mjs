@@ -185,7 +185,11 @@ function nameScore(place, osmName) {
 
 const report = [];
 const snapCategories = new Set(['building', 'sport', 'food']);
-const candidates = placesDoc.places.filter((p) => snapCategories.has(p.category) && p.kind !== 'court');
+// outdoor places keep their point, and so do rooms whose building already has its own pin
+const POINT_ONLY_KINDS = new Set(['court', 'field', 'parking', 'fountain', 'garden', 'square']);
+const POINT_ONLY_IDS = new Set(['convent-parlour', 'digby-square']);
+const pointOnly = (p) => POINT_ONLY_KINDS.has(p.kind) || POINT_ONLY_IDS.has(p.id);
+const candidates = placesDoc.places.filter((p) => snapCategories.has(p.category) && !pointOnly(p));
 const claimed = new Set(); // footprints taken by an exact name match
 const exact = new Map();
 // pass 1: exact names claim footprints; pass 2: strong word overlap nearby, unclaimed only
@@ -201,7 +205,7 @@ for (const [minScore, maxD] of [[1, 250], [0.89, 60]]) {
   }
 }
 for (const p of placesDoc.places) {
-  if (p.kind === 'court') { report.push(`--  ${p.id}: outdoor court, no building footprint (uses its point)`); continue; }
+  if (pointOnly(p)) { p.footprintId = null; report.push(`--  ${p.id}: ${p.kind}, no building footprint (uses its point)`); continue; }
   if (!candidates.includes(p)) continue;
   const radius = Math.max(60, (p.positionAccuracyM || 20) * 3);
   let match = exact.get(p.id) || null, how = match ? `name "${match.b.f.properties.name}"` : '';
@@ -251,6 +255,73 @@ for (const { f } of buildings) {
   f.properties.campus ??= true;
 }
 
+// ---------- hand-mapped outdoor areas ----------
+// OSM has no car parks here. Shapes are in metres east/north of ORIGIN, traced against the
+// campus tour and the aerial view; the aisles cars park off are OSM ways.
+const ORIGIN = [-0.246, 51.4555];
+const KX = 111320 * Math.cos((ORIGIN[1] * Math.PI) / 180), KY = 111320;
+const fromM = ([x, y]) => [round(ORIGIN[0] + x / KX), round(ORIGIN[1] + y / KY)];
+const toM = ([lng, lat]) => [(lng - ORIGIN[0]) * KX, (lat - ORIGIN[1]) * KY];
+const ringLL = (pts) => [...pts, pts[0]].map(fromM);
+// a stable pseudo-random number in [0, 1) for a few integers
+const hash = (...n) => { const v = Math.sin(n.reduce((a, b, i) => a + b * (12.9898 + i * 78.233), 0)) * 43758.5453; return v - Math.floor(v); };
+const wayGeom = new Map(osm.elements.filter((el) => el.type === 'way' && el.geometry).map((el) => [el.id, el.geometry.map((p) => [p.lon, p.lat])]));
+
+const PARKING = [
+  { // between Davies Sports Hall and the MUGA, on the south side of the service road
+    place: 'south-car-park', aisles: [293959905],
+    area: [[-107.9, 4.6], [-123.7, 6.7], [-139.6, 8.7], [-140.3, 3.2], [-124.5, 1.1], [-108.6, -1.0]],
+  },
+  { // the long strip between Queen's Building's east front and the wall, short aisles off the service road
+    place: 'southlands-car-park', aisles: [1216692135, 1216692136, 1216692137, 1216692138],
+    area: [[167.5, 415.5], [188.7, 415.5], [176.3, 496], [156, 496], [155.5, 489.5], [161, 441], [163.5, 437.5], [166, 417.5]],
+  },
+  { // south of Grove House, just below the road
+    place: 'froebel-car-park', aisles: [259754248],
+    area: [[36.3, -66.5], [8.4, -61.3], [3.9, -62], [-3.9, -64.5], [-2.2, -69.8], [5.6, -67.4], [9.4, -67.2], [33.3, -71.6]],
+  },
+];
+// parked cars: low-poly boxes drawn in the app (map.ts); about 60% of the bays are taken
+const CAR = { long: 4.3, wide: 1.8, pitch: 2.6, aisleHalf: 3, colours: 6 };
+const noTrees = []; // rings (lng/lat) where no decorative tree should stand
+let cars = 0;
+PARKING.forEach((lot, li) => {
+  const area = ringLL(lot.area);
+  noTrees.push(area);
+  features.push({ type: 'Feature', properties: { layer: 'parking', place: lot.place }, geometry: { type: 'Polygon', coordinates: [area] } });
+  const bays = [];
+  for (const id of lot.aisles) {
+    const pts = (wayGeom.get(id) ?? []).map(toM);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [ax, ay] = pts[i], [bx, by] = pts[i + 1], len = Math.hypot(bx - ax, by - ay);
+      if (!len) continue;
+      const u = [(bx - ax) / len, (by - ay) / len];
+      for (let d = CAR.pitch / 2; d < len; d += CAR.pitch) {
+        for (const side of [1, -1]) {
+          // nose to the aisle: the car's long side is square to it
+          const nrm = [-u[1] * side, u[0] * side], off = CAR.aisleHalf + CAR.long / 2;
+          const c = [ax + u[0] * d + nrm[0] * off, ay + u[1] * d + nrm[1] * off];
+          // (checked 0.25 m in, so a car whose nose meets the aisle edge still counts as inside)
+          const corners = [[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([i, j]) => [
+            c[0] + nrm[0] * (CAR.long / 2 - 0.25) * i + u[0] * (CAR.wide / 2) * j,
+            c[1] + nrm[1] * (CAR.long / 2 - 0.25) * i + u[1] * (CAR.wide / 2) * j]);
+          if (!corners.every((q) => pointInRing(q, lot.area))) continue;
+          if (bays.some((b) => Math.hypot(b[0] - c[0], b[1] - c[1]) < CAR.pitch - 0.2)) continue; // aisle bends
+          bays.push(c);
+          const k = bays.length;
+          if (hash(li, k, 1) > 0.6) continue;
+          const a = Math.round((Math.atan2(nrm[1], nrm[0]) + (hash(li, k, 2) - 0.5) * 0.08) * 1000) / 1000;
+          features.push({ type: 'Feature', properties: { layer: 'car', a, c: Math.floor(hash(li, k, 3) * CAR.colours) }, geometry: { type: 'Point', coordinates: fromM(c) } });
+          cars++;
+        }
+      }
+    }
+  }
+  const [cx, cy] = lot.area.reduce(([x, y], p) => [x + p[0] / lot.area.length, y + p[1] / lot.area.length], [0, 0]);
+  console.log(`${lot.place}: ${bays.length} bays, centre ${JSON.stringify(fromM([cx, cy]))}`);
+});
+console.log(`parked ${cars} cars`);
+
 // ---------- low-poly trees: scatter deterministic points over green areas ----------
 // (OSM maps very few individual trees here; these are decorative, flagged generated:true)
 let seed = 42;
@@ -262,7 +333,7 @@ const nearPath = (p) => paths.some((f) => {
   return false;
 });
 const green = features.filter((f) => f.properties.layer === 'green');
-let trees = 0;
+let trees = 0, cleared = 0;
 for (const g of green) {
   const r = g.geometry.coordinates[0];
   const xs = r.map((p) => p[0]), ys = r.map((p) => p[1]);
@@ -276,12 +347,15 @@ for (const g of green) {
       if (!pointInRing(p, r)) continue;
       if (buildings.some((b) => distToRing(p, b.ring) < 5)) continue;
       if (nearPath(p)) continue;
-      features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: Math.round((0.75 + rand() * 0.6) * 100) / 100 }, geometry: { type: 'Point', coordinates: p } });
+      const size = Math.round((0.75 + rand() * 0.6) * 100) / 100;
+      // checked after the size is drawn, so the other trees keep their places and sizes
+      if (noTrees.some((r) => distToRing(p, r) < 2)) { cleared++; continue; }
+      features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size }, geometry: { type: 'Point', coordinates: p } });
       trees++;
     }
   }
 }
-console.log(`generated ${trees} decorative trees`);
+console.log(`generated ${trees} decorative trees (${cleared} left out of courts, fields and car parks)`);
 
 const fc = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10), attribution: '© OpenStreetMap contributors (ODbL)', bounds: placesDoc.bounds, features };
 await writeFile(OUT, JSON.stringify(fc));
