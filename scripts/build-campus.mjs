@@ -169,6 +169,28 @@ for (const el of osm.elements) {
   }
 }
 
+// ---------- historic monuments that are not university buildings ----------
+// The Lyne-Stephens Mausoleum (Grade II, Historic England 1184736) is OSM's way/623548456: a small
+// Romanesque mausoleum, Greek cross in plan, stone-faced, each arm under an equilateral gable. It is
+// drawn by the app as low grey stone (layer "monument"), not as a campus building with windows and
+// a college roof. Its outline stays in `buildings` only so decorative trees keep clear of it.
+const MONUMENTS = [{ osmId: 'way/623548456', kind: 'mausoleum', wall: 3.5 }]; // wall height: an estimate, no source gives one
+for (const m of MONUMENTS) {
+  const b = buildings.find((x) => x.f.properties.osmId === m.osmId);
+  if (!b) { console.warn(`monument ${m.osmId}: not found`); continue; }
+  const pts = b.ring.slice(0, -1).map(toM);
+  const c = pts.reduce(([x, y], p) => [x + p[0] / pts.length, y + p[1] / pts.length], [0, 0]);
+  // the cross's axes: the direction of its longest straight edge (an arm's end)
+  let best = 0, a = 0;
+  pts.forEach((p, i) => { const q = pts[(i + 1) % pts.length], l = Math.hypot(q[0] - p[0], q[1] - p[1]); if (l > best) { best = l; a = Math.atan2(q[1] - p[1], q[0] - p[0]); } });
+  const u = [Math.cos(a), Math.sin(a)], v = [-u[1], u[0]];
+  const along = pts.map((p) => (p[0] - c[0]) * u[0] + (p[1] - c[1]) * u[1]), across = pts.map((p) => (p[0] - c[0]) * v[0] + (p[1] - c[1]) * v[1]);
+  const span = Math.round(Math.min(Math.max(...along) - Math.min(...along), Math.max(...across) - Math.min(...across)) * 10) / 10;
+  b.f.properties = { layer: 'monument', osmId: m.osmId, name: b.f.properties.name, kind: m.kind, a: Math.round(a * 1000) / 1000, span, arm: Math.round(best * 10) / 10, wall: m.wall, centre: fromM(c) };
+  b.monument = true;
+  console.log(`monument ${m.osmId}: ${m.kind}, span ${span} m, arm ${b.f.properties.arm} m`);
+}
+
 // ---------- one block that OSM maps as two buildings ----------
 // Elm Grove (careers, conference centre) and Elm Grove Hall (halls) are two relations with the
 // same outline, so a tap picked the whole block. The block stays one building on the map; only
@@ -235,7 +257,7 @@ function nameScore(place, osmName) {
 const report = [];
 const snapCategories = new Set(['building', 'sport', 'food']);
 // outdoor places keep their point, and so do rooms whose building already has its own pin
-const POINT_ONLY_KINDS = new Set(['court', 'field', 'parking', 'fountain', 'garden', 'square']);
+const POINT_ONLY_KINDS = new Set(['court', 'field', 'parking', 'fountain', 'garden', 'square', 'monument']);
 const POINT_ONLY_IDS = new Set(['convent-parlour']);
 const pointOnly = (p) => POINT_ONLY_KINDS.has(p.kind) || POINT_ONLY_IDS.has(p.id);
 const candidates = placesDoc.places.filter((p) => snapCategories.has(p.category) && !pointOnly(p));
@@ -246,7 +268,7 @@ for (const [minScore, maxD] of [[1, 250], [0.89, 60]]) {
   for (const p of candidates) {
     if (exact.has(p.id)) continue;
     const hit = buildings
-      .filter((b) => minScore === 1 || !claimed.has(b.f.properties.osmId))
+      .filter((b) => !b.monument && (minScore === 1 || !claimed.has(b.f.properties.osmId)))
       .map((b) => ({ b, score: nameScore(p, b.f.properties.name), d: distToRing(p.position, b.ring) }))
       .filter((x) => x.score >= minScore && x.d < maxD)
       .sort((a, b) => a.d - b.d)[0];
@@ -266,7 +288,7 @@ for (const p of placesDoc.places) {
   // 1) partial name match nearby, not stealing an exact-match footprint
   if (!match) {
     const partial = buildings
-      .filter((b) => !claimed.has(b.f.properties.osmId))
+      .filter((b) => !b.monument && !claimed.has(b.f.properties.osmId))
       .map((b) => ({ b, score: nameScore(p, b.f.properties.name), d: distToRing(p.position, b.ring) }))
       .filter((x) => x.score >= 0.5 && x.d < radius)
       .sort((a, b) => b.score - a.score || a.d - b.d)[0];
@@ -275,7 +297,7 @@ for (const p of placesDoc.places) {
   // 2) otherwise the nearest footprint within the position accuracy
   if (!match) {
     const limit = Math.max(15, p.positionAccuracyM || 20);
-    const near = buildings.map((b) => ({ b, d: distToRing(p.position, b.ring) })).sort((a, b) => a.d - b.d)[0];
+    const near = buildings.filter((b) => !b.monument).map((b) => ({ b, d: distToRing(p.position, b.ring) })).sort((a, b) => a.d - b.d)[0];
     if (near && near.d <= limit) {
       match = near;
       const nm = near.b.f.properties.name;
@@ -295,8 +317,8 @@ for (const p of placesDoc.places) {
 
 // college zone for unlinked footprints: nearest place's college within 120 m
 const withCollege = placesDoc.places.filter((p) => p.college && p.category !== 'entrance');
-for (const { f, ring: r } of buildings) {
-  if (f.properties.college) continue;
+for (const { f, ring: r, monument } of buildings) {
+  if (monument || f.properties.college) continue;
   const c = centroid(r);
   f.properties.campus = !campusRings.length || campusRings.some((cr) => pointInRing(c, cr));
   if (!f.properties.campus) { f.properties.college = null; continue; }
@@ -305,7 +327,8 @@ for (const { f, ring: r } of buildings) {
   f.properties.college = best && bd < 150 ? best.college : null;
 }
 console.log(`university outlines: ${campusRings.length}`);
-for (const { f } of buildings) {
+for (const { f, monument } of buildings) {
+  if (monument) continue;
   f.properties.campus ??= true;
 }
 

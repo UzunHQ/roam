@@ -1260,6 +1260,56 @@
       "sources": []
     },
     {
+      "id": "lyne-stephens-mausoleum",
+      "code": "",
+      "name": "Lyne-Stephens Mausoleum",
+      "aliases": [
+        "Mausoleum",
+        "Lyne Stephens Mausoleum"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "monument",
+      "college": "froebel",
+      "description": "A Grade II listed Romanesque mausoleum in the grounds of Grove House, Greek cross in plan. William Burn designed it for Yolande Lyne-Stephens in memory of her husband, who died in 1860; it was consecrated in 1864, and she was buried there in 1894.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243614,
+        51.454938
+      ],
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [],
+      "officialUrl": "https://historicengland.org.uk/listing/the-list/list-entry/1184736",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://historicengland.org.uk/listing/the-list/list-entry/1184736",
+          "title": "Historic England list entry 1184736: Mausoleum in grounds of Grove House (Grade II)",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://britishlistedbuildings.co.uk/101184736-mausoleum-in-grounds-of-grove-house-roehampton-ward",
+          "title": "British Listed Buildings: the list entry text (Greek cross plan, Romanesque, stone-faced)",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://parksandgardens.org/places/grove-house-wandsworth",
+          "title": "Parks & Gardens UK: Grove House, Wandsworth (built by William Burn for Yolande Lyne-Stephens)",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://grovehouseroehampton.co.uk/house-and-gardens/",
+          "title": "Grove House, Roehampton: House and gardens (consecrated 1864; Yolande buried there 1894)",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
       "id": "jebb-auditorium",
       "code": "F8",
       "name": "Jebb Auditorium",

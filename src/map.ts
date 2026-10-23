@@ -28,7 +28,7 @@ const PALETTE = {
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
     cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
     fencePost: '#3d5a49', fenceMesh: '#4a6656',
-    goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
+    stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -45,7 +45,7 @@ const PALETTE = {
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
     cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
     fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
-    goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
+    stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
   },
 } as const;
 
@@ -104,6 +104,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     parking: { 'fill-color': p.road }, // the same asphalt as the roads
     courtline: { 'line-color': p.pitchLine },
     'fence-mesh': { 'fill-extrusion-color': p.fenceMesh },
+    monument: { 'fill-extrusion-color': ['match', ['get', 'part'], 'roof', p.stoneRoof, 'base', p.stoneDark, 'band', p.stoneDark, p.stone] },
     water: { 'fill-color': p.water },
     shore: { 'line-color': p.shore },
     waterway: { 'line-color': p.water },
@@ -531,6 +532,43 @@ function gardenParts(statues: GeoJSON.Feature[], beds: GeoJSON.Feature[]): GeoJS
 }
 
 /**
+ * Historic monuments (layer "monument"): the Lyne-Stephens Mausoleum, a Greek cross of four equal
+ * arms in grey stone, each arm under an equilateral gable (approximated by stepped slabs), on a low
+ * base, with a carved band under the eaves. No windows and no college colour: it isn't a campus
+ * building. `a` turns the cross, `span` is its overall size and `arm` the width of an arm (metres).
+ */
+function monumentParts(fs: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
+  const out: GeoJSON.Feature[] = [];
+  for (const f of fs) {
+    const pr = f.properties ?? {};
+    const [lng, lat] = pr.centre as number[];
+    const a = Number(pr.a) || 0, S = Number(pr.span) || 9, A = Math.min(Number(pr.arm) || 5, S * 0.62), H = Number(pr.wall) || 4.5;
+    const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
+    const u = [Math.cos(a), Math.sin(a)], v = [-u[1], u[0]];
+    const ll = (x: number, y: number) => [lng + (u[0] * x + v[0] * y) / kx, lat + (u[1] * x + v[1] * y) / ky];
+    const rect = (hx: number, hy: number) => [[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy], [-hx, -hy]].map(([x, y]) => ll(x, y));
+    const cross = (s: number, w: number) => {
+      const h = s / 2, q = w / 2;
+      return [[q, -h], [q, -q], [h, -q], [h, q], [q, q], [q, h], [-q, h], [-q, q], [-h, q], [-h, -q], [-q, -q], [-q, -h], [q, -h]].map(([x, y]) => ll(x, y));
+    };
+    const put = (part: string, base: number, top: number, ring: number[][]) =>
+      out.push({ type: 'Feature', properties: { part, base, top }, geometry: { type: 'Polygon', coordinates: [ring] } });
+    put('base', 0, 0.45, cross(S + 0.5, A + 0.5)); // a stepped stone base
+    put('wall', 0.45, H, cross(S, A));
+    put('band', H - 0.45, H, cross(S + 0.16, A + 0.16)); // the carved band at the eaves
+    // each arm's gable: an equilateral triangle on the arm's width, so the ridge stands A x 0.87
+    // above the eaves; built as stepped slabs, both bars (along u and along v) crossing at the middle
+    const steps = 5, rise = A * 0.87;
+    for (let k = 0; k < steps; k++) {
+      const w = (A + 0.3) * (1 - k / steps), b0 = H + (rise * k) / steps, b1 = H + (rise * (k + 1)) / steps;
+      put('roof', b0, b1, rect((S + 0.3) / 2, w / 2));
+      put('roof', b0, b1, rect(w / 2, (S + 0.3) / 2));
+    }
+  }
+  return { type: 'FeatureCollection', features: out };
+}
+
+/**
  * Football goals (layer "goal"): two posts and a crossbar `w` x `h` metres, square to the pitch's
  * long axis `a`, with the net's frame running back a little behind them.
  */
@@ -798,6 +836,7 @@ export function createMap(opts: {
       wallparts: { type: 'geojson', data: wallParts(walls) },
       props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features)] } },
       fence: { type: 'geojson', data: fences.mesh },
+      monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       route: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
@@ -911,6 +950,11 @@ export function createMap(opts: {
       {
         id: 'props', type: 'fill-extrusion', source: 'props', minzoom: 16.5,
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'] },
+      },
+      // historic stone monuments: shown from afar like the buildings, but never tappable as one
+      {
+        id: 'monument', type: 'fill-extrusion', source: 'monument',
+        paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-vertical-gradient': true },
       },
       // wire mesh: see-through, so it goes in its own layer with a layer-wide opacity
       {

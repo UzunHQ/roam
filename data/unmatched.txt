@@ -1,6 +1,7 @@
 ~~  dorothy-buchanan-building -> way/653472802 (point inside footprint; OSM calls it "Jubilee", verify)
 --  fountain: fountain, no building footprint (uses its point)
 --  garden: garden, no building footprint (uses its point)
+--  lyne-stephens-mausoleum: monument, no building footprint (uses its point)
 ~~  chapman-hall -> relation/8758398 (point inside footprint; OSM calls it "Queen's Building", verify)
 ~~  laundry -> way/653472806 (point inside footprint; OSM calls it "Sport and Active Communities", verify)
 ~~  the-base -> way/653472808 (point inside footprint; OSM calls it "Erasmus House", verify)
