@@ -89,9 +89,10 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
   return {
     background: { 'background-color': p.bg },
     outside: { 'fill-color': p.outside },
-    green: { 'fill-color': ['case', ['get', 'wooded'], p.wood, p.green] },
+    green: { 'fill-color': ['case', ['get', 'wooded'], p.wood, ['coalesce', ['get', 'field'], false], p.pitch, p.green] },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
     parking: { 'fill-color': p.parking },
+    courtline: { 'line-color': p.pitchLine },
     water: { 'fill-color': p.water },
     shore: { 'line-color': p.shore },
     waterway: { 'line-color': p.water },
@@ -552,6 +553,11 @@ export function createMap(opts: {
       { id: 'green', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'green'], paint: {} },
       { id: 'pitch', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'pitch'], paint: {} },
       { id: 'parking', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'parking'], paint: {} },
+      // tennis court markings on the MUGA (about 5 cm lines, so they only show up close)
+      {
+        id: 'courtline', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'courtline'], minzoom: 16.5,
+        paint: { 'line-width': ['interpolate', ['exponential', 2], ['zoom'], 16.5, 0.6, 19.5, 3] },
+      },
       { id: 'water', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'water'], paint: {} },
       { id: 'shore', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'water'], paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 1, 19, 5], 'line-blur': 1 } },
       { id: 'waterway', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'waterway'], paint: { 'line-width': 3 } },

@@ -2055,7 +2055,9 @@
         "Basketball",
         "Tennis",
         "Football",
-        "Netball"
+        "Netball",
+        "Court 1 (tennis)",
+        "Court 2 (tennis)"
       ],
       "officialUrl": "https://www.roehampton.ac.uk/student-support/our-facilities/",
       "accessibility": null,
@@ -2069,6 +2071,46 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ]
+    },
+    {
+      "id": "playing-field",
+      "code": "",
+      "name": "Playing Field",
+      "aliases": [
+        "Field",
+        "Sports field",
+        "Football pitch",
+        "Grass pitch"
+      ],
+      "roomCodePrefixes": [],
+      "category": "sport",
+      "kind": "field",
+      "college": "froebel",
+      "description": "The big grass playing field west of Davies Sports Hall and the Michaelis Building, used for football and other outdoor sport.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.2489,
+        51.4557
+      ],
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [
+        "Football and other outdoor sport",
+        "Grass running track"
+      ],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/1546333125",
+          "title": "OpenStreetMap: recreation ground west of Davies",
+          "checked": "2026-10-23"
         }
       ]
     },

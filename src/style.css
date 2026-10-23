@@ -689,6 +689,13 @@ html[data-motion="off"] .ripple, html[data-motion="off"] .avatar .halo { display
 body.has-fix .find-label, body.panel-open .find-label { display: none; }
 @media (min-width: 900px) { .find-label { display: none; } } /* desktop: the Key button sits there; the button has a tooltip */
 
+/* ---------- tennis court numbers, painted on the court ---------- */
+.court-label {
+  display: none; pointer-events: none; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;
+  text-transform: uppercase; white-space: nowrap; opacity: 0.92; text-shadow: 0 0 2px rgba(31, 45, 39, 0.35);
+}
+.show-courts .court-label { display: block; }
+
 /* ---------- college area names (overview only) ---------- */
 .area-label {
   display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px 0 6px;

@@ -359,6 +359,38 @@ PARKING.forEach((lot, li) => {
 });
 console.log(`parked ${cars} cars`);
 
+// ---------- sports grounds ----------
+// The MUGA's fenced courts and the big playing field west of Davies are grass in OSM
+// (landuse=recreation_ground): draw them like pitches and keep decorative trees off them.
+const FIELDS = new Set(['way/293961403', 'way/1546333125']);
+for (const f of features) {
+  if (f.properties.layer === 'green' && FIELDS.has(f.id)) f.properties.field = true;
+  if (f.properties.layer === 'pitch' || f.properties.field) noTrees.push(f.geometry.coordinates[0]);
+}
+// tennis court markings on the MUGA's two tennis pitches; Court 1 is the western one
+const TENNIS = { singles: 1.37, service: 6.4 };
+const tennis = features.filter((f) => f.properties.layer === 'pitch' && f.properties.sport === 'tennis')
+  .map((f) => f.geometry.coordinates[0].slice(0, 4).map(toM))
+  .sort((a, b) => a.reduce((s, p) => s + p[0], 0) - b.reduce((s, p) => s + p[0], 0));
+tennis.forEach((q, i) => {
+  const c = q.reduce(([x, y], p) => [x + p[0] / 4, y + p[1] / 4], [0, 0]);
+  const e0 = [q[1][0] - q[0][0], q[1][1] - q[0][1]], e1 = [q[2][0] - q[1][0], q[2][1] - q[1][1]];
+  let [long, short] = Math.hypot(...e0) > Math.hypot(...e1) ? [e0, e1] : [e1, e0];
+  if (long[1] < 0) long = [-long[0], -long[1]]; // u runs north: the numbers go at the north end, clear of the MUGA pin
+  const L = Math.hypot(...long), W = Math.hypot(...short);
+  const u = [long[0] / L, long[1] / L], v = [-u[1], u[0]];
+  const at = (x, y) => fromM([c[0] + v[0] * x + u[0] * y, c[1] + v[1] * x + u[1] * y]);
+  const line = (pts) => features.push({ type: 'Feature', properties: { layer: 'courtline', court: i + 1 }, geometry: { type: 'LineString', coordinates: pts.map(([x, y]) => at(x, y)) } });
+  const w = W / 2, l = L / 2, sw = w - TENNIS.singles, sv = TENNIS.service;
+  line([[-w, -l], [w, -l], [w, l], [-w, l], [-w, -l]]); // doubles outline
+  line([[-sw, -l], [-sw, l]]); line([[sw, -l], [sw, l]]); // singles sidelines
+  line([[-sw, -sv], [sw, -sv]]); line([[-sw, sv], [sw, sv]]); // service lines
+  line([[0, -sv], [0, sv]]); // centre service line
+  line([[-w - 0.4, 0], [w + 0.4, 0]]); // net
+  features.push({ type: 'Feature', properties: { layer: 'courtlabel', name: `Court ${i + 1}` }, geometry: { type: 'Point', coordinates: at(0, l - 3.2) } });
+});
+console.log(`tennis courts marked: ${tennis.length}`);
+
 // ---------- low-poly trees: scatter deterministic points over green areas ----------
 // (OSM maps very few individual trees here; these are decorative, flagged generated:true)
 let seed = 42;

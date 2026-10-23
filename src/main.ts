@@ -330,12 +330,23 @@ async function main() {
     return { el, c };
   });
 
+  // ---------- tennis court numbers, painted flat on the MUGA (close up only, not tappable) ----------
+  for (const f of campus.features) {
+    if (f.properties?.layer !== 'courtlabel' || f.geometry.type !== 'Point' || !map) continue;
+    const el = document.createElement('div');
+    el.className = 'court-label';
+    el.setAttribute('aria-hidden', 'true');
+    el.textContent = String(f.properties.name);
+    new maplibregl.Marker({ element: el, anchor: 'center', pitchAlignment: 'map', rotationAlignment: 'map' }).setLngLat(f.geometry.coordinates as LngLat).addTo(map);
+  }
+
   // Fewer markers when zoomed out, more detail when zoomed in. Runs on moveend only (not every
   // frame): greedy by category priority, the selected place and route start always show.
   function layoutMarkers() {
     if (!map) return;
     const z = map.getZoom();
     document.body.classList.toggle('compact-pins', z < 16.6);
+    document.body.classList.toggle('show-courts', z >= 18);
     const gap = z < 16 ? 30 : z < 17 ? 26 : 22;
     const W = innerWidth, H = innerHeight;
     const dots: [number, number][] = [];

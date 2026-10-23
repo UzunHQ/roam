@@ -55,7 +55,7 @@ const byKind: Record<string, string> = {
   academic: icons.academic, accommodation: icons.accommodation, library: icons.library, health: icons.health,
   union: icons.union, faith: icons.faith, careers: icons.careers, security: icons.security, laundry: icons.laundry, post: icons.post,
   service: icons.service, cafe: icons.cafe, restaurant: icons.restaurant, bar: icons.bar, shop: icons.shop, parking: icons.parking,
-  gym: icons.gym, court: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
+  gym: icons.gym, court: icons.sport, field: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
 };
 
 export function placeIcon(category: string, kind: string): string {
