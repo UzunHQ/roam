@@ -1,5 +1,5 @@
 import * as maplibregl from 'maplibre-gl';
-import { type ExpressionSpecification as Expr, type Map as MLMap, type StyleSpecification } from 'maplibre-gl';
+import { type ExpressionSpecification as Expr, type LayerSpecification, type Map as MLMap, type StyleSpecification } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import type { LngLat } from './types';
 import { ROOFS, isPitched } from './roofs';
@@ -116,6 +116,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'building-top': { 'fill-extrusion-color': ['case', SELECTED, p.selected, partColor(p)] },
     'roof-solar': { 'fill-extrusion-color': p.solar },
     'roof-solar-far': { 'fill-extrusion-color': p.solar },
+    ...Object.fromEntries(FLAG_SIZES.map(({ k }) => [`golfflag-${k}`, { 'fill-extrusion-color': ['match', ['get', 'part'], 'flag', p.flag, p.goalPost] }])),
     'building-ghost': { 'fill-extrusion-color': ['case', SELECTED, p.selected, roofColor(p)] },
     'tree-trunk': { 'fill-extrusion-color': p.trunk },
     'tree-leaf': { 'fill-extrusion-color': ['match', ['get', 'tone'], 0, p.tones[0], 1, p.tones[1], 2, p.tones[2], 3, p.tones[3], 4, p.tones[4], p.blossom] },
@@ -577,19 +578,34 @@ function monumentParts(fs: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
 }
 
 /**
- * Golf flags (layer "golfflag"), one on each green: a thin white pole about 2.2 m tall with a small
- * red pennant near the top, a triangle stepped out in three slices (extrusions can't slope).
+ * Golf flags (layer "golfflag"), one on each green: a white pole with a red pennant near the top,
+ * a triangle stepped out in three slices (extrusions can't slope). Extrusions are in metres and
+ * would shrink to a dot from afar, so each flag comes in a few sizes (`k`, FLAG_SIZES) and each size
+ * is drawn only in its own zoom band: big enough to read as a flag in the opening view, about real
+ * size close up. The pole is thicker on the bigger ones, so it doesn't vanish either.
  */
+// k: the flag's scale against real size (a 2.2 m pole, 0.9 m pennant); about 12-18 px of pennant on
+// screen in every band, real size from zoom 18.5
+const FLAG_SIZES = [
+  { k: 20, from: 0, to: 15.5 },
+  { k: 11, from: 15.5, to: 16.5 },
+  { k: 5.5, from: 16.5, to: 17.5 },
+  { k: 2.6, from: 17.5, to: 18.5 },
+  { k: 1.3, from: 18.5, to: 24 },
+];
 function flagParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
   const out: GeoJSON.Feature[] = [];
   for (const f of points) {
     const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
     const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
     const sq = (x0: number, x1: number, h: number) => [[x0, -h], [x1, -h], [x1, h], [x0, h], [x0, -h]].map(([x, y]) => [lng + x / kx, lat + y / ky]);
-    out.push({ type: 'Feature', properties: { part: 'goal', base: 0, top: 2.2 }, geometry: { type: 'Polygon', coordinates: [sq(-0.05, 0.05, 0.05)] } });
-    // pennant: flies east from the pole, 0.9 m long, taller at the pole
-    [[0.05, 0.35, 0.3], [0.35, 0.65, 0.19], [0.65, 0.95, 0.08]].forEach(([x0, x1, h]) =>
-      out.push({ type: 'Feature', properties: { part: 'flag', base: 1.95 - h, top: 1.95 + h }, geometry: { type: 'Polygon', coordinates: [sq(x0, x1, 0.03)] } }));
+    for (const { k } of FLAG_SIZES) {
+      const pole = 0.055 * k; // about 2 px wide in every band
+      out.push({ type: 'Feature', properties: { part: 'pole', k, base: 0, top: 2.2 * k }, geometry: { type: 'Polygon', coordinates: [sq(-pole, pole, pole)] } });
+      // pennant: flies east from the pole, 0.9 m long at real size, taller at the pole
+      [[0, 0.3, 0.3], [0.3, 0.6, 0.19], [0.6, 0.9, 0.08]].forEach(([x0, x1, h]) =>
+        out.push({ type: 'Feature', properties: { part: 'flag', k, base: (1.95 - h) * k, top: (1.95 + h) * k }, geometry: { type: 'Polygon', coordinates: [sq(pole + x0 * k, pole + x1 * k, 0.03 * k)] } }));
+    }
   }
   return out;
 }
@@ -936,9 +952,10 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features), ...picnicParts(byLayer('picnic').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features), ...picnicParts(byLayer('picnic').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
       fence: { type: 'geojson', data: fences.mesh, tolerance: 0 },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
+      flags: { type: 'geojson', data: { type: 'FeatureCollection', features: flagParts(byLayer('golfflag').features) }, tolerance: 0 },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       route: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
@@ -1060,6 +1077,12 @@ export function createMap(opts: {
         id: 'monument', type: 'fill-extrusion', source: 'monument',
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-vertical-gradient': true },
       },
+      // golf flags, one size per zoom band (FLAG_SIZES)
+      ...FLAG_SIZES.map(({ k, from, to }): LayerSpecification => ({
+        id: `golfflag-${k}`, type: 'fill-extrusion', source: 'flags', filter: ['==', ['get', 'k'], k],
+        minzoom: Math.max(from, DETAIL_ZOOM), maxzoom: to,
+        paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-vertical-gradient': false },
+      })),
       // wire mesh: see-through, so it goes in its own layer with a layer-wide opacity
       {
         id: 'fence-mesh', type: 'fill-extrusion', source: 'fence', minzoom: DETAIL_ZOOM,
