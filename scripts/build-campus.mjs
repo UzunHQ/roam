@@ -336,6 +336,26 @@ for (const { f, monument } of buildings) {
 // ---------- the golf course west of campus (Roehampton Club, OSM way/4268543) ----------
 // Fairways, greens, tees, bunkers and rough inside the course become their own layer ("golf"),
 // drawn under everything else; their playing surfaces are kept clear of decorative trees below.
+// keep the part of a ring inside the map's bounds (Sutherland-Hodgman against the four sides)
+function clipToBounds(r) {
+  let pts = r.slice(0, -1);
+  for (const [inside, cut] of [
+    [(p) => p[0] >= w, (a, b) => [w, a[1] + ((b[1] - a[1]) * (w - a[0])) / (b[0] - a[0])]],
+    [(p) => p[0] <= e, (a, b) => [e, a[1] + ((b[1] - a[1]) * (e - a[0])) / (b[0] - a[0])]],
+    [(p) => p[1] >= s, (a, b) => [a[0] + ((b[0] - a[0]) * (s - a[1])) / (b[1] - a[1]), s]],
+    [(p) => p[1] <= n, (a, b) => [a[0] + ((b[0] - a[0]) * (n - a[1])) / (b[1] - a[1]), n]],
+  ]) {
+    const out = [];
+    pts.forEach((p, i) => {
+      const q = pts[(i + 1) % pts.length];
+      if (inside(p)) out.push(p);
+      if (inside(p) !== inside(q)) out.push(cut(p, q).map(round));
+    });
+    pts = out;
+    if (pts.length < 3) return null;
+  }
+  return [...pts, pts[0]];
+}
 const GOLF_KINDS = new Set(['fairway', 'green', 'tee', 'bunker', 'rough', 'water_hazard', 'lateral_water_hazard']);
 const course = osm.elements.find((el) => el.type === 'way' && el.id === 4268543 && el.geometry);
 const courseRing = course ? ring(course.geometry) : null;
@@ -343,8 +363,11 @@ const golfFeatures = [];
 for (const el of osm.elements) {
   const kind = el.tags?.golf;
   if (!courseRing || el.type !== 'way' || !el.geometry || !GOLF_KINDS.has(kind)) continue;
-  const r = ring(el.geometry);
-  if (!closed(r) || !pointInRing(centroid(r), courseRing)) continue;
+  const whole = ring(el.geometry);
+  if (!closed(whole) || !pointInRing(centroid(whole), courseRing)) continue;
+  // the map stops at its bounds: the course is cut off there like everything else west and north
+  const r = clipToBounds(whole);
+  if (!r) continue;
   const f = { type: 'Feature', id: `way/${el.id}`, properties: { layer: 'golf', kind: kind.includes('water') ? 'water' : kind }, geometry: { type: 'Polygon', coordinates: [r] } };
   golfFeatures.push(f);
 }
@@ -669,15 +692,15 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   if (meadowF) meadowF.properties.unveil = true; // runs past the map's edge: the app keeps it out of the dimmed frame
   const meadow = meadowF?.geometry.coordinates[0];
   // It is Roehampton Club's golf course: trees stand in belts between the holes, thickest along the
-  // edges of the fairways and greens, never on them (noTrees). The whole course is covered, also the
-  // part beyond the map's edge that shows past the frame.
+  // edges of the fairways and greens, never on them (noTrees), and only inside the map's bounds.
   let seed3 = 11, more = 0;
   const rand3 = () => ((seed3 = (seed3 * 1664525 + 1013904223) % 4294967296) / 4294967296);
   const M = 11; // metres between candidates
   const play = golfFeatures.filter((f) => ['fairway', 'green', 'tee'].includes(f.properties.kind)).map((f) => f.geometry.coordinates[0].map(toM));
   const toPlay = (m) => Math.min(Infinity, ...play.map((r) => r.reduce((d, a, i) => (i < r.length - 1 ? Math.min(d, segDist(m, a, r[i + 1])) : d), Infinity)));
   const mm = (meadow ?? []).map(toM), mx = mm.map((p) => p[0]), my = mm.map((p) => p[1]);
-  const [gx0, gx1, gy0, gy1] = mm.length ? [Math.min(...mx), Math.max(...mx), Math.min(...my), Math.max(...my)] : [0, 0, 0, 0];
+  // the course as far as the map's bounds go (beyond them it is plain meadow, no trees)
+  const [gx0, gx1, gy0, gy1] = mm.length ? [Math.max(x0, Math.min(...mx)), Math.min(x1, Math.max(...mx)), Math.max(y0, Math.min(...my)), Math.min(y1, Math.max(...my))] : [0, 0, 0, 0];
   for (let y = gy0 + M / 2; meadow && y < gy1; y += M) {
     for (let x = gx0 + M / 2; x < gx1; x += M) {
       const r = rand3(), jx = (rand3() - 0.5) * M * 0.8, jy = (rand3() - 0.5) * M * 0.8, size = Math.round((0.75 + rand3() * 0.6) * 100) / 100;
