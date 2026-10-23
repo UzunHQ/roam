@@ -98,7 +98,8 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
   return {
     background: { 'background-color': p.bg },
     outside: { 'fill-color': p.outside },
-    green: { 'fill-color': ['case', ['get', 'wooded'], p.wood, ['coalesce', ['get', 'field'], false], p.pitch, p.green] },
+    // every lawn, meadow and wood in one green, so neighbouring OSM areas don't show as patches; sports fields stand out
+    green: { 'fill-color': ['case', ['coalesce', ['get', 'field'], false], p.pitch, p.wood] },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
     parking: { 'fill-color': p.road }, // the same asphalt as the roads
     courtline: { 'line-color': p.pitchLine },

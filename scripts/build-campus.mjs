@@ -492,6 +492,12 @@ for (const g of green) {
 }
 console.log(`generated ${trees} decorative trees (${cleared} left out of courts, fields, car parks, the fountain lawn and the garden)`);
 
+// ---------- gaps between OSM green areas ----------
+// A wedge of plain ground east of the garden, between it and the woods towards the Medical Centre,
+// showed as a pale patch; it is lawn on site, so it gets the same green.
+const LAWN_FILLS = [[[84, -20], [104, -22], [110, -40], [104, -55], [101, -72], [88, -80], [80.5, -71], [86, -45.5]]];
+for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer: 'green', wooded: false, fill: true }, geometry: { type: 'Polygon', coordinates: [ringLL(r)] } });
+
 // ---------- more trees on the open campus lawns ----------
 // The lawns between buildings are plain background (no OSM green area), so the pass above never
 // reaches them. A sparser scatter there, with its own seed so every tree above keeps its place.
@@ -542,6 +548,30 @@ console.log(`generated ${trees} decorative trees (${cleared} left out of courts,
     }
   }
   console.log(`added ${added} trees on open lawns; left out: ${JSON.stringify(why)}`);
+
+  // the big meadow west of campus (OSM way/4268543): a denser scatter of its own, so it reads as
+  // parkland like the grounds round the lake
+  const meadow = features.find((f) => f.id === 'way/4268543' && f.properties.layer === 'green')?.geometry.coordinates[0];
+  let seed3 = 11, more = 0;
+  const rand3 = () => ((seed3 = (seed3 * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const M = 12; // metres between candidates
+  for (let y = y0 + M / 2; meadow && y < y1; y += M) {
+    for (let x = x0 + M / 2; x < x1; x += M) {
+      const keep = rand3() < 0.5, jx = (rand3() - 0.5) * M * 0.8, jy = (rand3() - 0.5) * M * 0.8, size = Math.round((0.75 + rand3() * 0.6) * 100) / 100;
+      if (!keep) continue;
+      const m = [x + jx, y + jy], ll = fromM(m);
+      if (!pointInRing(ll, meadow)) continue;
+      if (noTrees.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 2)) continue;
+      if (water.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3)) continue;
+      if (bldg.some((r) => pointInRing(m, r) || r.some((a, i) => i < r.length - 1 && segDist(m, a, r[i + 1]) < 6))) continue;
+      if (near(roads.map((r) => r.pts), m, 7) || near(foot.map((r) => r.pts), m, 4) || near(wallLines, m, 4)) continue;
+      if (treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 6)) continue;
+      features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size }, geometry: { type: 'Point', coordinates: ll } });
+      treesM.push(m);
+      more++;
+    }
+  }
+  console.log(`added ${more} trees on the west meadow`);
 }
 
 const fc = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10), attribution: '© OpenStreetMap contributors (ODbL)', bounds: placesDoc.bounds, features };
