@@ -258,7 +258,7 @@ function nameScore(place, osmName) {
 const report = [];
 const snapCategories = new Set(['building', 'sport', 'food']);
 // outdoor places keep their point, and so do rooms whose building already has its own pin
-const POINT_ONLY_KINDS = new Set(['court', 'field', 'parking', 'fountain', 'garden', 'square', 'monument']);
+const POINT_ONLY_KINDS = new Set(['court', 'field', 'parking', 'fountain', 'garden', 'square', 'monument', 'golf']);
 const POINT_ONLY_IDS = new Set(['convent-parlour']);
 const pointOnly = (p) => POINT_ONLY_KINDS.has(p.kind) || POINT_ONLY_IDS.has(p.id);
 const candidates = placesDoc.places.filter((p) => snapCategories.has(p.category) && !pointOnly(p));
@@ -375,6 +375,11 @@ for (const el of osm.elements) {
 const GOLF_ORDER = ['rough', 'fairway', 'tee', 'green', 'bunker', 'water'];
 golfFeatures.sort((a, b) => GOLF_ORDER.indexOf(a.properties.kind) - GOLF_ORDER.indexOf(b.properties.kind));
 features.push(...golfFeatures);
+// a flag in the middle of each green on the map (drawn in the app)
+for (const g of golfFeatures.filter((f) => f.properties.kind === 'green')) {
+  const r = g.geometry.coordinates[0];
+  features.push({ type: 'Feature', properties: { layer: 'golfflag' }, geometry: { type: 'Point', coordinates: centroid(r) } });
+}
 console.log(`golf: ${golfFeatures.length} areas (${GOLF_ORDER.map((k) => `${golfFeatures.filter((f) => f.properties.kind === k).length} ${k}`).join(', ')})`);
 
 // ---------- hand-mapped outdoor areas ----------

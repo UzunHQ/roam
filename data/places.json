@@ -3708,6 +3708,48 @@
           "checked": "2026-10-20"
         }
       ]
+    },
+    {
+      "id": "roehampton-club-golf-course",
+      "code": "",
+      "name": "Roehampton Club Golf Course",
+      "aliases": [
+        "Golf course",
+        "Golf",
+        "Roehampton Club",
+        "Roehampton Golf"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "golf",
+      "college": null,
+      "description": "Golf course of Roehampton Club, a private golf and tennis club next to the campus. Not part of the University.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.248883,
+        51.457836
+      ],
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 30,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [],
+      "officialUrl": "https://www.roehamptonclub.co.uk/golf",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehamptonclub.co.uk/golf",
+          "title": "Roehampton Club: Golf (18-hole parkland course; private members' club, Roehampton Lane, SW15 5LR)",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/4268543",
+          "title": "OpenStreetMap: Roehampton Club Golf Course",
+          "checked": "2026-10-23"
+        }
+      ]
     }
   ]
 }

@@ -28,6 +28,7 @@ export const icons = {
   fountain: svg('<path d="M4 16h16l-1.5 4h-13z"/><path d="M12 16V9M8 16v-2h8v2"/><path d="M12 9c-1.5-3-4.5-3.5-6-1.5M12 9c1.5-3 4.5-3.5 6-1.5"/>'),
   garden: svg('<path d="M12 21v-6"/><path d="M12 15a5 5 0 0 1-5-5c0-3 2.5-6 5-7 2.5 1 5 4 5 7a5 5 0 0 1-5 5z"/><path d="M7 21h10"/>'),
   square: svg('<path d="M4 11h16M4 15h16M6 15v4M18 15v4M7 11V7h10v4"/>'),
+  golf: svg('<path d="M8 21V3l9 4-9 4"/><path d="M4 21h10"/>'),
   monument: svg('<path d="M4 21h16M6 21v-9M18 21v-9M4 12l8-7 8 7"/><circle cx="12" cy="10" r="1.6"/><path d="M10 21v-4a2 2 0 0 1 4 0v4"/>'),
   search: svg('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
   list: svg('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>'),
@@ -59,7 +60,7 @@ const byKind: Record<string, string> = {
   academic: icons.academic, accommodation: icons.accommodation, library: icons.library, health: icons.health,
   union: icons.union, faith: icons.faith, careers: icons.careers, security: icons.security, laundry: icons.laundry, post: icons.post,
   service: icons.service, cafe: icons.cafe, restaurant: icons.restaurant, bar: icons.bar, shop: icons.shop, parking: icons.parking,
-  fountain: icons.fountain, garden: icons.garden, square: icons.square, monument: icons.monument, outdoors: icons.garden,
+  fountain: icons.fountain, garden: icons.garden, square: icons.square, monument: icons.monument, golf: icons.golf, outdoors: icons.garden,
   gym: icons.gym, court: icons.sport, field: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
 };
 

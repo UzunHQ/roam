@@ -15,7 +15,7 @@ export const GROUPS = [
 
 export type GroupId = (typeof GROUPS)[number]['id'];
 /** Car parks and open-air spots. Like the entrances they have no chip and stay on the map under any filter. */
-const OUTDOOR_KINDS = new Set(['parking', 'fountain', 'garden', 'square', 'monument']);
+const OUTDOOR_KINDS = new Set(['parking', 'fountain', 'garden', 'square', 'monument', 'golf']);
 
 export function groupOf(p: Place): GroupId {
   if (p.category === 'entrance') return 'entrance';

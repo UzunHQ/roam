@@ -28,3 +28,4 @@
 ~~  union-bar -> way/294029609 (point inside footprint; OSM calls it "Montefiore", verify)
 ~~  pub-grub -> way/294029609 (point inside footprint; OSM calls it "Montefiore", verify)
 ~~  digby-shop -> way/624679297 (nearest, 1 m away; OSM calls it "Howard", verify)
+--  roehampton-club-golf-course: golf, no building footprint (uses its point)

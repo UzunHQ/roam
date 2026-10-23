@@ -236,8 +236,10 @@ async function main() {
     if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute } });
   }
 
+  // places off campus (the golf course next door) don't count towards the campus's own extent
+  const onCampus = (p: Place) => p.category !== 'entrance' && p.college !== null;
   const campusCenter: LngLat = (() => {
-    const pts = places.filter((p) => p.category !== 'entrance').map((p) => p.position);
+    const pts = places.filter(onCampus).map((p) => p.position);
     return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
   })();
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
@@ -250,7 +252,7 @@ async function main() {
   const camMove = (opts: EaseToOptions) => { camBusyUntil = Date.now() + (opts.duration ?? 0) + 80; map?.easeTo(opts); };
   // the home view frames the campus itself: its wall and gates, and every campus building (its
   // footprint's corners). The park to the west and the houses across the road are left out.
-  const campusPoints: LngLat[] = places.filter((p) => p.category !== 'entrance').map((p) => p.position);
+  const campusPoints: LngLat[] = places.filter(onCampus).map((p) => p.position);
   for (const f of walls.features) {
     if ((f.properties?.part === 'wall' || f.properties?.part === 'gate') && f.geometry.type === 'LineString') campusPoints.push(...(f.geometry.coordinates as LngLat[]));
   }
