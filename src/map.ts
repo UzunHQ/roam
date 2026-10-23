@@ -27,6 +27,7 @@ const PALETTE = {
     route: '#ff4f7b', routeCase: '#ffffff', routeFlow: '#ffffff', outside: '#c2d8b1', shadow: 'rgba(52,70,40,0.14)',
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
     cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
+    fencePost: '#3d5a49', fenceMesh: '#4a6656',
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -42,6 +43,7 @@ const PALETTE = {
     route: '#ff7f9c', routeCase: '#1b2228', routeFlow: '#ffe3ea', outside: '#19261f', shadow: 'rgba(0,0,0,0.28)',
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
     cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
+    fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
   },
 } as const;
 
@@ -93,6 +95,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
     parking: { 'fill-color': p.road }, // the same asphalt as the roads
     courtline: { 'line-color': p.pitchLine },
+    'fence-mesh': { 'fill-extrusion-color': p.fenceMesh },
     water: { 'fill-color': p.water },
     shore: { 'line-color': p.shore },
     waterway: { 'line-color': p.water },
@@ -121,7 +124,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'half-roof': { 'fill-extrusion-color': p.selected },
     props: {
       'fill-extrusion-color': ['match', ['get', 'part'],
-        'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet,
+        'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet, 'post', p.fencePost,
         ['match', ['get', 'c'], 0, p.cars[0], 1, p.cars[1], 2, p.cars[2], 3, p.cars[3], 4, p.cars[4], p.cars[5]]],
     },
   };
@@ -423,6 +426,38 @@ function fountainParts(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
 }
 
 /**
+ * Wire fences (layer "fence", the MUGA's): a thin see-through mesh `height` metres tall, drawn in
+ * its own half-transparent layer, and a solid post about every 2.5 m (in the props layer).
+ */
+function fenceParts(lines: GeoJSON.Feature[]): { mesh: GeoJSON.FeatureCollection; posts: GeoJSON.Feature[] } {
+  const mesh: GeoJSON.Feature[] = [], posts: GeoJSON.Feature[] = [];
+  for (const f of lines) {
+    const pts = (f.geometry as GeoJSON.LineString).coordinates;
+    const top = Number(f.properties?.height) || 3;
+    const [lng0, lat0] = pts[0];
+    const kx = 111320 * Math.cos((lat0 * Math.PI) / 180), ky = 111320;
+    const ll = ([x, y]: number[]) => [lng0 + x / kx, lat0 + y / ky];
+    const xy = pts.map(([lng, lat]) => [(lng - lng0) * kx, (lat - lat0) * ky]);
+    const box = (c: number[], u: number[], hx: number, hy: number) =>
+      [[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([i, j]) => ll([c[0] + u[0] * hx * i - u[1] * hy * j, c[1] + u[1] * hx * i + u[0] * hy * j]));
+    for (let i = 0; i < xy.length - 1; i++) {
+      const a = xy[i], b = xy[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (len < 0.1) continue;
+      const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len], mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      mesh.push({ type: 'Feature', properties: { base: 0, top }, geometry: { type: 'Polygon', coordinates: [box(mid, u, len / 2, 0.03)] } });
+      const n = Math.max(1, Math.round(len / 2.5));
+      for (let k = 0; k < n; k++) {
+        const t = k / n, c = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+        posts.push({ type: 'Feature', properties: { part: 'post', base: 0, top: top + 0.05 }, geometry: { type: 'Polygon', coordinates: [box(c, u, 0.05, 0.05)] } });
+      }
+      // a top rail, so the mesh reads as a fence and not a pane of glass
+      posts.push({ type: 'Feature', properties: { part: 'post', base: top - 0.06, top }, geometry: { type: 'Polygon', coordinates: [box(mid, u, len / 2 + 0.03, 0.035)] } });
+    }
+  }
+  return { mesh: { type: 'FeatureCollection', features: mesh }, posts };
+}
+
+/**
  * The campus wall along Roehampton Lane and Clarence Lane (data/walls.geojson), low-poly and
  * well under the buildings: a dark plinth, a course of warm stone blocks in three tones and a
  * light coping that overhangs both faces; a thicker pier every ~17 m; a pillar wherever it
@@ -581,6 +616,7 @@ export function createMap(opts: {
   // each building carries its roof type (src/roofs.ts) so the layers can style by it
   const buildings = byLayer('building');
   const halfLayer = byLayer('half');
+  const fences = fenceParts(byLayer('fence').features);
   halves = halfLayer.features.map((f) => ({ id: f.properties!.osmId, block: f.properties!.block, ring: (f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[] }));
   halfLayer.features = halfLayer.features.map((f) => ({ ...f, geometry: { type: 'Polygon', coordinates: [grown((f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[], 0.12)] } }));
   buildings.features = buildings.features.map((f) => ({ ...f, properties: { ...f.properties, roof: ROOFS[f.properties?.osmId] ?? 'flat' } }));
@@ -606,7 +642,8 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features] } },
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts] } },
+      fence: { type: 'geojson', data: fences.mesh },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       route: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
@@ -711,6 +748,11 @@ export function createMap(opts: {
       {
         id: 'props', type: 'fill-extrusion', source: 'props', minzoom: 16.5,
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'] },
+      },
+      // wire mesh: see-through, so it goes in its own layer with a layer-wide opacity
+      {
+        id: 'fence-mesh', type: 'fill-extrusion', source: 'fence', minzoom: 16.5,
+        paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-opacity': 0.22 },
       },
       {
         id: 'tree-trunk', type: 'fill-extrusion', source: 'trees', filter: ['==', ['get', 'part'], 'trunk'],

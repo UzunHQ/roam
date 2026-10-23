@@ -408,6 +408,9 @@ for (const f of features) {
   if (f.properties.layer === 'green' && FIELDS.has(f.id)) f.properties.field = true;
   if (f.properties.layer === 'pitch' || f.properties.field) noTrees.push(f.geometry.coordinates[0]);
 }
+// the MUGA's courts sit inside a 3 m wire fence (OSM barrier=fence on the same outline)
+const MUGA = features.find((f) => f.id === 'way/293961403');
+if (MUGA) features.push({ type: 'Feature', properties: { layer: 'fence', height: 3 }, geometry: { type: 'LineString', coordinates: MUGA.geometry.coordinates[0] } });
 // tennis court markings on the MUGA's two tennis pitches; Court 1 is the western one
 const TENNIS = { singles: 1.37, service: 6.4 };
 const tennis = features.filter((f) => f.properties.layer === 'pitch' && f.properties.sport === 'tennis')
