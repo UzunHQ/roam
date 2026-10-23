@@ -233,7 +233,7 @@ async function main() {
     const slow = setTimeout(() => { loading.textContent = 'The map is taking a while. You can use the list view in the meantime.'; }, 10000);
     map.once('load', () => { clearTimeout(slow); loading.hidden = true; });
     document.addEventListener('roam-theme', () => applyTheme(map!, theme()));
-    if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute } });
+    if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute, home: () => ({ box: homeBox(map!.getCanvas().clientWidth, map!.getCanvas().clientHeight), points: campusPoints }) } });
   }
 
   // places off campus (the golf course next door) don't count towards the campus's own extent

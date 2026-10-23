@@ -987,9 +987,14 @@ export function createMap(opts: {
     style,
     bounds: [w, s, e, n],
     fitBoundsOptions: { padding: 10 },
-    // room to pan a little past the edge, so places near it can sit mid-screen above a panel; only a
-    // little to the west and north, where there is nothing but golf course and the world beyond the map
-    maxBounds: [w - 0.0015, s - 0.004, e + 0.006, n + 0.0012],
+    // how far the camera may go past the campus, in metres west, south, east and north: just enough
+    // for the opening view on a tall phone (campus centred between the chips and the welcome card)
+    // and on a desktop (campus right of the search column), measured at 375x812 to 1920x1080; any
+    // tighter and the map would push the opening view off-centre
+    maxBounds: (() => {
+      const [mw, ms, me, mn] = [280, 370, 150, 250], kx = 111320 * Math.cos((s * Math.PI) / 180);
+      return [w - mw / kx, s - ms / 111320, e + me / kx, n + mn / 111320] as [number, number, number, number];
+    })(),
     pitch: 55,
     maxPitch: 65,
     minZoom: 14.5, // the whole campus fits a phone held upright at about 14.9
