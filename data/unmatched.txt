@@ -10,6 +10,7 @@
 --  playing-field: field, no building footprint (uses its point)
 --  south-car-park: parking, no building footprint (uses its point)
 --  froebel-car-park: parking, no building footprint (uses its point)
+--  froebel-gate-car-park: parking, no building footprint (uses its point)
 ~~  sport-active-communities -> relation/8763239 (point inside footprint; OSM calls it "Davies", verify)
 --  convent-parlour: academic, no building footprint (uses its point)
 ~~  medical-centre-annex-prayer-room -> way/623548451 (nearest, 1 m away; OSM calls it "Old Court", verify)

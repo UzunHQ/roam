@@ -331,6 +331,11 @@ const PARKING = [
     drive: [[-1.5, -73.3], [35.5, -80.7]],
     area: [[-0.8, -62.1], [7.1, -59.6], [40.6, -65.8], [33.4, -95.7], [-5.7, -90.2]],
   },
+  { // north of Froebel Gate, inside the wall: the little loop at the end of the service road; one row
+    // along its north side (the cars on the inner side would stand on the loop itself, so none are kept)
+    place: 'froebel-gate-car-park', aisles: [], seed: 39, rows: [[[143, -75.7], [165.6, -79.3]]],
+    area: [[144.2, -68.2], [166.8, -71.8], [168.6, -79.4], [168.3, -86.6], [164.9, -88.4], [142.8, -84.9], [140.6, -81.6], [141.2, -75.6]],
+  },
   { // South Car Park's other side: the strip across the road, in front of Davies Sports Hall
     place: 'south-car-park', aisles: [293959905], seed: 5, // (seed: which bays are taken, about 60%)
     area: [[-107.7, 9.1], [-139.4, 13.2], [-138.6, 19.4], [-106.9, 15.2]],
@@ -361,7 +366,7 @@ PARKING.forEach((lot, i) => {
   noTrees.push(area);
   features.push({ type: 'Feature', properties: { layer: 'parking', place: lot.place }, geometry: { type: 'Polygon', coordinates: [area] } });
   const bays = [];
-  for (const pts of [...lot.aisles.map((id) => (wayGeom.get(id) ?? []).map(toM)), ...(lot.drive ? [lot.drive] : [])]) {
+  for (const pts of [...lot.aisles.map((id) => (wayGeom.get(id) ?? []).map(toM)), ...(lot.drive ? [lot.drive] : []), ...(lot.rows ?? [])]) {
     for (let i = 0; i < pts.length - 1; i++) {
       const [ax, ay] = pts[i], [bx, by] = pts[i + 1], len = Math.hypot(bx - ax, by - ay);
       if (!len) continue;

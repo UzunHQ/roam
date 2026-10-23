@@ -2251,6 +2251,38 @@
       "sources": []
     },
     {
+      "id": "froebel-gate-car-park",
+      "code": "",
+      "name": "Froebel Gate Car Park",
+      "aliases": [
+        "Car park",
+        "Parking",
+        "Froebel Gate parking"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "parking",
+      "college": "froebel",
+      "description": "A small car park on the service loop just inside Froebel Gate, Froebel College.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.24376,
+        51.454753
+      ],
+      "positionSource": "estimate",
+      "positionAccuracyM": 10,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [
+        "Parking on campus is very limited"
+      ],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": []
+    },
+    {
       "id": "davies-sports-hall",
       "code": "F2",
       "name": "Davies Sports Hall",
