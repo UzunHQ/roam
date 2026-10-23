@@ -2226,12 +2226,12 @@
       "category": "building",
       "kind": "parking",
       "college": "froebel",
-      "description": "Car park at Froebel College, on the south side of the road below Grove House.",
+      "description": "Car park at Froebel College: the whole block on the south side of the road below Grove House.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.245836,
-        51.454905
+        -0.245784,
+        51.454821
       ],
       "positionSource": "estimate",
       "positionAccuracyM": 10,

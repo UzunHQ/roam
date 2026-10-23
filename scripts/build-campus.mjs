@@ -325,13 +325,29 @@ const PARKING = [
     place: 'southlands-car-park', aisles: [1216692135, 1216692136, 1216692137, 1216692138],
     area: [[167.5, 415.5], [188.7, 415.5], [176.3, 496], [156, 496], [155.5, 489.5], [161, 441], [163.5, 437.5], [166, 417.5]],
   },
-  { // south of Grove House, just below the road
+  { // south of Grove House: the whole block below the road; a row along the road and two aisles inside
     place: 'froebel-car-park', aisles: [259754248],
-    area: [[36.3, -66.5], [8.4, -61.3], [3.9, -62], [-3.9, -64.5], [-2.2, -69.8], [5.6, -67.4], [9.4, -67.2], [33.3, -71.6]],
+    lines: [[[-7.6, -71], [43.9, -80.6]], [[-10.5, -86.3], [41, -95.9]]],
+    area: [[-0.4, -63.5], [7.3, -61.1], [40.3, -67.3], [33.4, -95.7], [-5.7, -90.2]],
   },
 ];
 // parked cars: low-poly boxes drawn in the app (map.ts); about 60% of the bays are taken
 const CAR = { long: 4.3, wide: 1.8, pitch: 2.6, aisleHalf: 3, colours: 6 };
+// do two parked cars (corner lists) overlap? separating-axis test on their edges
+const overlap = (a, b) => [a, b].every((poly) => poly.every((p, i) => {
+  const q = poly[(i + 1) % poly.length], ax = [q[1] - p[1], p[0] - q[0]];
+  const proj = (pts) => pts.map((r) => r[0] * ax[0] + r[1] * ax[1]);
+  const pa = proj(a), pb = proj(b);
+  return Math.max(...pa) > Math.min(...pb) + 1e-6 && Math.max(...pb) > Math.min(...pa) + 1e-6;
+}));
+// no car on a road (or within 1 m of a footpath): metres from a point to the nearest path of each kind
+const pathSegs = features.filter((f) => f.properties.layer === 'path').map((f) => ({ road: f.properties.kind !== 'footpath', pts: f.geometry.coordinates.map(toM) }));
+const segDist = (p, a, b) => {
+  const dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy;
+  const t = l ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l)) : 0;
+  return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+};
+const onPath = (corners) => pathSegs.some(({ road, pts }) => pts.some((a, i) => i < pts.length - 1 && corners.some((c) => segDist(c, a, pts[i + 1]) < (road ? 2.9 : 1.6))));
 const noTrees = []; // rings (lng/lat) where no decorative tree should stand
 let cars = 0;
 PARKING.forEach((lot, li) => {
@@ -339,8 +355,7 @@ PARKING.forEach((lot, li) => {
   noTrees.push(area);
   features.push({ type: 'Feature', properties: { layer: 'parking', place: lot.place }, geometry: { type: 'Polygon', coordinates: [area] } });
   const bays = [];
-  for (const id of lot.aisles) {
-    const pts = (wayGeom.get(id) ?? []).map(toM);
+  for (const pts of [...lot.aisles.map((id) => (wayGeom.get(id) ?? []).map(toM)), ...(lot.lines ?? [])]) {
     for (let i = 0; i < pts.length - 1; i++) {
       const [ax, ay] = pts[i], [bx, by] = pts[i + 1], len = Math.hypot(bx - ax, by - ay);
       if (!len) continue;
@@ -355,8 +370,8 @@ PARKING.forEach((lot, li) => {
             c[0] + nrm[0] * (CAR.long / 2 - 0.25) * i + u[0] * (CAR.wide / 2) * j,
             c[1] + nrm[1] * (CAR.long / 2 - 0.25) * i + u[1] * (CAR.wide / 2) * j]);
           if (!corners.every((q) => pointInRing(q, lot.area))) continue;
-          if (bays.some((b) => Math.hypot(b[0] - c[0], b[1] - c[1]) < CAR.pitch - 0.2)) continue; // aisle bends
-          bays.push(c);
+          if (bays.some((b) => overlap(b, corners)) || onPath(corners)) continue; // aisle bends, rows meeting, roads
+          bays.push(corners);
           const k = bays.length;
           if (hash(li, k, 1) > 0.6) continue;
           const a = Math.round((Math.atan2(nrm[1], nrm[0]) + (hash(li, k, 2) - 0.5) * 0.08) * 1000) / 1000;
