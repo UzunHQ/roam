@@ -117,6 +117,8 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
         ['match', ['get', 'tone'], 0, p.stones[0], 1, p.stones[1], p.stones[2]]],
     },
     'building-halo': { 'line-color': p.selected },
+    'half-walls': { 'fill-extrusion-color': p.selectedWall },
+    'half-roof': { 'fill-extrusion-color': p.selected },
     props: {
       'fill-extrusion-color': ['match', ['get', 'part'],
         'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet,
@@ -126,6 +128,40 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
 }
 
 let treeCenters: LngLat[] = [];
+
+/**
+ * Blocks drawn as one building but selected in halves (layer "half" in campus.geojson, see SPLITS
+ * in build-campus.mjs): Elm Grove is the north half of its block, Elm Grove Hall the south half.
+ */
+let halves: { id: string; block: string; ring: LngLat[] }[] = [];
+const isHalf = (osmId: string | null) => !!osmId && halves.some((h) => h.id === osmId);
+const inRing = ([x, y]: LngLat, r: LngLat[]) => {
+  let c = false;
+  for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+    const [xi, yi] = r[i], [xj, yj] = r[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+};
+/** The half of a split block under a tap (or the building itself when it isn't split). */
+export function pickHalf(osmId: string, at: LngLat): string {
+  const own = halves.find((h) => h.id === osmId);
+  if (!own) return osmId;
+  const mine = halves.filter((h) => h.block === own.block);
+  return (mine.find((h) => inRing(at, h.ring)) ?? own).id;
+}
+/** a half's outline pushed out a few centimetres, so its highlight sits just over the block's walls */
+function grown(ring: LngLat[], m: number): LngLat[] {
+  const pts = ring.slice(0, -1);
+  const c = pts.reduce(([x, y], p) => [x + p[0] / pts.length, y + p[1] / pts.length], [0, 0]);
+  const kx = 111320 * Math.cos((c[1] * Math.PI) / 180), ky = 111320;
+  const out = pts.map(([x, y]) => {
+    const dx = (x - c[0]) * kx, dy = (y - c[1]) * ky, l = Math.hypot(dx, dy) || 1;
+    return [x + (dx / l) * (m / kx), y + (dy / l) * (m / ky)] as LngLat;
+  });
+  out.push(out[0]);
+  return out;
+}
 
 /**
  * Shrinks an outline by `m` metres (mitred offset, works for L- and U-shapes). Returns null when
@@ -544,6 +580,9 @@ export function createMap(opts: {
   const byLayer = (l: string) => ({ type: 'FeatureCollection', features: campus.features.filter((f) => f.properties?.layer === l) }) as GeoJSON.FeatureCollection;
   // each building carries its roof type (src/roofs.ts) so the layers can style by it
   const buildings = byLayer('building');
+  const halfLayer = byLayer('half');
+  halves = halfLayer.features.map((f) => ({ id: f.properties!.osmId, block: f.properties!.block, ring: (f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[] }));
+  halfLayer.features = halfLayer.features.map((f) => ({ ...f, geometry: { type: 'Polygon', coordinates: [grown((f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[], 0.12)] } }));
   buildings.features = buildings.features.map((f) => ({ ...f, properties: { ...f.properties, roof: ROOFS[f.properties?.osmId] ?? 'flat' } }));
   const [w, s, e, n] = bounds;
   // a big frame around campus, so the edge of the world reads as "off the map"
@@ -564,6 +603,7 @@ export function createMap(opts: {
       campus: { type: 'geojson', data: { ...campus, features: [...campus.features, ...walls.features.filter((f) => f.properties?.part === 'wall').map((f) => ({ ...f, properties: { layer: 'path', kind: 'wall' } }))] }, promoteId: 'osmId' },
       buildings: { type: 'geojson', data: buildings, promoteId: 'osmId' },
       roofparts: { type: 'geojson', data: roofParts(buildings), promoteId: 'osmId' },
+      halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
       props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features] } },
@@ -653,6 +693,15 @@ export function createMap(opts: {
           'fill-extrusion-pattern': 'solar-cells',
         },
       },
+      // the selected half of a split block (selectBuilding): walls and roof in the selection colours
+      {
+        id: 'half-walls', type: 'fill-extrusion', source: 'halves', filter: inIds([]),
+        paint: { 'fill-extrusion-height': ['+', HEIGHT, BOUNCE], 'fill-extrusion-base': 0, 'fill-extrusion-vertical-gradient': true },
+      },
+      {
+        id: 'half-roof', type: 'fill-extrusion', source: 'halves', filter: inIds([]),
+        paint: { 'fill-extrusion-height': ['+', HEIGHT, BOUNCE, ROOF + 0.75], 'fill-extrusion-base': ['+', HEIGHT, BOUNCE] },
+      },
       // buildings standing between you and the route turn see-through while it shows (setXray)
       {
         id: 'building-ghost', type: 'fill-extrusion', source: 'buildings', filter: inIds([]),
@@ -729,7 +778,7 @@ export function bounceBuilding(map: MLMap, osmId: string) {
   const tick = (t: number) => {
     const k = Math.min(1, (t - start) / 450);
     const v = Math.sin(k * Math.PI) * (1 - k * 0.4);
-    for (const source of ['buildings', 'roofparts']) map.setFeatureState({ source, id: osmId }, { bounce: k < 1 ? v : 0 });
+    for (const source of isHalf(osmId) ? ['halves'] : ['buildings', 'roofparts']) map.setFeatureState({ source, id: osmId }, { bounce: k < 1 ? v : 0 });
     if (k < 1) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
@@ -739,7 +788,10 @@ let selectedId: string | null = null;
 export function selectBuilding(map: MLMap, osmId: string | null) {
   if (selectedId) for (const source of ['buildings', 'roofparts']) map.setFeatureState({ source, id: selectedId }, { selected: false });
   selectedId = osmId;
-  if (osmId) for (const source of ['buildings', 'roofparts']) map.setFeatureState({ source, id: osmId }, { selected: true });
+  // half of a split block: only that half lights up, drawn over the block
+  const half = isHalf(osmId);
+  for (const id of ['half-walls', 'half-roof']) if (map.getLayer(id)) map.setFilter(id, inIds(half && osmId ? [osmId] : []));
+  if (osmId && !half) for (const source of ['buildings', 'roofparts']) map.setFeatureState({ source, id: osmId }, { selected: true });
 }
 
 /**
@@ -748,7 +800,9 @@ export function selectBuilding(map: MLMap, osmId: string | null) {
  */
 let xray = '';
 export function setXray(map: MLMap, ids: string[]) {
-  const sorted = [...new Set(ids)].sort();
+  // a split block is one building on the map: see through all of it
+  const blocks = new Set(halves.filter((h) => ids.includes(h.id)).map((h) => h.block));
+  const sorted = [...new Set([...ids, ...halves.filter((h) => blocks.has(h.block)).map((h) => h.id)])].sort();
   const key = sorted.join(',');
   if (key === xray || !map.getLayer('building-ghost')) return;
   xray = key;

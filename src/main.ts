@@ -4,7 +4,7 @@ import * as maplibregl from 'maplibre-gl';
 import { type EaseToOptions, type Map as MLMap } from 'maplibre-gl';
 import { config } from './config';
 import { loadData } from './data';
-import { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, selectBuilding, setGeoJSON, setXray, type Theme } from './map';
+import { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, pickHalf, selectBuilding, setGeoJSON, setXray, type Theme } from './map';
 import { icons, placeIcon } from './icons';
 import { matchingGroups, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
@@ -189,6 +189,13 @@ async function main() {
     const ring = f.geometry.coordinates[0] as LngLat[];
     footprints.set(f.properties.osmId, ring);
     outlines.set(f.properties.osmId, [...(outlines.get(f.properties.osmId) ?? []), ring]);
+  }
+  // a block selected in halves (Elm Grove / Elm Grove Hall): each place's footprint is its own half
+  for (const f of campus.features) {
+    if (f.properties?.layer !== 'half' || f.geometry.type !== 'Polygon') continue;
+    const ring = f.geometry.coordinates[0] as LngLat[];
+    footprints.set(f.properties.osmId, ring);
+    outlines.set(f.properties.osmId, [ring]);
   }
   const router = new Router(paths);
   // Which place a building tap opens when several share one building: the building itself (named
@@ -1449,7 +1456,7 @@ async function main() {
     if (!key.hidden) toggleKey(false);
     if (navigating) return; // while walking, stray taps on the map shouldn't end the route
     const f = map!.queryRenderedFeatures(e.point, { layers: ['building-walls', 'building-roof', 'building-top', 'building-ghost'] })[0];
-    const p = f && footprintToPlace.get(f.properties?.osmId);
+    const p = f && footprintToPlace.get(pickHalf(f.properties?.osmId, [e.lngLat.lng, e.lngLat.lat]));
     if (p) { select(p, { source: 'building' }); return; }
     if (current && !directionsOpen) closePanel();
   });

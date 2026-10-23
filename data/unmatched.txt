@@ -2,7 +2,6 @@
 --  fountain: fountain, no building footprint (uses its point)
 --  garden: garden, no building footprint (uses its point)
 ~~  chapman-hall -> relation/8758398 (point inside footprint; OSM calls it "Queen's Building", verify)
-~~  elm-grove -> relation/8673531 (point inside footprint)
 ~~  laundry -> way/653472806 (point inside footprint; OSM calls it "Sport and Active Communities", verify)
 ~~  the-base -> way/653472808 (point inside footprint; OSM calls it "Erasmus House", verify)
 ~~  post-room -> way/653472791 (point inside footprint; OSM calls it "Richardson", verify)

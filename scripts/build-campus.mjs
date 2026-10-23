@@ -171,17 +171,20 @@ for (const el of osm.elements) {
 
 // ---------- one block that OSM maps as two buildings ----------
 // Elm Grove (careers, conference centre) and Elm Grove Hall (halls) are two relations with the
-// same outline, so a tap picked the whole block. Cut it in half along its length: the west half,
-// on the library side, is Elm Grove; the east half, towards Lee House, is Elm Grove Hall.
-const SPLITS = [{ west: 'relation/8673531', east: 'relation/8673532' }];
+// same outline, so a tap picked the whole block. The block stays one building on the map; only
+// selection is split, across the middle of its short side: the north half (library side) is
+// Elm Grove, the south half is Elm Grove Hall. The halves (layer "half") carry the relation ids,
+// so the app can tell which half was tapped, highlight just that half and route to it.
+const SPLITS = [{ block: 'relation/8673532', north: { osmId: 'relation/8673531', place: 'elm-grove' }, south: { osmId: 'relation/8673532', place: 'elm-grove-hall' } }];
+const forcedFootprint = new Map(); // place id -> half id
 function halves(ringLLIn) {
   const pts = ringLLIn.slice(0, -1).map(toM);
   const c = pts.reduce(([x, y], p) => [x + p[0] / pts.length, y + p[1] / pts.length], [0, 0]);
-  // long axis: the main direction of the corners (principal component)
+  // long axis: the main direction of the corners (principal component); the cut is square to it
   let sxx = 0, syy = 0, sxy = 0;
   for (const [x, y] of pts) { sxx += (x - c[0]) ** 2; syy += (y - c[1]) ** 2; sxy += (x - c[0]) * (y - c[1]); }
-  const ang = 0.5 * Math.atan2(2 * sxy, sxx - syy), nrm = [-Math.sin(ang), Math.cos(ang)];
-  const side = (p) => (p[0] - c[0]) * nrm[0] + (p[1] - c[1]) * nrm[1];
+  const ang = 0.5 * Math.atan2(2 * sxy, sxx - syy), u = [Math.cos(ang), Math.sin(ang)];
+  const side = (p) => (p[0] - c[0]) * u[0] + (p[1] - c[1]) * u[1];
   // keep one side of the cut line (Sutherland-Hodgman against a half-plane)
   const clip = (sign) => {
     const out = [];
@@ -193,15 +196,19 @@ function halves(ringLLIn) {
     return out;
   };
   const [a, b] = [clip(1), clip(-1)];
-  const mean = (r) => r.reduce((s, p) => s + p[0], 0) / r.length;
-  return (mean(a) < mean(b) ? [a, b] : [b, a]).map(ringLL); // [west, east]
+  const meanY = (r) => r.reduce((s, p) => s + p[1], 0) / r.length;
+  return (meanY(a) > meanY(b) ? [a, b] : [b, a]).map(ringLL); // [north, south]
 }
-for (const { west, east } of SPLITS) {
-  const w = buildings.find((b) => b.f.properties.osmId === west), e = buildings.find((b) => b.f.properties.osmId === east);
-  if (!w || !e) { console.warn(`split ${west} / ${east}: not found`); continue; }
-  const [rw, re] = halves(w.ring);
-  for (const [b, r] of [[w, rw], [e, re]]) { b.ring = r; b.f.geometry.coordinates = [r]; }
-  console.log(`split ${west} (west, centre ${JSON.stringify(centroid(rw))}) / ${east} (east, centre ${JSON.stringify(centroid(re))})`);
+for (const { block, north, south } of SPLITS) {
+  const whole = buildings.find((b) => b.f.properties.osmId === block);
+  if (!whole) { console.warn(`split ${block}: not found`); continue; }
+  const [rn, rs] = halves(whole.ring);
+  const { height, building, college, campus } = whole.f.properties;
+  for (const [half, r] of [[north, rn], [south, rs]]) {
+    features.push({ type: 'Feature', properties: { layer: 'half', osmId: half.osmId, block, height, building, college, campus }, geometry: { type: 'Polygon', coordinates: [r] } });
+    forcedFootprint.set(half.place, half.osmId);
+    console.log(`half ${half.osmId} (${half === north ? 'north' : 'south'}, ${half.place}) centre ${JSON.stringify(centroid(r))}`);
+  }
 }
 
 // ---------- snap places to footprints ----------
@@ -251,6 +258,11 @@ for (const p of placesDoc.places) {
   if (!candidates.includes(p)) continue;
   const radius = Math.max(60, (p.positionAccuracyM || 20) * 3);
   let match = exact.get(p.id) || null, how = match ? `name "${match.b.f.properties.name}"` : '';
+  // one half of a block that is split for selection (see SPLITS)
+  if (forcedFootprint.has(p.id)) {
+    const half = buildings.find((b) => b.f.properties.osmId === forcedFootprint.get(p.id));
+    if (half) { match = { b: half }; how = 'name (split half)'; }
+  }
   // 1) partial name match nearby, not stealing an exact-match footprint
   if (!match) {
     const partial = buildings
