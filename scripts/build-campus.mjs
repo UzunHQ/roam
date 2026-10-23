@@ -720,6 +720,45 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   }
   console.log(`added ${more} trees on the west meadow`);
 
+  // a wall of big, dark trees along the edge between the golf course and campus: from west of
+  // Southlands, past Fincham, Digby and the lake, to the north-west corner of the Playing Field.
+  // Three staggered rows just inside the course, clear of fairways, roads, paths, buildings and pitches.
+  let belt = 0;
+  if (courseRing) {
+    const edge = [];
+    // the course's east side, from where it enters the map in the north down to the Playing Field's
+    // north-west corner (the outline runs south along campus, then west above the field)
+    for (const p of courseRing.map(toM)) { if (p[1] > y1 + 1) { if (edge.length) break; continue; } edge.push(p); if (p[0] < -170) break; }
+    let seed4 = 23;
+    const rand4 = () => ((seed4 = (seed4 * 1664525 + 1013904223) % 4294967296) / 4294967296);
+    const courseM = courseRing.map(toM);
+    for (let i = 0; i < edge.length - 1; i++) {
+      const a = edge[i], b = edge[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (len < 0.5) continue;
+      const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+      let nrm = [-u[1], u[0]];
+      const mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      if (!pointInRing([mid[0] + nrm[0] * 3, mid[1] + nrm[1] * 3], courseM)) nrm = [-nrm[0], -nrm[1]]; // into the course
+      for (let d = 0; d < len; d += 4.2) {
+        for (const [row, off] of [[0, 3], [1, 7.5], [2, 12]]) {
+          const jx = (rand4() - 0.5) * 2.4, jy = (rand4() - 0.5) * 2, size = Math.round((1.25 + rand4() * 0.5) * 100) / 100;
+          const along = d + (row % 2) * 2.1 + jx;
+          const m = [a[0] + u[0] * along + nrm[0] * (off + jy), a[1] + u[1] * along + nrm[1] * (off + jy)], ll = fromM(m);
+          if (m[0] < x0 || m[0] > x1 || m[1] < y0 || m[1] > y1) continue;
+          if (noTrees.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3)) continue;
+          if (water.some((r) => pointInRing(ll, r) || distToRing(ll, r) < 3)) continue;
+          if (bldg.some((r) => pointInRing(m, r) || r.some((p, k) => k < r.length - 1 && segDist(m, p, r[k + 1]) < 6))) continue;
+          if (near(roads.map((r) => r.pts), m, 7) || near(foot.map((r) => r.pts), m, 4) || near(wallLines, m, 4)) continue;
+          if (treesM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 3.2)) continue;
+          features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: size, belt: true }, geometry: { type: 'Point', coordinates: ll } });
+          treesM.push(m);
+          belt++;
+        }
+      }
+    }
+  }
+  console.log(`tree wall: ${belt} trees along the golf course edge`);
+
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
   // (stretched over the west meadow and the playing field too, so no pale strip is left between them

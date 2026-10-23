@@ -424,7 +424,8 @@ function treePolygons(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
     const rot = (c[0] * 1e6) % 1;
     // a stable pseudo-random number per tree, so colours don't change between visits
     const h = Math.abs(Math.sin(c[0] * 12.9898e3 + c[1] * 78.233e3) * 43758.5453) % 1;
-    const tone = h < 0.05 ? 5 : Math.floor((h * 100) % 5);
+    // the tree wall along the golf course (belt): only the two darkest greens, never blossom
+    const tone = f.properties?.belt ? (h < 0.5 ? 3 : 1) : h < 0.05 ? 5 : Math.floor((h * 100) % 5);
     out.push({ type: 'Feature', properties: { t, part: 'trunk', base: 0, top: 2.2 * s }, geometry: ngon(c, 0.45 * s, rot, 6) });
     out.push({ type: 'Feature', properties: { t, tone, part: 'leaf', tier: 0, base: 2 * s, top: 3.4 * s }, geometry: ngon(c, 2.1 * s, rot, 8) });
     out.push({ type: 'Feature', properties: { t, tone, part: 'leaf', tier: 1, base: 3.4 * s, top: 5.6 * s }, geometry: ngon(c, 2.6 * s, rot + 0.2, 8) });
