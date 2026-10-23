@@ -889,8 +889,10 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
 // side and north of Southlands there is nothing to show: everything there is cut away, and the
 // app dims it like the rest of the world outside the map (layer "mapedge"). Metres, a convex ring
 // that holds every campus building, wall and place: its north-west side runs down the golf course
-// from north of Southlands to the west end of the Clarence Lane wall.
-const MAP_EDGE = [[-42, 565], [-177, 497], [-244, 378], [-304, 244], [-360, 98], [-386, -67], [-386, -181], [296, -181], [296, 565]];
+// from north of Southlands to the west end of the Clarence Lane wall, and its north side runs from
+// the golf course just west of Southlands up to the wall's north-east corner (Southlands' buildings
+// reach 532 m north, the wall 556 m) and back down east of Roehampton Lane.
+const MAP_EDGE = [[-177, 497], [-244, 378], [-304, 244], [-360, 98], [-386, -67], [-386, -181], [296, -181], [296, 532], [166, 559]];
 {
   const orient = Math.sign(MAP_EDGE.reduce((a, p, i) => { const q = MAP_EDGE[(i + 1) % MAP_EDGE.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0));
   const keepSide = (a, b, p) => orient * ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) >= 0;

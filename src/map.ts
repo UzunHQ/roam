@@ -992,7 +992,7 @@ export function createMap(opts: {
     // and on a desktop (campus right of the search column), measured at 375x812 to 1920x1080; any
     // tighter and the map would push the opening view off-centre
     maxBounds: (() => {
-      const [mw, ms, me, mn] = [280, 370, 150, 250], kx = 111320 * Math.cos((s * Math.PI) / 180);
+      const [mw, ms, me, mn] = [280, 370, 150, 235], kx = 111320 * Math.cos((s * Math.PI) / 180);
       return [w - mw / kx, s - ms / 111320, e + me / kx, n + mn / 111320] as [number, number, number, number];
     })(),
     pitch: 55,
