@@ -881,6 +881,40 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   }
   console.log(`seating area: ${benches} benches`);
 
+  // a row of tall pines along the path from in front of Fincham, past Sir David Bell, Dorothy
+  // Buchanan and Howard, along the north of the lake, to the Hive Café (layer "pine", drawn in the
+  // app). The path is OSM's footways; the row runs on the side drawn on the 04:32 screenshot.
+  const PINE_PATH = [[48, 236], [37, 172], [35.5, 150], [38, 133], [51, 124], [64, 112], [67, 103], [69, 95], [69, 82], [70.3, 72], [82, 67], [112, 59]];
+  const PINE_SIDE = [[50, 233.7], [49.4, 208.1], [46.9, 169.8], [50.4, 144.2], [61.6, 122], [72.4, 100.6], [79.8, 78.4], [101.1, 67.1]];
+  const toLine = (m, line) => line.reduce((d, a, i) => (i < line.length - 1 ? Math.min(d, segDist(m, a, line[i + 1])) : d), Infinity);
+  let pines = 0;
+  const pineM = [];
+  for (let i = 0; i < PINE_PATH.length - 1; i++) {
+    const a = PINE_PATH[i], b = PINE_PATH[i + 1], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+    for (let d = 3; d < len; d += 6.5) {
+      const p = [a[0] + u[0] * d, a[1] + u[1] * d];
+      const sides = [[-u[1], u[0]], [u[1], -u[0]]].sort((n1, n2) => toLine([p[0] + n1[0] * 5, p[1] + n1[1] * 5], PINE_SIDE) - toLine([p[0] + n2[0] * 5, p[1] + n2[1] * 5], PINE_SIDE));
+      for (const n of sides) {
+        const m = [p[0] + n[0] * 5, p[1] + n[1] * 5];
+        if (bldg.some((ring) => pointInRing(m, ring) || ring.some((q, k) => k < ring.length - 1 && segDist(m, q, ring[k + 1]) < 4))) continue;
+        if (near(roads.map((q) => q.pts), m, 5.5) || near(foot.map((q) => q.pts), m, 3)) continue;
+        if (water.some((r) => pointInRing(fromM(m), r) || distToRing(fromM(m), r) < 3)) continue;
+        if (pineM.some((t) => Math.hypot(t[0] - m[0], t[1] - m[1]) < 5)) continue;
+        features.push({ type: 'Feature', properties: { layer: 'pine', s: Math.round((1.05 + ((pines * 29) % 25) / 100) * 100) / 100 }, geometry: { type: 'Point', coordinates: fromM(m) } });
+        pineM.push(m);
+        pines++;
+        break;
+      }
+    }
+  }
+  // ordinary trees standing where a pine now is make way
+  for (let i = features.length - 1; i >= 0; i--) {
+    const f = features[i];
+    if (f.properties.layer === 'tree' && pineM.some((t) => Math.hypot(...toM(f.geometry.coordinates).map((v, k) => v - t[k])) < 4)) features.splice(i, 1);
+  }
+  console.log(`pine row: ${pines} pines`);
+
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
   // (stretched over the west meadow and the playing field too, so no pale strip is left between them
