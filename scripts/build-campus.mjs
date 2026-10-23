@@ -915,6 +915,20 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   }
   console.log(`pine row: ${pines} pines`);
 
+  // a low garden wall from south of the Hive Café, along the west side of the path running south-east,
+  // to beside the Growhampton chicken coop (drawn in the app like the campus wall, at under half its
+  // height); no tree stands on it
+  const GARDEN_WALL = [[148.8, 63.5], [151.8, 53.5], [155.3, 37], [156.4, 31.5], [155.4, 24]];
+  features.push({ type: 'Feature', properties: { layer: 'gardenwall', scale: 0.45 }, geometry: { type: 'LineString', coordinates: GARDEN_WALL.map(fromM) } });
+  let offWall = 0;
+  for (let i = features.length - 1; i >= 0; i--) {
+    const f = features[i];
+    if (f.properties.layer !== 'tree' && f.properties.layer !== 'pine') continue;
+    const m = toM(f.geometry.coordinates);
+    if (GARDEN_WALL.some((a, k) => k < GARDEN_WALL.length - 1 && segDist(m, a, GARDEN_WALL[k + 1]) < 2.6 * (f.properties.s ?? 1) + 0.5)) { features.splice(i, 1); offWall++; }
+  }
+  console.log(`garden wall: ${offWall} trees cleared`);
+
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
   // (stretched over the west meadow and the playing field too, so no pale strip is left between them

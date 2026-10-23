@@ -827,13 +827,15 @@ function wallParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
       const r = [pointAt(d0, -half), ...inner.map((i) => mitre(i, -half)), pointAt(d1, -half)];
       return [...l, ...r.reverse()];
     };
-    put(band(0, L, WALL.plinthHalf), 'plinth', 0, WALL.plinth);
+    // a low garden wall (scale < 1) is the same build, shorter and a little thinner
+    const hk = Number(pr.scale) || 1, t = 0.5 + hk / 2;
+    put(band(0, L, WALL.plinthHalf * t), 'plinth', 0, WALL.plinth * hk);
     const nBlocks = Math.max(1, Math.round(L / WALL.block));
     for (let k = 0; k < nBlocks; k++) {
       const d0 = (L * k) / nBlocks, d1 = (L * (k + 1)) / nBlocks, mid = pointAt((d0 + d1) / 2, 0);
-      put(band(d0, d1, WALL.half), 'stone', WALL.plinth, WALL.plinth + WALL.course, { tone: tone(mid[0] + lng0 * 1e4, mid[1]) });
+      put(band(d0, d1, WALL.half * t), 'stone', WALL.plinth * hk, (WALL.plinth + WALL.course) * hk, { tone: tone(mid[0] + lng0 * 1e4, mid[1]) });
     }
-    put(band(0, L, WALL.copeHalf), 'cope', WALL.plinth + WALL.course, WALL.cope);
+    put(band(0, L, WALL.copeHalf * t), 'cope', (WALL.plinth + WALL.course) * hk, WALL.cope * hk);
   }
   return { type: 'FeatureCollection', features: out };
 }
@@ -881,7 +883,8 @@ export function createMap(opts: {
       roofparts: { type: 'geojson', data: roofParts(buildings), promoteId: 'osmId' },
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
-      wallparts: { type: 'geojson', data: wallParts(walls) },
+      // the campus wall, and low garden walls on campus (layer "gardenwall") in the same stone
+      wallparts: { type: 'geojson', data: wallParts({ type: 'FeatureCollection', features: [...walls.features, ...byLayer('gardenwall').features] }) },
       props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features)] } },
       fence: { type: 'geojson', data: fences.mesh },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },

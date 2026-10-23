@@ -3101,6 +3101,51 @@
       ]
     },
     {
+      "id": "growhampton-chicken-coop",
+      "code": "",
+      "name": "Growhampton Chicken Coop",
+      "aliases": [
+        "Chicken coop",
+        "Chickens",
+        "Hens",
+        "Growhampton"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "coop",
+      "college": "digby-stuart",
+      "description": "Home of Growhampton's flock of hens, many of them rescued and rehomed. Growhampton is a food sustainability project growing fruit, vegetables and herbs on campus; volunteers look after the hens every day of the year.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243825,
+        51.455673
+      ],
+      "positionSource": "osm-footprint",
+      "positionAccuracyM": 3,
+      "entrance": null,
+      "footprintId": "way/629613440",
+      "photo": null,
+      "services": [
+        "Chicken Care volunteering, 365 days a year",
+        "Collecting eggs"
+      ],
+      "officialUrl": "https://www.roehamptonstudent.com/activities/growhampton/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehamptonstudent.com/activities/growhampton/",
+          "title": "Roehampton Students' Union: Growhampton (flock of hens, Chicken Care volunteering)",
+          "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/629613440",
+          "title": "OpenStreetMap: Growhampton Chicken Coop",
+          "checked": "2026-10-23"
+        }
+      ]
+    },
+    {
       "id": "froebel-diner",
       "code": "",
       "name": "Froebel Diner",
