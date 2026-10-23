@@ -170,6 +170,20 @@ for (const el of osm.elements) {
   }
 }
 
+// ---------- buildings OSM has in the wrong place ----------
+// The small unnamed block way/1094567673 stands just inside the wall by the main entrance, south of
+// the drive in from the gate (seen on site), not 15 m further in by Elm Grove. Moved as it is:
+// same outline, size and height. Metres east and north.
+const MOVES = [{ osmId: 'way/1094567673', by: [13.25, 0.9] }];
+for (const { osmId, by } of MOVES) {
+  const b = buildings.find((x) => x.f.properties.osmId === osmId);
+  if (!b) { console.warn(`move ${osmId}: not found`); continue; }
+  const r = b.ring.map(toM).map(([x, y]) => fromM([x + by[0], y + by[1]]));
+  b.ring = r;
+  b.f.geometry.coordinates = [r];
+  console.log(`moved ${osmId} by ${by.join(', ')} m`);
+}
+
 // ---------- historic monuments that are not university buildings ----------
 // The Lyne-Stephens Mausoleum (Grade II, Historic England 1184736) is OSM's way/623548456: a small
 // Romanesque mausoleum, Greek cross in plan, stone-faced, each arm under an equilateral gable. It is
