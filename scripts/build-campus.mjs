@@ -189,7 +189,11 @@ for (const { osmId, by } of MOVES) {
 // Romanesque mausoleum, Greek cross in plan, stone-faced, each arm under an equilateral gable. It is
 // drawn by the app as low grey stone (layer "monument"), not as a campus building with windows and
 // a college roof. Its outline stays in `buildings` only so decorative trees keep clear of it.
-const MONUMENTS = [{ osmId: 'way/623548456', kind: 'mausoleum', wall: 3.5 }]; // wall height: an estimate, no source gives one
+const MONUMENTS = [
+  { osmId: 'way/623548456', kind: 'mausoleum', wall: 3.5 }, // wall height: an estimate, no source gives one
+  // the Growhampton chicken coop: a small wooden hen house, drawn by the app as one (not a campus building)
+  { osmId: 'way/629613440', kind: 'coop' },
+];
 for (const m of MONUMENTS) {
   const b = buildings.find((x) => x.f.properties.osmId === m.osmId);
   if (!b) { console.warn(`monument ${m.osmId}: not found`); continue; }
@@ -201,7 +205,8 @@ for (const m of MONUMENTS) {
   const u = [Math.cos(a), Math.sin(a)], v = [-u[1], u[0]];
   const along = pts.map((p) => (p[0] - c[0]) * u[0] + (p[1] - c[1]) * u[1]), across = pts.map((p) => (p[0] - c[0]) * v[0] + (p[1] - c[1]) * v[1]);
   const span = Math.round(Math.min(Math.max(...along) - Math.min(...along), Math.max(...across) - Math.min(...across)) * 10) / 10;
-  b.f.properties = { layer: 'monument', osmId: m.osmId, name: b.f.properties.name, kind: m.kind, a: Math.round(a * 1000) / 1000, span, arm: Math.round(best * 10) / 10, wall: m.wall, centre: fromM(c) };
+  const long = Math.round((Math.max(...along) - Math.min(...along)) * 10) / 10, wide = Math.round((Math.max(...across) - Math.min(...across)) * 10) / 10;
+  b.f.properties = { layer: 'monument', osmId: m.osmId, name: b.f.properties.name, kind: m.kind, a: Math.round(a * 1000) / 1000, span, arm: Math.round(best * 10) / 10, wall: m.wall, long, wide, centre: fromM(c) };
   b.monument = true;
   console.log(`monument ${m.osmId}: ${m.kind}, span ${span} m, arm ${b.f.properties.arm} m`);
 }
@@ -272,7 +277,7 @@ function nameScore(place, osmName) {
 const report = [];
 const snapCategories = new Set(['building', 'sport', 'food']);
 // outdoor places keep their point, and so do rooms whose building already has its own pin
-const POINT_ONLY_KINDS = new Set(['court', 'field', 'pitch', 'parking', 'fountain', 'garden', 'square', 'monument', 'golf']);
+const POINT_ONLY_KINDS = new Set(['court', 'field', 'pitch', 'parking', 'fountain', 'garden', 'square', 'monument', 'golf', 'coop']);
 const POINT_ONLY_IDS = new Set(['convent-parlour']);
 const pointOnly = (p) => POINT_ONLY_KINDS.has(p.kind) || POINT_ONLY_IDS.has(p.id);
 const candidates = placesDoc.places.filter((p) => snapCategories.has(p.category) && !pointOnly(p));
@@ -980,6 +985,19 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
       }
     }
     console.log(`Southlands: ${sl} trees round the pond and north of Wesley Court`);
+  }
+
+  // the hens' run west of the chicken coop, between it and the path: a low wire fence (layer "fence",
+  // 1 m) and five hens (layer "hen", drawn in the app); no tree inside
+  {
+    const RUN = [[142.6, 16.6], [148.6, 16.2], [149.6, 23], [143.4, 23.4]];
+    features.push({ type: 'Feature', properties: { layer: 'fence', height: 1 }, geometry: { type: 'LineString', coordinates: [...RUN, RUN[0]].map(fromM) } });
+    [[144.6, 18.4, 0.4], [146.5, 20.8, 2.1], [145.2, 21.9, 4], [147.3, 18.2, 5.3], [144.4, 20.2, 1.2]].forEach(([x, y, a]) =>
+      features.push({ type: 'Feature', properties: { layer: 'hen', a }, geometry: { type: 'Point', coordinates: fromM([x, y]) } }));
+    for (let i = features.length - 1; i >= 0; i--) {
+      const f = features[i];
+      if (f.properties.layer === 'tree' && (pointInRing(toM(f.geometry.coordinates), RUN) || RUN.some((p, k) => segDist(toM(f.geometry.coordinates), p, RUN[(k + 1) % 4]) < 2.5))) features.splice(i, 1);
+    }
   }
 
 

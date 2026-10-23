@@ -3124,7 +3124,7 @@
       "positionSource": "osm-footprint",
       "positionAccuracyM": 3,
       "entrance": null,
-      "footprintId": "way/629613440",
+      "footprintId": null,
       "photo": null,
       "services": [
         "Chicken Care volunteering, 365 days a year",

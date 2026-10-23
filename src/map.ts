@@ -28,7 +28,7 @@ const PALETTE = {
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
     cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
     fencePost: '#3d5a49', fenceMesh: '#4a6656',
-    golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', benchWood: '#b98559', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
+    golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', benchWood: '#b98559', coopWood: '#9a6b45', coopRoof: '#b5523b', hen: '#fbfaf4', comb: '#e0412e', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -45,7 +45,7 @@ const PALETTE = {
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
     cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
     fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
-    golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', benchWood: '#8a6446', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
+    golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', benchWood: '#8a6446', coopWood: '#6e4c33', coopRoof: '#7d3a2c', hen: '#d9d8d0', comb: '#b8402f', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
   },
 } as const;
 
@@ -137,7 +137,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     props: {
       'fill-extrusion-color': ['match', ['get', 'part'],
         'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet, 'post', p.fencePost,
-        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil, 'goal', p.goalPost, 'flag', p.flag, 'bench', p.benchWood,
+        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil, 'goal', p.goalPost, 'flag', p.flag, 'bench', p.benchWood, 'coopwall', p.coopWood, 'ramp', p.coopWood, 'cooproof', p.coopRoof, 'hen', p.hen, 'comb', p.comb,
         'bloom', ['match', ['get', 'c'], 0, p.blooms[0], 1, p.blooms[1], 2, p.blooms[2], p.blooms[3]],
         ['match', ['get', 'c'], 0, p.cars[0], 1, p.cars[1], 2, p.cars[2], 3, p.cars[3], 4, p.cars[4], p.cars[5]]],
     },
@@ -547,7 +547,7 @@ function gardenParts(statues: GeoJSON.Feature[], beds: GeoJSON.Feature[]): GeoJS
  */
 function monumentParts(fs: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
   const out: GeoJSON.Feature[] = [];
-  for (const f of fs) {
+  for (const f of fs.filter((x) => x.properties?.kind === 'mausoleum')) {
     const pr = f.properties ?? {};
     const [lng, lat] = pr.centre as number[];
     const a = Number(pr.a) || 0, S = Number(pr.span) || 9, A = Math.min(Number(pr.arm) || 5, S * 0.62), H = Number(pr.wall) || 4.5;
@@ -615,6 +615,49 @@ function benchParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
     box('bench', 0, 0, 0.9, 0.24, 0.42, 0.48); // seat
     box('bench', 0, -0.22, 0.9, 0.035, 0.55, 0.85); // backrest
     for (const s of [-0.75, 0.75]) box('iron', s, -0.22, 0.03, 0.03, 0.42, 0.85); // backrest posts
+  }
+  return out;
+}
+
+/**
+ * The Growhampton chicken coop (a "monument" of kind coop): a small wooden hen house on short legs,
+ * `long` x `wide` metres turned by `a`, under a reddish pitched roof (stepped slabs along the ridge,
+ * eaves overhanging), with a little ramp up to a hatch on the side facing the path. Hens (layer
+ * "hen"): a white body, head and red comb, facing `a`.
+ */
+function coopParts(coops: GeoJSON.Feature[], hens: GeoJSON.Feature[]): GeoJSON.Feature[] {
+  const out: GeoJSON.Feature[] = [];
+  const at = (lng: number, lat: number, a: number) => {
+    const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320, u = [Math.cos(a), Math.sin(a)], v = [-u[1], u[0]];
+    // a box centred `x` along u and `y` along v, half sizes hx, hy
+    return (part: string, x: number, y: number, hx: number, hy: number, base: number, top: number) => out.push({
+      type: 'Feature', properties: { part, base, top },
+      geometry: { type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([i, j]) => {
+        const px = u[0] * (x + hx * i) + v[0] * (y + hy * j), py = u[1] * (x + hx * i) + v[1] * (y + hy * j);
+        return [lng + px / kx, lat + py / ky];
+      })] },
+    });
+  };
+  for (const f of coops.filter((x) => x.properties?.kind === 'coop')) {
+    const pr = f.properties ?? {};
+    const [lng, lat] = pr.centre as number[];
+    const box = at(lng, lat, Number(pr.a) || 0);
+    const L = (Number(pr.long) || 6) / 2, W = (Number(pr.wide) || 2.5) / 2;
+    for (const [x, y] of [[-L + 0.2, -W + 0.2], [L - 0.2, -W + 0.2], [-L + 0.2, W - 0.2], [L - 0.2, W - 0.2]]) box('coopwall', x, y, 0.08, 0.08, 0, 0.35); // legs
+    box('coopwall', 0, 0, L, W, 0.35, 1.6); // walls
+    // roof: the ridge runs along the coop; five slabs narrowing upwards, eaves 0.25 m out
+    for (let k = 0; k < 5; k++) box('cooproof', 0, 0, L + 0.25, (W + 0.3) * (1 - k / 5), 1.6 + k * 0.17, 1.6 + (k + 1) * 0.17);
+    // a ramp from the ground up to a hatch on one long side (+v), in three steps
+    for (let k = 0; k < 3; k++) box('ramp', 0, W + 0.25 + (2 - k) * 0.35, 0.3, 0.18, 0, 0.12 + k * 0.12);
+    box('cooproof', 0, W + 0.01, 0.28, 0.02, 0.45, 0.9); // hatch
+  }
+  for (const f of hens) {
+    const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+    const box = at(lng, lat, Number(f.properties?.a) || 0);
+    // a little larger than life (0.4 m long), so they read on the map
+    box('hen', 0, 0, 0.22, 0.14, 0.1, 0.38); // body
+    box('hen', 0.22, 0, 0.08, 0.08, 0.32, 0.48); // head
+    box('comb', 0.22, 0, 0.045, 0.035, 0.48, 0.55);
   }
   return out;
 }
@@ -869,7 +912,7 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...flagParts(byLayer('golfflag').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
       fence: { type: 'geojson', data: fences.mesh, tolerance: 0 },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
       outside: { type: 'geojson', data: outside },
