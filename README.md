@@ -37,7 +37,7 @@ New students at Roehampton get lost, and the tools they have don't help much:
 
 | | |
 |---|---|
-| Places on the map | 69 (48 buildings and spaces, 11 food and drink, 3 sport, 2 car parks, 5 entrances) |
+| Places on the map | 73 (47 buildings, 11 food and drink, 4 sport, 3 car parks, 3 outdoor spaces, 5 entrances) |
 | Timetable room-code prefixes | 15 |
 | Code | about 4,100 lines of TypeScript and CSS |
 

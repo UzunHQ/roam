@@ -363,7 +363,8 @@ async function main() {
       const pt = map.project(a.c), w = a.el.offsetWidth / 2 + 8;
       areaBoxes.push([pt.x - w, pt.y - 24, pt.x + w, pt.y + 24]);
     }
-    const off = (m: M) => m.group !== 'entrance' && !passes(m.p); // outside the chosen category
+    // outside the chosen category (entrances, car parks and open-air spots have no chip and always show)
+    const off = (m: M) => m.group !== 'entrance' && m.group !== 'outdoors' && !passes(m.p);
     const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || PRIORITY[b.group] - PRIORITY[a.group]);
     const shown: { m: M; x: number; y: number; sel: boolean }[] = [];
     // gate pins float just above the pillars' lanterns (about 5.4 m up, as seen at this zoom and tilt)

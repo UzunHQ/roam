@@ -1196,6 +1196,65 @@
       ]
     },
     {
+      "id": "fountain",
+      "code": "",
+      "name": "Fountain",
+      "aliases": [
+        "Water fountain",
+        "Froebel fountain",
+        "Grove House fountain"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "fountain",
+      "college": "froebel",
+      "description": "A fountain in the middle of the round path in the garden north of Grove House, Froebel College.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.245345,
+        51.455499
+      ],
+      "positionSource": "campus-tour",
+      "positionAccuracyM": 10,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": []
+    },
+    {
+      "id": "garden",
+      "code": "",
+      "name": "Garden",
+      "aliases": [
+        "Froebel garden",
+        "Grove House garden"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "garden",
+      "college": "froebel",
+      "description": "A small lawn garden between Grove House and Old Court, Froebel College.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.24463,
+        51.455024
+      ],
+      "positionSource": "campus-tour",
+      "positionAccuracyM": 10,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": []
+    },
+    {
       "id": "jebb-auditorium",
       "code": "F8",
       "name": "Jebb Auditorium",
@@ -2875,7 +2934,7 @@
       ],
       "roomCodePrefixes": [],
       "category": "building",
-      "kind": "service",
+      "kind": "square",
       "college": "digby-stuart",
       "description": "Outdoor social space at Digby Stuart, home of the Hive Café, with outdoor seating and table tennis.",
       "lastVerified": null,

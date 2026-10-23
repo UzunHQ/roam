@@ -229,7 +229,7 @@ const report = [];
 const snapCategories = new Set(['building', 'sport', 'food']);
 // outdoor places keep their point, and so do rooms whose building already has its own pin
 const POINT_ONLY_KINDS = new Set(['court', 'field', 'parking', 'fountain', 'garden', 'square']);
-const POINT_ONLY_IDS = new Set(['convent-parlour', 'digby-square']);
+const POINT_ONLY_IDS = new Set(['convent-parlour']);
 const pointOnly = (p) => POINT_ONLY_KINDS.has(p.kind) || POINT_ONLY_IDS.has(p.id);
 const candidates = placesDoc.places.filter((p) => snapCategories.has(p.category) && !pointOnly(p));
 const claimed = new Set(); // footprints taken by an exact name match
@@ -359,6 +359,14 @@ PARKING.forEach((lot, li) => {
 });
 console.log(`parked ${cars} cars`);
 
+// the round lawn north of Grove House: a fountain in the middle of the circular path (the centre
+// of its arc, fitted), and no decorative tree on the lawn inside the loop
+const FOUNTAIN = [45.4, -0.1];
+const loop = (wayGeom.get(293987530) ?? []).slice(0, 9); // the loop itself, without the path running on south
+if (loop.length) noTrees.push([...loop, loop[0]].map(([x, y]) => [round(x), round(y)]));
+features.push({ type: 'Feature', properties: { layer: 'fountain' }, geometry: { type: 'Point', coordinates: fromM(FOUNTAIN) } });
+console.log(`fountain at ${JSON.stringify(fromM(FOUNTAIN))}`);
+
 // ---------- sports grounds ----------
 // The MUGA's fenced courts and the big playing field west of Davies are grass in OSM
 // (landuse=recreation_ground): draw them like pitches and keep decorative trees off them.
@@ -424,7 +432,7 @@ for (const g of green) {
     }
   }
 }
-console.log(`generated ${trees} decorative trees (${cleared} left out of courts, fields and car parks)`);
+console.log(`generated ${trees} decorative trees (${cleared} left out of courts, fields, car parks and the fountain lawn)`);
 
 const fc = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10), attribution: '© OpenStreetMap contributors (ODbL)', bounds: placesDoc.bounds, features };
 await writeFile(OUT, JSON.stringify(fc));

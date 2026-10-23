@@ -26,7 +26,7 @@ const PALETTE = {
     tones: ['#7fc36d', '#6aae5f', '#94cf7c', '#5f9f58', '#a9d47f'], blossom: '#f4b8c8',
     route: '#ff4f7b', routeCase: '#ffffff', routeFlow: '#ffffff', outside: '#c2d8b1', shadow: 'rgba(52,70,40,0.14)',
     stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
-    parking: '#dcdfdc', cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c',
+    parking: '#dcdfdc', cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
   },
   dark: {
     bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
@@ -41,7 +41,7 @@ const PALETTE = {
     tones: ['#3f7a4c', '#356b42', '#4a8655', '#2f6140', '#557f45'], blossom: '#9a6a7a',
     route: '#ff7f9c', routeCase: '#1b2228', routeFlow: '#ffe3ea', outside: '#19261f', shadow: 'rgba(0,0,0,0.28)',
     stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
-    parking: '#3c434a', cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a',
+    parking: '#3c434a', cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
   },
 } as const;
 
@@ -119,7 +119,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'building-halo': { 'line-color': p.selected },
     props: {
       'fill-extrusion-color': ['match', ['get', 'part'],
-        'cabin', p.carGlass,
+        'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet,
         ['match', ['get', 'c'], 0, p.cars[0], 1, p.cars[1], 2, p.cars[2], 3, p.cars[3], 4, p.cars[4], p.cars[5]]],
     },
   };
@@ -363,6 +363,30 @@ function carParts(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
 }
 
 /**
+ * The fountain on the round lawn north of Grove House (layer "fountain"): an octagonal stone basin
+ * with water in it, a pedestal and a small bowl in the middle, and a short jet on top.
+ */
+function fountainParts(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
+  const out: GeoJSON.Feature[] = [];
+  for (const f of points) {
+    const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+    const kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
+    const oct = (r: number) => Array.from({ length: 9 }, (_, i) => {
+      const a = ((i % 8) * Math.PI) / 4 + Math.PI / 8;
+      return [lng + (r * Math.cos(a)) / kx, lat + (r * Math.sin(a)) / ky];
+    });
+    const put = (part: string, base: number, top: number, rings: number[][][]) =>
+      out.push({ type: 'Feature', properties: { part, base, top }, geometry: { type: 'Polygon', coordinates: rings } });
+    put('basin', 0, 0.55, [oct(3.2), oct(2.7).reverse()]); // the rim, a ring
+    put('water', 0, 0.42, [oct(2.75)]);
+    put('basin', 0, 1.25, [oct(0.45)]); // pedestal
+    put('basin', 1.25, 1.45, [oct(1.1)]); // bowl
+    put('jet', 1.45, 2.3, [oct(0.2)]);
+  }
+  return { type: 'FeatureCollection', features: out };
+}
+
+/**
  * The campus wall along Roehampton Lane and Clarence Lane (data/walls.geojson), low-poly and
  * well under the buildings: a dark plinth, a course of warm stone blocks in three tones and a
  * light coping that overhangs both faces; a thicker pier every ~17 m; a pillar wherever it
@@ -542,7 +566,7 @@ export function createMap(opts: {
       roofparts: { type: 'geojson', data: roofParts(buildings), promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: carParts(byLayer('car').features) },
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features] } },
       outside: { type: 'geojson', data: outside },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       route: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
@@ -634,7 +658,7 @@ export function createMap(opts: {
         id: 'building-ghost', type: 'fill-extrusion', source: 'buildings', filter: inIds([]),
         paint: { 'fill-extrusion-height': RIM, 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 0.42, 'fill-extrusion-vertical-gradient': false },
       },
-      // parked cars: close up only, and never in the way of a tap (main.ts only asks the building layers)
+      // parked cars and the fountain: close up only, and never in the way of a tap (main.ts only asks the building layers)
       {
         id: 'props', type: 'fill-extrusion', source: 'props', minzoom: 16.5,
         paint: { 'fill-extrusion-height': ['get', 'top'], 'fill-extrusion-base': ['get', 'base'] },

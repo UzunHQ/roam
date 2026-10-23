@@ -118,8 +118,9 @@ const GROUP_WORDS: Record<string, string[]> = {
   food: ['food', 'drink', 'cafe', 'cafes', 'coffee', 'restaurant', 'eat', 'lunch', 'breakfast', 'dinner', 'bar', 'diner', 'snack', 'shop'],
   accommodation: ['accommodation', 'halls', 'hall', 'residence', 'housing'],
   sport: ['sport', 'sports', 'gym', 'fitness', 'exercise', 'court'],
-  services: ['services', 'support', 'help', 'wellbeing', 'careers', 'security', 'health', 'doctor', 'gp', 'laundry', 'union', 'finance', 'parking', 'car park'],
+  services: ['services', 'support', 'help', 'wellbeing', 'careers', 'security', 'health', 'doctor', 'gp', 'laundry', 'union', 'finance'],
   faith: ['faith', 'prayer', 'pray', 'chapel', 'chaplaincy', 'mosque', 'wudu', 'multifaith'],
+  outdoors: ['outdoors', 'outdoor', 'outside', 'parking', 'car park', 'garden', 'fountain', 'square'],
 };
 
 export function matchingGroups(raw: string): string[] {

@@ -28,6 +28,7 @@
   --g-sport: #d64d86;
   --g-services: #e3a21a;
   --g-faith: #6b7a8c;
+  --g-outdoors: #4f9a5a;
   --roof-digby: #a8cdee;
   --roof-froebel: #f6d77a;
   --roof-southlands: #bba9e8;
@@ -215,6 +216,7 @@ svg { display: block; flex: none; }
 .g-sport { --g: var(--g-sport); }
 .g-services { --g: var(--g-services); }
 .g-faith { --g: var(--g-faith); }
+.g-outdoors { --g: var(--g-outdoors); }
 .g-entrance { --g: #8b8578; }
 
 /* ---------- map controls ---------- */
