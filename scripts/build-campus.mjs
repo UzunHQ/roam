@@ -99,6 +99,13 @@ function distToRing(p, r) {
   return best;
 }
 
+// local metres east/north of ORIGIN, for shapes drawn by hand
+const ORIGIN = [-0.246, 51.4555];
+const KX = 111320 * Math.cos((ORIGIN[1] * Math.PI) / 180), KY = 111320;
+const fromM = ([x, y]) => [round(ORIGIN[0] + x / KX), round(ORIGIN[1] + y / KY)];
+const toM = ([lng, lat]) => [(lng - ORIGIN[0]) * KX, (lat - ORIGIN[1]) * KY];
+const ringLL = (pts) => [...pts, pts[0]].map(fromM);
+
 function centroid(r) {
   let x = 0, y = 0;
   const m = r.length - 1;
@@ -160,6 +167,41 @@ for (const el of osm.elements) {
     const wooded = t.natural === 'wood' || t.landuse === 'forest' || t.natural === 'scrub';
     for (const r of rings) if (closed(r)) features.push({ type: 'Feature', id, properties: { layer: 'green', wooded }, geometry: { type: 'Polygon', coordinates: [r] } });
   }
+}
+
+// ---------- one block that OSM maps as two buildings ----------
+// Elm Grove (careers, conference centre) and Elm Grove Hall (halls) are two relations with the
+// same outline, so a tap picked the whole block. Cut it in half along its length: the west half,
+// on the library side, is Elm Grove; the east half, towards Lee House, is Elm Grove Hall.
+const SPLITS = [{ west: 'relation/8673531', east: 'relation/8673532' }];
+function halves(ringLLIn) {
+  const pts = ringLLIn.slice(0, -1).map(toM);
+  const c = pts.reduce(([x, y], p) => [x + p[0] / pts.length, y + p[1] / pts.length], [0, 0]);
+  // long axis: the main direction of the corners (principal component)
+  let sxx = 0, syy = 0, sxy = 0;
+  for (const [x, y] of pts) { sxx += (x - c[0]) ** 2; syy += (y - c[1]) ** 2; sxy += (x - c[0]) * (y - c[1]); }
+  const ang = 0.5 * Math.atan2(2 * sxy, sxx - syy), nrm = [-Math.sin(ang), Math.cos(ang)];
+  const side = (p) => (p[0] - c[0]) * nrm[0] + (p[1] - c[1]) * nrm[1];
+  // keep one side of the cut line (Sutherland-Hodgman against a half-plane)
+  const clip = (sign) => {
+    const out = [];
+    pts.forEach((p, i) => {
+      const q = pts[(i + 1) % pts.length], sp = side(p) * sign, sq = side(q) * sign;
+      if (sp >= 0) out.push(p);
+      if ((sp >= 0) !== (sq >= 0)) { const t = sp / (sp - sq); out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]); }
+    });
+    return out;
+  };
+  const [a, b] = [clip(1), clip(-1)];
+  const mean = (r) => r.reduce((s, p) => s + p[0], 0) / r.length;
+  return (mean(a) < mean(b) ? [a, b] : [b, a]).map(ringLL); // [west, east]
+}
+for (const { west, east } of SPLITS) {
+  const w = buildings.find((b) => b.f.properties.osmId === west), e = buildings.find((b) => b.f.properties.osmId === east);
+  if (!w || !e) { console.warn(`split ${west} / ${east}: not found`); continue; }
+  const [rw, re] = halves(w.ring);
+  for (const [b, r] of [[w, rw], [e, re]]) { b.ring = r; b.f.geometry.coordinates = [r]; }
+  console.log(`split ${west} (west, centre ${JSON.stringify(centroid(rw))}) / ${east} (east, centre ${JSON.stringify(centroid(re))})`);
 }
 
 // ---------- snap places to footprints ----------
@@ -258,11 +300,6 @@ for (const { f } of buildings) {
 // ---------- hand-mapped outdoor areas ----------
 // OSM has no car parks here. Shapes are in metres east/north of ORIGIN, traced against the
 // campus tour and the aerial view; the aisles cars park off are OSM ways.
-const ORIGIN = [-0.246, 51.4555];
-const KX = 111320 * Math.cos((ORIGIN[1] * Math.PI) / 180), KY = 111320;
-const fromM = ([x, y]) => [round(ORIGIN[0] + x / KX), round(ORIGIN[1] + y / KY)];
-const toM = ([lng, lat]) => [(lng - ORIGIN[0]) * KX, (lat - ORIGIN[1]) * KY];
-const ringLL = (pts) => [...pts, pts[0]].map(fromM);
 // a stable pseudo-random number in [0, 1) for a few integers
 const hash = (...n) => { const v = Math.sin(n.reduce((a, b, i) => a + b * (12.9898 + i * 78.233), 0)) * 43758.5453; return v - Math.floor(v); };
 const wayGeom = new Map(osm.elements.filter((el) => el.type === 'way' && el.geometry).map((el) => [el.id, el.geometry.map((p) => [p.lon, p.lat])]));

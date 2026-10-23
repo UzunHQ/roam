@@ -215,8 +215,8 @@
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.243957,
-        51.457497
+        -0.243799,
+        51.457495
       ],
       "positionSource": "osm-footprint",
       "positionAccuracyM": 5,
@@ -1452,8 +1452,8 @@
       "lastVerified": "2026-10-20",
       "status": "confirmed",
       "position": [
-        -0.244068,
-        51.457925
+        -0.244121,
+        51.457498
       ],
       "positionSource": "official-map",
       "positionAccuracyM": 20,

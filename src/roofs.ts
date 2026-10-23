@@ -20,6 +20,7 @@ export const ROOFS: Record<string, RoofKind> = {
   'relation/8763239': 'solar', // Davies
   // Digby Stuart
   'way/624430550': 'solar', // Library
+  'relation/8673531': 'green', // Elm Grove (west half of the same block)
   'relation/8673532': 'green', // Elm Grove Hall
   'way/653472791': 'slate', // Richardson
   'way/629613445': 'tile', // Newman House
