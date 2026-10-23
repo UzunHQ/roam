@@ -326,9 +326,9 @@ const PARKING = [
     place: 'southlands-car-park', aisles: [1216692135, 1216692136, 1216692137, 1216692138],
     area: [[167.5, 415.5], [188.7, 415.5], [176.3, 496], [156, 496], [155.5, 489.5], [161, 441], [163.5, 437.5], [166, 417.5]],
   },
-  { // south of Grove House: the whole block below the road; a row along the road and two aisles inside
-    place: 'froebel-car-park', aisles: [259754248],
-    lines: [[[-7.6, -71], [43.9, -80.6]], [[-10.5, -86.3], [41, -95.9]]],
+  { // south of Grove House: the whole block below the road, a drive down the middle with one row each side
+    place: 'froebel-car-park', aisles: [],
+    drive: [[-1.5, -73.3], [35.5, -80.7]],
     area: [[-0.8, -62.1], [7.1, -59.6], [40.6, -65.8], [33.4, -95.7], [-5.7, -90.2]],
   },
   { // South Car Park's other side: the strip across the road, in front of Davies Sports Hall
@@ -361,7 +361,7 @@ PARKING.forEach((lot, i) => {
   noTrees.push(area);
   features.push({ type: 'Feature', properties: { layer: 'parking', place: lot.place }, geometry: { type: 'Polygon', coordinates: [area] } });
   const bays = [];
-  for (const pts of [...lot.aisles.map((id) => (wayGeom.get(id) ?? []).map(toM)), ...(lot.lines ?? [])]) {
+  for (const pts of [...lot.aisles.map((id) => (wayGeom.get(id) ?? []).map(toM)), ...(lot.drive ? [lot.drive] : [])]) {
     for (let i = 0; i < pts.length - 1; i++) {
       const [ax, ay] = pts[i], [bx, by] = pts[i + 1], len = Math.hypot(bx - ax, by - ay);
       if (!len) continue;
@@ -391,6 +391,8 @@ PARKING.forEach((lot, i) => {
   console.log(`${lot.place}: ${bays.length} bays, centre ${JSON.stringify(fromM([cx, cy]))}`);
 });
 console.log(`parked ${cars} cars`);
+// a lot's own drive is drawn like the campus service roads (after the cars, so they don't shy away from it)
+for (const lot of PARKING) if (lot.drive) features.push({ type: 'Feature', properties: { layer: 'path', kind: 'service', drive: true }, geometry: { type: 'LineString', coordinates: lot.drive.map(fromM) } });
 
 // the round lawn north of Grove House: a fountain in the middle of the circular path (the centre
 // of its arc, fitted), and no decorative tree on the lawn inside the loop
