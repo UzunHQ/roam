@@ -311,7 +311,8 @@ for (const { f } of buildings) {
 
 // ---------- hand-mapped outdoor areas ----------
 // OSM has no car parks here. Shapes are in metres east/north of ORIGIN, traced against the
-// campus tour and the aerial view; the aisles cars park off are OSM ways.
+// campus tour and the aerial view; the aisles cars park off are OSM ways. A lot beside a road
+// starts under its edge, so the asphalt runs on without a strip of grass.
 // a stable pseudo-random number in [0, 1) for a few integers
 const hash = (...n) => { const v = Math.sin(n.reduce((a, b, i) => a + b * (12.9898 + i * 78.233), 0)) * 43758.5453; return v - Math.floor(v); };
 const wayGeom = new Map(osm.elements.filter((el) => el.type === 'way' && el.geometry).map((el) => [el.id, el.geometry.map((p) => [p.lon, p.lat])]));
@@ -319,7 +320,7 @@ const wayGeom = new Map(osm.elements.filter((el) => el.type === 'way' && el.geom
 const PARKING = [
   { // between Davies Sports Hall and the MUGA, on the south side of the service road
     place: 'south-car-park', aisles: [293959905],
-    area: [[-107.9, 4.6], [-123.7, 6.7], [-139.6, 8.7], [-140.3, 3.2], [-124.5, 1.1], [-108.6, -1.0]],
+    area: [[-107.7, 6.1], [-123.5, 8.2], [-139.4, 10.2], [-140.3, 3.2], [-124.5, 1.1], [-108.6, -1]],
   },
   { // the long strip between Queen's Building's east front and the wall, short aisles off the service road
     place: 'southlands-car-park', aisles: [1216692135, 1216692136, 1216692137, 1216692138],
@@ -328,7 +329,11 @@ const PARKING = [
   { // south of Grove House: the whole block below the road; a row along the road and two aisles inside
     place: 'froebel-car-park', aisles: [259754248],
     lines: [[[-7.6, -71], [43.9, -80.6]], [[-10.5, -86.3], [41, -95.9]]],
-    area: [[-0.4, -63.5], [7.3, -61.1], [40.3, -67.3], [33.4, -95.7], [-5.7, -90.2]],
+    area: [[-0.8, -62.1], [7.1, -59.6], [40.6, -65.8], [33.4, -95.7], [-5.7, -90.2]],
+  },
+  { // South Car Park's other side: the strip across the road, in front of Davies Sports Hall
+    place: 'south-car-park', aisles: [293959905], seed: 5, // (seed: which bays are taken, about 60%)
+    area: [[-107.7, 9.1], [-139.4, 13.2], [-138.6, 19.4], [-106.9, 15.2]],
   },
 ];
 // parked cars: low-poly boxes drawn in the app (map.ts); about 60% of the bays are taken
@@ -350,7 +355,8 @@ const segDist = (p, a, b) => {
 const onPath = (corners) => pathSegs.some(({ road, pts }) => pts.some((a, i) => i < pts.length - 1 && corners.some((c) => segDist(c, a, pts[i + 1]) < (road ? 2.9 : 1.6))));
 const noTrees = []; // rings (lng/lat) where no decorative tree should stand
 let cars = 0;
-PARKING.forEach((lot, li) => {
+PARKING.forEach((lot, i) => {
+  const li = lot.seed ?? i;
   const area = ringLL(lot.area);
   noTrees.push(area);
   features.push({ type: 'Feature', properties: { layer: 'parking', place: lot.place }, geometry: { type: 'Polygon', coordinates: [area] } });

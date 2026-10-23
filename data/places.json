@@ -2187,12 +2187,12 @@
       "category": "building",
       "kind": "parking",
       "college": "froebel",
-      "description": "Car park at Froebel College, beside the Montefiore Building and the MUGA courts.",
+      "description": "Car park at Froebel College on both sides of the service road between Davies Sports Hall and the MUGA courts.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
         -0.247789,
-        51.455535
+        51.455585
       ],
       "positionSource": "estimate",
       "positionAccuracyM": 10,
