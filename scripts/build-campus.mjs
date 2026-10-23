@@ -551,7 +551,9 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
 
   // the big meadow west of campus (OSM way/4268543): a denser scatter of its own, so it reads as
   // parkland like the grounds round the lake
-  const meadow = features.find((f) => f.id === 'way/4268543' && f.properties.layer === 'green')?.geometry.coordinates[0];
+  const meadowF = features.find((f) => f.id === 'way/4268543' && f.properties.layer === 'green');
+  if (meadowF) meadowF.properties.unveil = true; // runs past the map's edge: the app keeps it out of the dimmed frame
+  const meadow = meadowF?.geometry.coordinates[0];
   let seed3 = 11, more = 0;
   const rand3 = () => ((seed3 = (seed3 * 1664525 + 1013904223) % 4294967296) / 4294967296);
   const M = 12; // metres between candidates
@@ -575,7 +577,15 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
 
   // and a lawn under the whole campus, below every other area (added last, so the trees above are
   // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
-  features.unshift({ type: 'Feature', properties: { layer: 'green', wooded: false, campus: true }, geometry: { type: 'Polygon', coordinates: [ringLL(hull)] } });
+  // (stretched over the west meadow and the playing field too, so no pale strip is left between them
+  // and the campus: west of the Playing Field by Willow and Aspen House, and west of Southlands)
+  const lawnPts = [...hullPts, ...[meadow, features.find((f) => f.id === 'way/1546333125')?.geometry.coordinates[0]].filter(Boolean).flat().map(toM)];
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const sorted = [...lawnPts].sort((a, b) => a[0] - b[0] || a[1] - b[1]), lo = [], hi = [];
+  for (const p of sorted) { while (lo.length > 1 && cross(lo.at(-2), lo.at(-1), p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of sorted.reverse()) { while (hi.length > 1 && cross(hi.at(-2), hi.at(-1), p) <= 0) hi.pop(); hi.push(p); }
+  const lawn = [...lo.slice(0, -1), ...hi.slice(0, -1)];
+  features.unshift({ type: 'Feature', properties: { layer: 'green', wooded: false, campus: true }, geometry: { type: 'Polygon', coordinates: [ringLL(lawn)] } });
 }
 
 const fc = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10), attribution: '© OpenStreetMap contributors (ODbL)', bounds: placesDoc.bounds, features };
