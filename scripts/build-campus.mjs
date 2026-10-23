@@ -572,6 +572,10 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
     }
   }
   console.log(`added ${more} trees on the west meadow`);
+
+  // and a lawn under the whole campus, below every other area (added last, so the trees above are
+  // unchanged): ground OSM leaves unmapped between paths shows as grass, not as pale patches
+  features.unshift({ type: 'Feature', properties: { layer: 'green', wooded: false, campus: true }, geometry: { type: 'Polygon', coordinates: [ringLL(hull)] } });
 }
 
 const fc = { type: 'FeatureCollection', generated: new Date().toISOString().slice(0, 10), attribution: '© OpenStreetMap contributors (ODbL)', bounds: placesDoc.bounds, features };
