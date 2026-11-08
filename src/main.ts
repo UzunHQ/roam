@@ -105,6 +105,7 @@ const welcome = $('#welcome');
 // device. Direct links to a building skip it. While it's open the mascot waves now and then.
 const welcomeMascot = $('.welcome-mascot');
 welcomeMascot.innerHTML = avatarSvg.replace('width="48" height="63"', '');
+$('.detail-mascot').innerHTML = avatarSvg.replace('width="48" height="63"', '');
 let waveTimer = 0;
 const dismissWelcome = () => {
   clearTimeout(waveTimer);
@@ -173,7 +174,9 @@ main().catch((err) => {
   console.error(err);
   const l = $('#loading');
   l.hidden = false;
-  l.innerHTML = `<span>Sorry, the campus data didn't load. Check your connection and try again.</span> <button class="btn primary" id="retry">Try again</button>`;
+  l.innerHTML = navigator.onLine === false
+    ? `<span>You seem to be offline, and the campus data isn't saved on this device yet. Connect once and Roam will work offline after that.</span> <button class="btn primary" id="retry">Try again</button>`
+    : `<span>Sorry, the campus data didn't load. Check your connection and try again.</span> <button class="btn primary" id="retry">Try again</button>`;
   $('#retry').addEventListener('click', () => location.reload());
 });
 
@@ -223,15 +226,21 @@ async function main() {
   // ---------- map (falls back to the list if WebGL is unavailable) ----------
   const theme = (): Theme => themeChoice();
   let map: MLMap | null = null;
-  try {
-    map = createMap({ container: 'map', campus, walls, bounds: doc.bounds, theme: theme() });
-  } catch (err) {
-    console.error(err);
+  // MapLibre needs WebGL2: check first, so a browser without it goes straight to the list
+  const hasWebGL2 = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } })();
+  if (hasWebGL2) {
+    try {
+      map = createMap({ container: 'map', campus, walls, bounds: doc.bounds, theme: theme() });
+    } catch (err) {
+      console.error(err);
+    }
   }
   const loading = $('#loading');
+  /** the status box is gone for good once the map (or the list) is up, so screen readers don't find it later */
+  const doneLoading = () => { loading.hidden = true; loading.textContent = ''; };
   if (map) {
     const slow = setTimeout(() => { loading.textContent = 'The map is taking a while. You can use the list view in the meantime.'; }, 10000);
-    map.once('load', () => { clearTimeout(slow); loading.hidden = true; });
+    map.once('load', () => { clearTimeout(slow); doneLoading(); });
     document.addEventListener('roam-theme', () => applyTheme(map!, theme()));
     if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute, home: () => ({ box: homeBox(map!.getCanvas().clientWidth, map!.getCanvas().clientHeight), points: campusPoints }) } });
   }
@@ -1585,9 +1594,20 @@ async function main() {
     select(p, { source: 'list' });
   });
   if (!map) {
-    loading.hidden = true;
+    // No WebGL: the list becomes the app (list beside the details on large screens, one column on
+    // phones). Search, categories, saved places, details and text directions all keep working.
+    doneLoading();
     document.body.classList.add('no-map');
-    showList("The map can't be shown on this device, so here is every place as a list.");
+    listBtn.hidden = true; // there's no map to switch to
+    if (!welcome.hidden) { welcome.hidden = true; document.body.classList.remove('hello-open'); } // its Find me / Explore are about the map
+    showList();
+    const n = $('#list-note');
+    n.hidden = false;
+    n.innerHTML = `<b>The 3D map isn't available in this browser.</b>
+      <span>Everything else works: search, categories, saved places, details and walking directions as text.</span>
+      <button type="button" class="btn ghost retry-map">Try the map again</button>`;
+    n.querySelector('.retry-map')!.addEventListener('click', () => location.reload());
+    $('#map').setAttribute('aria-hidden', 'true');
   }
 
   // ---------- keyboard: Esc closes the top-most layer ----------

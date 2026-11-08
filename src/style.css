@@ -535,6 +535,40 @@ svg { display: block; flex: none; }
 .list-note { padding: 12px; border-radius: 14px; background: var(--unknown-bg); font-weight: 650; }
 .list-empty { padding: 12px 6px; }
 .no-map .controls, .no-map .key-btn { display: none; }
+/* ---------- no map (no WebGL): the list is the app ---------- */
+.list-note { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.list-note span { font-weight: 500; }
+.list-note .btn { margin-top: 4px; }
+.detail-hint { display: none; }
+.no-map #map { display: none; }
+.no-map .list { animation: none; }
+@media (min-width: 900px) {
+  /* list in the middle, details docked on the right; the search column stays where it is */
+  .no-map .list {
+    left: 412px; right: 452px; width: auto; top: 16px; bottom: calc(var(--footer-h) + 16px);
+  }
+  .no-map .list > * { max-width: none; }
+  .no-map .panel {
+    left: auto; right: 16px; top: 16px; width: 420px;
+    max-height: calc(100vh - var(--footer-h) - 32px); transform: translateX(110%);
+  }
+  .no-map .panel.open, .no-map .panel.expanded { transform: none; max-height: calc(100vh - var(--footer-h) - 32px); }
+  .no-map:not(.panel-open) .detail-hint {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center;
+    position: fixed; right: 16px; top: 16px; width: 420px; bottom: calc(var(--footer-h) + 16px);
+    padding: 24px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); color: var(--muted); font-weight: 650;
+  }
+  .detail-mascot { width: 72px; height: 94px; }
+}
+@media (min-width: 900px) and (max-width: 1199px) {
+  /* not enough room for three columns: the details slide over the list */
+  .no-map .list { right: 16px; }
+  .no-map:not(.panel-open) .detail-hint { display: none; }
+}
+@media (max-width: 899px) {
+  .no-map .list { top: calc(var(--top-b, 118px) + 8px); border-radius: 22px 22px 0 0; }
+  .no-map .panel { max-height: 86vh; }
+}
 
 /* ---------- welcome + about ---------- */
 .welcome, .about {
