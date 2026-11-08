@@ -177,9 +177,13 @@ svg { display: block; flex: none; }
   mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 44px), transparent);
 }
 /* search suggestions open under the search bar: keep the chips out of the way */
-.top:has(#results:not([hidden])) .chips, .top:has(#results:not([hidden])) .open-now { display: none; }
+.top:has(#results:not([hidden])) .chips, .top:has(#results:not([hidden])) .filter-bar { display: none; }
 /* "Open now", under the chips while Food or Study is chosen */
-.open-now { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; }
+.filter-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 4px; }
+.filter-bar[hidden], .open-now[hidden] { display: none; }
+.filter-status { min-height: 32px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 16px; background: var(--surface); box-shadow: 0 2px 0 rgba(36, 35, 46, 0.1); font-size: 14px; font-weight: 750; }
+.open-now { display: inline-flex; align-items: center; gap: 8px; }
+@media (max-width: 420px) { .filter-bar .open-hint { display: none; } }
 .open-toggle {
   flex: none; min-height: 40px; padding: 0 12px 0 6px; display: inline-flex; align-items: center; gap: 8px;
   border: 0; border-radius: 18px; background: var(--surface); box-shadow: 0 2px 0 rgba(36, 35, 46, 0.1);
@@ -299,6 +303,10 @@ svg { display: block; flex: none; }
 .compact-pins .pin .dot { width: 20px; height: 20px; border-width: 1.5px; }
 .compact-pins .pin .dot svg { width: 11px; height: 11px; }
 .pin:active .dot { transform: scale(0.9); }
+/* a match squeezed by its neighbours (a category is chosen): still there, just smaller and unnamed */
+.pin.mini .dot { width: 16px; height: 16px; border-width: 1.5px; }
+.pin.mini .dot svg { width: 9px; height: 9px; }
+.pin.mini .label { display: none; }
 .pin.selected { z-index: 2; }
 .pin.selected .dot { transform: scale(1.35); box-shadow: 0 0 0 3px var(--select), 0 4px 10px rgba(0, 0, 0, 0.3); }
 .compact-pins .pin.selected .dot { transform: scale(1.6); }

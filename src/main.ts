@@ -375,7 +375,8 @@ async function main() {
     const labels: [number, number, number, number][] = [];
     const isSel = (m: M) => m.p.id === current?.id || m.p.id === routeFrom?.id;
     // college names take the space they need on the overview; pins underneath step aside
-    const showAreas = z < AREA_Z;
+    // (not while a category is chosen: then the places matter, not the college names)
+    const showAreas = z < AREA_Z && !narrowed();
     const areaBoxes: [number, number, number, number][] = [];
     for (const a of areas) {
       a.el.classList.toggle('hidden', !showAreas);
@@ -385,7 +386,9 @@ async function main() {
       areaBoxes.push([pt.x - w, pt.y - 24, pt.x + w, pt.y + 24]);
     }
     // outside the chosen category (entrances, car parks and open-air spots have no chip and always show)
-    const off = (m: M) => m.group !== 'entrance' && m.group !== 'outdoors' && !passes(m.p);
+    // (entrances always stay, as small gates; open-air spots and car parks used to as well, now only under All)
+    const off = (m: M) => m.group !== 'entrance' && !passes(m.p);
+    const narrow = narrowed();
     const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || PRIORITY[b.group] - PRIORITY[a.group]);
     const shown: { m: M; x: number; y: number; sel: boolean }[] = [];
     // gate pins float just above the pillars' lanterns (about 5.4 m up, as seen at this zoom and tilt)
@@ -402,12 +405,16 @@ async function main() {
       const pt = map.project(m.at);
       const x = pt.x + m.offset[0], y = pt.y + m.offset[1];
       const onScreen = x > -40 && x < W + 40 && y > -40 && y < H + 40;
-      if (show && onScreen && !sel && dots.some(([a, b]) => Math.hypot(a - x, b - y) < gap)) show = false;
-      if (show && !sel && areaBoxes.some(([a, b, c, d]) => x > a && x < c && y > b && y < d)) show = false;
+      // with a category chosen, a match that collides shrinks instead of disappearing
+      let mini = false;
+      const squeezed = (show && onScreen && !sel && dots.some(([a, b]) => Math.hypot(a - x, b - y) < gap))
+        || (show && !sel && areaBoxes.some(([a, b, c, d]) => x > a && x < c && y > b && y < d));
+      if (squeezed) { if (narrow && !filtered && m.group !== 'entrance') mini = true; else show = false; }
+      m.el.classList.toggle('mini', mini);
       m.el.classList.toggle('hidden', !show);
       m.el.tabIndex = show ? 0 : -1;
       m.el.classList.remove('show-label');
-      if (show && onScreen) { dots.push([x, y]); if (!filtered || sel) { shown.push({ m, x, y, sel }); keyDots.push([x, y]); } }
+      if (show && onScreen) { dots.push([x, y]); if ((!filtered || sel) && !mini) { shown.push({ m, x, y, sel }); keyDots.push([x, y]); } }
     }
     // second pass: names where they cover neither another label nor a dot. The main buildings and
     // the library get theirs from zoom 16.3, food and sport from 16.8, everything else from 17.
@@ -485,8 +492,22 @@ async function main() {
     $$('.chip').forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.filter === chip)));
     $(`.chip[data-filter="${chip}"]`).scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: ms(1) ? 'smooth' : 'auto' });
     layoutMarkers();
+    updateFilterStatus();
     if (!$('#list').hidden) renderList();
     if (input.value) showResults();
+    fitMatches();
+  }
+  /** "10 places" / "3 open now" beside the chips while a category is chosen */
+  function updateFilterStatus() {
+    const n = places.filter((p) => groupOf(p) !== 'entrance' && passes(p)).length;
+    $('#filter-bar').hidden = !narrowed();
+    $('#filter-status').textContent = !narrowed() ? '' : openOnly && openApplies() ? `${n} open now` : plural(n, 'place');
+  }
+  /** after a category change: frame its places (all of them, clear of the search bar and panel) */
+  function fitMatches() {
+    if (!map || navigating || filter === 'all') return;
+    const pts = places.filter((p) => groupOf(p) !== 'entrance' && passes(p)).map((p) => markers.get(p.id)!.at);
+    if (pts.length) fitPoints(pts, { maxZoom: 17.6, side: 36, duration: 500 });
   }
   const openToggle = $('#open-toggle');
   function setOpenOnly(on: boolean) {
@@ -496,6 +517,8 @@ async function main() {
   openToggle.addEventListener('click', () => {
     setOpenOnly(!openOnly);
     layoutMarkers();
+    updateFilterStatus();
+    if (places.some((p) => groupOf(p) !== 'entrance' && passes(p))) fitMatches();
     if (!$('#list').hidden) renderList();
     if (input.value) showResults();
     if (!openOnly || places.some(passes)) return;
@@ -873,7 +896,10 @@ async function main() {
         if (Math.abs(dx) < 1 && Math.abs(dy) < 1) break;
         map!.jumpTo({ center: map!.unproject([W / 2 + dx, H / 2 + dy]) });
       }
-      return fits;
+      // the camera may not reach the centre (it's kept near campus): then check where the points
+      // really landed, so a point never ends up off the screen
+      const xy = points.map((p) => map!.project(p));
+      return fits && xy.every((q) => q.x >= box.l - 2 && q.x <= box.r + 2 && q.y >= box.t - 2 && q.y <= box.b + 2);
     };
     // the closest zoom that still fits, to about 1%
     let lo = map.getMinZoom(), hi = opts.maxZoom ?? 18;
@@ -1078,11 +1104,11 @@ async function main() {
   // (measured at the chips; while search suggestions hide them the last value stays)
   const topObserver = new ResizeObserver(() => {
     const r = $('#chips').getBoundingClientRect();
-    const o = $('#open-now').getBoundingClientRect();
+    const o = $('#filter-bar').getBoundingClientRect();
     if (r.height) document.documentElement.style.setProperty('--top-b', `${Math.round(Math.max(r.bottom, o.bottom))}px`);
   });
   topObserver.observe($('#chips'));
-  topObserver.observe($('#open-now'));
+  topObserver.observe($('#filter-bar'));
   // keep the floating controls above the sheet on phones
   new ResizeObserver(() => {
     const h = panel.hidden ? 0 : panel.offsetHeight;

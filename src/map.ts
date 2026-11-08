@@ -1108,12 +1108,12 @@ export function createMap(opts: {
     style,
     bounds: [w, s, e, n],
     fitBoundsOptions: { padding: 10 },
-    // how far the camera may go past the campus, in metres west, south, east and north: just enough
-    // for the opening view on a tall phone (campus centred between the chips and the welcome card)
-    // and on a desktop (campus right of the search column), measured at 375x812 to 1920x1080; any
-    // tighter and the map would push the opening view off-centre
+    // how far the camera may go past the campus, in metres west, south, east and north. Enough for
+    // a tilted view on a narrow phone to frame the west edge (Froebel, the Jebb) with a category or
+    // route on screen; the earlier, tighter box (280/370/150/235) held the camera back and left
+    // places just off the left of a 375 px screen
     maxBounds: (() => {
-      const [mw, ms, me, mn] = [280, 370, 150, 235], kx = 111320 * Math.cos((s * Math.PI) / 180);
+      const [mw, ms, me, mn] = [700, 700, 450, 500], kx = 111320 * Math.cos((s * Math.PI) / 180);
       return [w - mw / kx, s - ms / 111320, e + me / kx, n + mn / 111320] as [number, number, number, number];
     })(),
     pitch: 55,
