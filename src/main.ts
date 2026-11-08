@@ -6,7 +6,7 @@ import { config } from './config';
 import { loadData } from './data';
 import { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, pickHalf, selectBuilding, setGeoJSON, setXray, type Theme } from './map';
 import { icons, placeIcon } from './icons';
-import { matchingGroups, search } from './search';
+import { matchingGroups, parseRoom, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
 import { avatarSvg } from './avatar';
 import { Router, type Route } from './route';
@@ -100,6 +100,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 const linkedId = new URLSearchParams(location.search).get('place');
+const linkedRoom = new URLSearchParams(location.search).get('room');
 const welcome = $('#welcome');
 // The welcome card shows until you close it (X, Esc, Find me or Explore), then never again on this
 // device. Direct links to a building skip it. While it's open the mascot waves now and then.
@@ -274,6 +275,7 @@ async function main() {
 
   // ---------- state ----------
   let current: Place | null = null;
+  let currentRoom: string | null = null; // a timetable room code searched for ("Ma101"): only its building is known
   let directionsOpen = false;
   let routeShown = false;
   let routeFrom: Place | null = null;
@@ -812,6 +814,7 @@ async function main() {
   function closePanel() {
     leaveNavMode();
     current = null;
+    currentRoom = null;
     directionsOpen = false;
     clearRoute();
     panel.classList.remove('open');
@@ -948,7 +951,7 @@ async function main() {
 
   function renderCard(p: Place, expanded = false) {
     const g = groupOf(p);
-    const placeLabel = p.code ? `${p.name} (${p.code})` : p.name;
+    const placeLabel = (p.code ? `${p.name} (${p.code})` : p.name) + (currentRoom ? `, room ${currentRoom}` : '');
     const report = config.reportForm.url
       ? `${config.reportForm.url}?usp=pp_url&${config.reportForm.placeField}=${encodeURIComponent(placeLabel)}`
       : config.reportEmail
@@ -968,6 +971,7 @@ async function main() {
         <button class="icon-btn save" aria-pressed="${saved.has(p.id)}" aria-label="Save ${esc(p.name)}">${icons.bookmark}</button>
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
       </div>
+      ${roomBlock(p)}
       ${p.description ? `<p class="desc${expanded ? '' : ' clamp'}">${esc(p.description)}</p>` : ''}
       ${hoursBlock(p) || '<div class="hours-wrap" hidden></div>'}
       ${walk ? `<p class="walk-hint">${icons.walk}<span>${walk}</span></p>` : ''}
@@ -1082,11 +1086,27 @@ async function main() {
   const doorMarker = new maplibregl.Marker({ element: doorEl, anchor: 'bottom' });
   const showDoor = (p: Place | null) => { if (map && p?.entrance) doorMarker.setLngLat(p.entrance).addTo(map); else doorMarker.remove(); };
 
-  function select(p: Place, opts: { source: 'marker' | 'building' | 'search' | 'link' | 'list' }) {
+  /** ?place=…, plus &room=… when a room was searched for */
+  const placeQuery = (p: Place) => `?place=${encodeURIComponent(p.id)}${currentRoom && current?.id === p.id ? `&room=${encodeURIComponent(currentRoom)}` : ''}`;
+  /** "Ma101, Mandela Building" or just the building */
+  const destName = (p: Place) => (currentRoom && current?.id === p.id ? `${currentRoom}, ${p.name}` : p.name);
+  /** what we know about the searched room: the building always, the inside only from checked data */
+  function roomBlock(p: Place): string {
+    if (!currentRoom) return '';
+    const r = p.rooms?.[currentRoom];
+    if (r) {
+      return `<div class="room-line"><b>Room ${esc(currentRoom)}</b>${[r.floor && `Floor: ${esc(r.floor)}`, r.entrance && `Way in: ${esc(r.entrance)}`, r.note && esc(r.note)].filter(Boolean).map((x) => `<span>${x}</span>`).join('')}
+        <small>Checked ${fmtDate(r.checked)} · ${esc(r.source)}</small></div>`;
+    }
+    return `<div class="room-line"><b>Room ${esc(currentRoom)}</b><span>Building found from the room code. The room's floor and way in aren't verified yet: follow the signs inside, or ask at reception.</span></div>`;
+  }
+  function select(p: Place, opts: { source: 'marker' | 'building' | 'search' | 'link' | 'list'; room?: string }) {
     if (!welcome.hidden) dismissWelcome();
     if (navigating && p.id === current?.id) return; // your own destination: keep walking
     if (navigating) { leaveNavMode(); clearRoute(); }
     if (current?.id !== p.id) clearRoute();
+    // a room stays with its building; picking any other way starts afresh
+    currentRoom = opts.room ?? (current?.id === p.id && (opts.source === 'marker' || opts.source === 'building') ? currentRoom : null);
     current = p;
     directionsOpen = false;
     renderCard(p);
@@ -1098,7 +1118,7 @@ async function main() {
       selectBuilding(map, p.footprintId);
       if (p.footprintId && ms(1)) bounceBuilding(map, p.footprintId);
     }
-    history.replaceState(null, '', `?place=${encodeURIComponent(p.id)}`);
+    history.replaceState(null, '', placeQuery(p));
     track('place-tap', { id: p.id, via: opts.source });
     const far = opts.source !== 'marker' && opts.source !== 'building';
     requestAnimationFrame(() => { ensureVisible(p, far); layoutMarkers(); });
@@ -1106,9 +1126,9 @@ async function main() {
   }
 
   async function share(p: Place) {
-    const url = `${location.origin}/?place=${encodeURIComponent(p.id)}`;
+    const url = `${location.origin}/${placeQuery(p)}`;
     if (navigator.share) {
-      try { await navigator.share({ title: `${p.name} · Roam`, text: `${p.name} on the Roehampton campus map`, url }); } catch { /* cancelled */ }
+      try { await navigator.share({ title: `${destName(p)} · Roam`, text: currentRoom ? `Room ${currentRoom} is in the ${p.name}, on the Roehampton campus map` : `${p.name} on the Roehampton campus map`, url }); } catch { /* cancelled */ }
       return;
     }
     try {
@@ -1141,7 +1161,7 @@ async function main() {
     panelBody.innerHTML = `
       <div class="p-head">
         <button class="icon-btn back" aria-label="Back to ${esc(p.name)}">${icons.back}</button>
-        <div class="titles"><h2 id="panel-name" tabindex="-1">Directions</h2><p class="meta">to ${esc(p.name)}</p></div>
+        <div class="titles"><h2 id="panel-name" tabindex="-1">Directions</h2><p class="meta">to ${esc(destName(p))}</p></div>
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
       </div>
       <label class="field"><span>Starting from</span>
@@ -1393,7 +1413,7 @@ async function main() {
       <div class="nav-bar">
         <span class="cat-icon g-${groupOf(current)}">${icons.walk}</span>
         <button class="nav-info" aria-label="Change the route to ${esc(current.name)}">
-          <b id="panel-name" tabindex="-1">${esc(current.name)}</b>
+          <b id="panel-name" tabindex="-1">${esc(destName(current))}</b>
           <span id="nav-left" class="nav-left" aria-live="polite">${navText(lastRoute.distanceM)}</span>
         </button>
         <button class="btn nav-end">End</button>
@@ -1483,7 +1503,7 @@ async function main() {
   const input = $<HTMLInputElement>('#q');
   const results = $('#results');
   const clearBtn = $('.search .clear');
-  type Option = { kind: 'place'; place: Place } | { kind: 'group'; group: GroupId };
+  type Option = { kind: 'place'; place: Place; room?: string } | { kind: 'group'; group: GroupId };
   let options: Option[] = [];
 
   function hideResults() { results.hidden = true; input.setAttribute('aria-expanded', 'false'); }
@@ -1502,7 +1522,7 @@ async function main() {
     const inside = narrowed() ? hits.filter((h) => passes(h.place)).slice(0, 6) : hits.slice(0, 6);
     const outside = narrowed() ? hits.filter((h) => !passes(h.place)).slice(0, inside.length ? 3 : 6) : [];
     const groups = (matchingGroups(q) as GroupId[]).filter((g) => (groupCount.get(g) ?? 0) > 0 && g !== filter);
-    options = [...groups.map((group) => ({ kind: 'group' as const, group })), ...[...inside, ...outside].map((h) => ({ kind: 'place' as const, place: h.place }))];
+    options = [...groups.map((group) => ({ kind: 'group' as const, group })), ...[...inside, ...outside].map((h) => ({ kind: 'place' as const, place: h.place, room: h.room }))];
     const via = new Map(hits.map((h) => [h.place.id, h.via]));
     const firstOutside = inside.length + groups.length;
     if (!options.length) {
@@ -1540,7 +1560,7 @@ async function main() {
     }
     track('search', { q, id: o.place.id });
     hideList();
-    select(o.place, { source: 'search' });
+    select(o.place, { source: 'search', room: o.room });
   }
   input.addEventListener('input', showResults);
   input.addEventListener('focus', () => input.value && showResults());
@@ -1646,7 +1666,9 @@ async function main() {
   if (linkedId) {
     const p = byId.get(linkedId);
     const open = () => {
-      if (p) select(p, { source: 'link' });
+      // a room code only counts if it really belongs to that building
+      const room = linkedRoom && p ? parseRoom(linkedRoom, [p]) : null;
+      if (p) select(p, { source: 'link', room: room?.code });
       else { history.replaceState(null, '', location.pathname); toast("Sorry, we couldn't find that place. Here's the whole campus.", 6000); }
     };
     if (map && !map.loaded()) map.once('load', open);

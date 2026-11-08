@@ -5,6 +5,8 @@ export interface Hit {
   score: number;
   /** why it matched, e.g. "Room Ma101" — shown under the name */
   via?: string;
+  /** a timetable room code this hit stands for ("Ma101"): its building is known, the room's spot isn't */
+  room?: string;
 }
 
 const norm = (s: string) =>
@@ -98,21 +100,30 @@ function textScore(query: string, text: string): number {
   return (total / query.split(' ').length) * 0.8;
 }
 
-/** Timetable room codes like "Ma101", "MS 2.03", "Fi-G12" resolve to the building with that prefix. */
-function roomMatch(raw: string, places: Place[]): Hit | null {
-  const m = raw.trim().match(/^([A-Za-z]{1,4})[\s\-.]?(\d[\w.]*|[A-Za-z]?\d[\w.]*)$/);
+/**
+ * Timetable room codes like "Ma101", "MA 101", "ma.101", "MS 2.03" or "Fi-G12" resolve to the
+ * building with that prefix. Only the building is known: where the room is inside isn't.
+ * Returns the place and the code written the usual way ("Ma101", "MS2.03").
+ */
+export function parseRoom(raw: string, places: Place[]): { place: Place; code: string } | null {
+  const m = raw.trim().match(/^([A-Za-z]{1,4})[\s\-.]*(\d[\w.]*|[A-Za-z]?\d[\w.]*)$/);
   if (!m) return null;
-  const [, letters] = m;
-  let best: Place | null = null;
+  const [, letters, rest] = m;
+  let best: { place: Place; prefix: string; exact: boolean } | null = null;
   for (const p of places) {
     for (const prefix of p.roomCodePrefixes) {
-      // case-sensitive first (Ma vs MS), then case-insensitive
-      if (letters === prefix || letters.toLowerCase() === prefix.toLowerCase()) {
-        if (!best || prefix.length > best.roomCodePrefixes[0].length) best = p;
-      }
+      if (letters.toLowerCase() !== prefix.toLowerCase()) continue;
+      // the exact case wins (Ma vs MS), then the longer prefix
+      const exact = letters === prefix;
+      if (!best || (exact && !best.exact) || (exact === best.exact && prefix.length > best.prefix.length)) best = { place: p, prefix, exact };
     }
   }
-  return best ? { place: best, score: 1.2, via: `Room ${raw.trim()}` } : null;
+  return best ? { place: best.place, code: best.prefix + rest.toUpperCase() } : null;
+}
+
+function roomMatch(raw: string, places: Place[]): Hit | null {
+  const r = parseRoom(raw, places);
+  return r ? { place: r.place, score: 1.2, via: `Room ${r.code}`, room: r.code } : null;
 }
 
 export function search(raw: string, places: Place[], limit = 8): Hit[] {
