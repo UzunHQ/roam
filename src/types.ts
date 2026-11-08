@@ -3,6 +3,20 @@ export type Category = 'building' | 'food' | 'sport' | 'entrance';
 export type College = 'digby-stuart' | 'froebel' | 'southlands' | null;
 export type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
+/**
+ * A way into a building. Only from a check on site or an official source: "verified" says which.
+ * main: the usual front door · accessible: step-free way in · card-required: needs a student/staff
+ * card · closed: there, but not in use (never routed to).
+ */
+export interface Entrance {
+  pos: LngLat;
+  type: 'main' | 'accessible' | 'card-required' | 'closed';
+  name?: string; // "Front door on Digby Square"
+  verified: boolean;
+  source?: string; // "Checked on site", or a URL
+  checked?: string; // YYYY-MM-DD
+}
+
 export interface Place {
   id: string;
   code: string;
@@ -16,7 +30,9 @@ export interface Place {
   position: LngLat;
   positionSource: string;
   positionAccuracyM: number;
+  /** old single entrance point (kept for older data; read as an unverified main door) */
   entrance: LngLat | null;
+  entrances?: Entrance[];
   footprintId: string | null;
   photo: string | null;
   lastVerified: string | null;

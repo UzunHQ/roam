@@ -10,6 +10,7 @@ import { matchingGroups, parseRoom, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
 import { avatarSvg } from './avatar';
 import { Router, type Route } from './route';
+import { routeSteps } from './steps';
 import { isOpenNow, openState, refreshLiveHours, resolveHours, weekRows } from './hours';
 import { initAnalytics, track } from './analytics';
 import { FILTERS, GROUPS, PRIORITY, chipOf, filterLabel, groupLabel, groupOf, passesFilter, type Filter, type GroupId } from './categories';
@@ -746,10 +747,12 @@ async function main() {
     btn.classList.add('busy');
     try {
       fix = await getFix();
+      lastLocateError = null;
       showFix(fix);
       startTracking();
       pendingLocate?.(true);
     } catch (err) {
+      lastLocateError = (err as GeolocationPositionError).code ?? 2;
       toast((err as GeolocationPositionError).code === 1
         ? 'Location access was refused. You can still choose a starting point by hand.'
         : "We couldn't get your location. Try again outdoors, or choose a starting point.", 6000);
@@ -845,12 +848,13 @@ async function main() {
    * Fit points into the free part of the screen. Projects them at the target tilt, so tilted 3D
    * views fit too (fitBounds ignores the tilt, which pushed routes behind the panel on phones).
    */
-  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number }; duration?: number } = {}) {
+  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number }; duration?: number; side?: number } = {}) {
     if (!map || !points.length) return null;
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
     const a = freeArea();
     // pins stand about 20 px either side of their point and 40 px above it
-    const box = opts.box ?? { l: a.left + 20, r: Math.min(a.right, W) - 20, t: a.top + 30, b: Math.min(a.bottom, H) - 8 };
+    const side = opts.side ?? 20; // pins stand about 20 px either side of their point; their names reach further
+    const box = opts.box ?? { l: a.left + side, r: Math.min(a.right, W) - side, t: a.top + 30, b: Math.min(a.bottom, H) - 8 };
     const zero = { top: 0, bottom: 0, left: 0, right: 0 };
     const before = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), padding: map.getPadding() };
     const b = new maplibregl.LngLatBounds(points[0], points[0]);
@@ -949,6 +953,14 @@ async function main() {
     return r ? `About ${r.minutes} min walk from you` : '';
   }
 
+  /** the building's doors as far as they are known; says so plainly when they aren't */
+  function entranceInfo(p: Place): string {
+    const TYPE = { main: 'Main entrance', accessible: 'Step-free entrance', 'card-required': 'Card access', closed: 'Closed entrance' } as const;
+    const doors = [...(p.entrances ?? [])];
+    if (!doors.length) return p.footprintId && p.category !== 'entrance' ? '<p class="small entrances">Entrances: not verified yet. Directions end on the path nearest the building.</p>' : '';
+    return `<ul class="entrances small">${doors.map((d) => `<li>${TYPE[d.type]}${d.name ? `: ${esc(d.name)}` : ''} · ${d.verified ? `checked${d.checked ? ` ${fmtDate(d.checked)}` : ''}` : 'not verified'}</li>`).join('')}</ul>`;
+  }
+
   function renderCard(p: Place, expanded = false) {
     const g = groupOf(p);
     const placeLabel = (p.code ? `${p.name} (${p.code})` : p.name) + (currentRoom ? `, room ${currentRoom}` : '');
@@ -984,6 +996,7 @@ async function main() {
         ${p.services?.length ? `<ul class="services" aria-label="Services">${p.services.map((s, i) => `<li${i >= 4 ? ' hidden' : ''}>${esc(s)}</li>`).join('')}${p.services.length > 4 ? `<li><button class="more" aria-label="Show ${p.services.length - 4} more services">+${p.services.length - 4} more</button></li>` : ''}</ul>` : ''}
         ${weekBlock(p) || '<div class="week-wrap" hidden></div>'}
         ${p.accessibility ? `<p class="access"><a href="${esc(p.accessibility.url)}" target="_blank" rel="noopener">${icons.accessible}<span>${esc(p.accessibility.summary)}</span></a></p>` : ''}
+        ${entranceInfo(p)}
         <div class="detail-links">
           <button class="btn ghost share" aria-label="Share a link to ${esc(p.name)}">${icons.share}<span>Share</span></button>
           ${p.officialUrl ? `<a class="official" href="${esc(p.officialUrl)}" target="_blank" rel="noopener">Official page ${icons.external}</a>` : ''}
@@ -1151,11 +1164,37 @@ async function main() {
   const endMarker = new maplibregl.Marker({ element: pinEl('end', 'B') });
   let fromValue = '';
 
+  // Where a walk starts: 'me', a place id, or 'pt:lng,lat' (a spot picked on the map)
+  let pickingStart = false;
+  const recentFrom = (): string[] => { try { return (JSON.parse(store.get('roam.recentFrom') ?? '[]') as string[]).filter((id) => id === 'me' || byId.has(id)); } catch { return []; } };
+  const rememberFrom = (v: string) => { if (v && !v.startsWith('pt:')) store.set('roam.recentFrom', JSON.stringify([v, ...recentFrom().filter((x) => x !== v)].slice(0, 5))); };
+  const pointOf = (v: string): LngLat | null => { const m = /^pt:(-?[\d.]+),(-?[\d.]+)$/.exec(v); return m ? [Number(m[1]), Number(m[2])] : null; };
+  const fromLabel = (v: string) => (v === 'me' ? 'My location' : pointOf(v) ? 'Spot picked on the map' : byId.get(v)?.name ?? '');
+  /** a place that has others inside it (the Library Café in the Library) reads "Library Café, in Library" */
+  type FromOpt = { value: string; label: string; hint?: string; icon: string };
+  function fromOptions(q: string, dest: Place): { head?: string; opts: FromOpt[] }[] {
+    const placeOpt = (p: Place): FromOpt => ({ value: p.id, label: p.name, hint: p.code || undefined, icon: groupOf(p) === 'entrance' ? icons.entrance : placeIcon(p.category, p.kind) });
+    const me: FromOpt = { value: 'me', label: 'My location', hint: fix ? undefined : 'asks to use your location', icon: icons.locate };
+    const pick: FromOpt = { value: 'pick', label: 'Pick on the map', hint: 'tap where you are', icon: icons.map };
+    const others = places.filter((x) => x.id !== dest.id);
+    if (q.trim()) {
+      const hits = search(q, others, 8).map((h) => placeOpt(h.place));
+      const extra = /^(my|me|loc|here|gps)/i.test(q.trim()) ? [me] : [];
+      return [{ opts: [...extra, ...hits] }];
+    }
+    const recent = recentFrom().filter((v) => v !== 'me' && v !== dest.id).map((v) => placeOpt(byId.get(v)!));
+    return [
+      { opts: [me, ...(map ? [pick] : [])] },
+      ...(recent.length ? [{ head: 'Recent', opts: recent }] : []),
+      { head: 'Campus entrances', opts: others.filter((x) => x.category === 'entrance').map(placeOpt) },
+      { head: 'All places', opts: others.filter((x) => x.category !== 'entrance').sort((a, b) => a.name.localeCompare(b.name)).map(placeOpt) },
+    ];
+  }
+
   function openDirections(p: Place) {
     directionsOpen = true;
+    pickingStart = false;
     setExpanded(false); // keep the map visible above the directions
-    const gates = places.filter((x) => x.category === 'entrance');
-    const others = places.filter((x) => x.category !== 'entrance' && x.id !== p.id).sort((a, b) => a.name.localeCompare(b.name));
     if (fromValue === p.id) fromValue = '';
     if (!fromValue && fix && distanceToBounds(fix.pos, doc.bounds) === 0) fromValue = 'me';
     panelBody.innerHTML = `
@@ -1164,69 +1203,212 @@ async function main() {
         <div class="titles"><h2 id="panel-name" tabindex="-1">Directions</h2><p class="meta">to ${esc(destName(p))}</p></div>
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
       </div>
-      <label class="field"><span>Starting from</span>
-        <select id="from">
-          <option value="">Choose a starting point…</option>
-          <optgroup label="Your position"><option value="me">My location</option></optgroup>
-          <optgroup label="Campus entrances">${gates.map((g) => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}</optgroup>
-          <optgroup label="Places">${others.map((o) => `<option value="${o.id}">${esc(o.name)}</option>`).join('')}</optgroup>
-        </select>
-      </label>
+      <div class="field from-field">
+        <label for="from-input">Starting from</label>
+        <div class="from-row">
+          <div class="combo">
+            <input id="from-input" type="text" role="combobox" aria-expanded="false" aria-controls="from-list" aria-autocomplete="list"
+              autocomplete="off" spellcheck="false" placeholder="Search: entrance, building or My location" />
+            <ul id="from-list" class="from-list" role="listbox" aria-label="Starting points" hidden></ul>
+          </div>
+          <button type="button" class="icon-btn swap" aria-label="Swap start and destination" title="Swap start and destination">${icons.swap}</button>
+        </div>
+      </div>
       <div id="route-result" class="route-result" aria-live="polite"></div>`;
-    const sel = panelBody.querySelector<HTMLSelectElement>('#from')!;
-    sel.value = fromValue;
-    sel.addEventListener('change', () => { fromValue = sel.value; planRoute(); });
-    panelBody.querySelector('.back')!.addEventListener('click', () => { clearRoute(); directionsOpen = false; renderCard(p); $('#panel-name').focus(); layoutMarkers(); });
+    const inp = panelBody.querySelector<HTMLInputElement>('#from-input')!;
+    const list = panelBody.querySelector<HTMLElement>('#from-list')!;
+    const swapBtn = panelBody.querySelector<HTMLButtonElement>('.swap')!;
+    let flat: FromOpt[] = [];
+    let active = -1;
+    const syncSwap = () => {
+      const ok = !!byId.get(fromValue);
+      swapBtn.disabled = !ok;
+      swapBtn.title = ok ? 'Swap start and destination' : 'Swap works when the start is a place';
+    };
+    inp.value = fromLabel(fromValue);
+    syncSwap();
+    const close = () => { list.hidden = true; inp.setAttribute('aria-expanded', 'false'); inp.removeAttribute('aria-activedescendant'); active = -1; };
+    const highlight = (i: number) => {
+      active = Math.max(0, Math.min(i, flat.length - 1));
+      list.querySelectorAll('[role=option]').forEach((el, j) => el.setAttribute('aria-selected', String(j === active)));
+      const el = list.querySelector<HTMLElement>(`#from-opt-${active}`);
+      if (el) { inp.setAttribute('aria-activedescendant', el.id); el.scrollIntoView({ block: 'nearest' }); }
+    };
+    const render = () => {
+      const q = inp.value === fromLabel(fromValue) ? '' : inp.value; // showing the current choice: list everything
+      const groups = fromOptions(q, p);
+      flat = groups.flatMap((g) => g.opts);
+      let i = 0;
+      list.innerHTML = flat.length ? groups.filter((g) => g.opts.length).map((g) => (g.head ? `<li class="res-head" role="presentation">${esc(g.head)}</li>` : '')
+        + g.opts.map((o) => `<li id="from-opt-${i}" role="option" aria-selected="false" data-i="${i++}"><span class="opt-icon">${o.icon}</span><span>${esc(o.label)}${o.hint ? ` <small>${esc(o.hint)}</small>` : ''}</span></li>`).join('')).join('')
+        : '<li class="res-head" role="presentation">No starting point matches. Try an entrance or a building name.</li>';
+      list.hidden = false;
+      inp.setAttribute('aria-expanded', 'true');
+      active = -1;
+      if (!isDesktop()) panel.classList.add('expanded'); // room for the list on a phone
+    };
+    const choose = (o: FromOpt) => {
+      close();
+      setExpanded(false); // back down, so the route shows on the map
+      if (o.value === 'pick') { startPicking(p); return; }
+      fromValue = o.value;
+      inp.value = fromLabel(fromValue);
+      syncSwap();
+      planRoute();
+    };
+    inp.addEventListener('focus', () => { inp.select(); render(); });
+    inp.addEventListener('input', render);
+    inp.addEventListener('blur', () => setTimeout(() => { if (!list.contains(document.activeElement)) { close(); inp.value = fromLabel(fromValue); } }, 150));
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (list.hidden) render(); highlight(active + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(active - 1); }
+      else if (e.key === 'Enter') { e.preventDefault(); const o = flat[active >= 0 ? active : 0]; if (o && !list.hidden) choose(o); }
+      else if (e.key === 'Escape' && !list.hidden) { e.stopPropagation(); close(); inp.value = fromLabel(fromValue); }
+    });
+    // pointerdown, not click: picking happens before the input's blur closes the list
+    list.addEventListener('pointerdown', (e) => {
+      const li = (e.target as HTMLElement).closest<HTMLElement>('[data-i]');
+      if (!li) return;
+      e.preventDefault();
+      choose(flat[Number(li.dataset.i)]);
+    });
+    swapBtn.addEventListener('click', () => {
+      const start = byId.get(fromValue);
+      if (!start) return;
+      const dest = p;
+      fromValue = dest.id;
+      select(start, { source: 'list' });
+      openDirections(start);
+    });
+    panelBody.querySelector('.back')!.addEventListener('click', () => { pickingStart = false; clearRoute(); directionsOpen = false; renderCard(p); $('#panel-name').focus(); layoutMarkers(); });
     panelBody.querySelector('.close')!.addEventListener('click', closePanel);
     $('#panel-name').focus({ preventScroll: true });
     planRoute();
   }
 
+  /** "Pick on the map": the next tap on the map is where the walk starts */
+  function startPicking(p: Place) {
+    pickingStart = true;
+    clearRoute();
+    const out = document.querySelector<HTMLElement>('#route-result');
+    if (out) {
+      out.innerHTML = `<p class="pick-note">${icons.locate}<span>Tap the map where you're starting.</span></p><button class="btn ghost cancel-pick">Cancel</button>`;
+      out.querySelector('.cancel-pick')!.addEventListener('click', () => { pickingStart = false; if (current === p) openDirections(p); });
+    }
+    toast('Tap the map where you are starting', 4000);
+  }
+
+  /** a route can't start here: say why, and offer the main entrance in one tap */
+  function offerGate(out: HTMLElement, msg: string) {
+    const gate = byId.get('gate-main');
+    out.innerHTML = `<p>${msg}</p>${gate && current?.id !== gate.id ? `<button class="btn ghost from-gate">${icons.entrance}<span>Start from the ${esc(gate.name)}</span></button>` : ''}`;
+    out.querySelector('.from-gate')?.addEventListener('click', () => {
+      fromValue = gate!.id;
+      const inp = document.querySelector<HTMLInputElement>('#from-input');
+      if (inp) inp.value = fromLabel(fromValue);
+      planRoute();
+    });
+  }
+
+  /** what we can honestly say about where the route ends */
+  function endNote(r: Route, to: Place): string {
+    if (r.endsAt === 'entrance-verified') return `Ends at the ${esc(r.door?.name ?? `${to.name} entrance`)}${r.door?.type === 'card-required' ? ' (needs a university card)' : r.door?.type === 'accessible' ? ' (step-free entrance)' : ''}.`;
+    if (r.endsAt === 'entrance-unverified') return 'Ends at an entrance that hasn\'t been checked on site yet.';
+    return to.footprintId ? 'Ends on the path nearest the building. Its entrances haven\'t been verified yet, so look for the door from there.' : 'Ends on the path nearest this spot.';
+  }
+
+  /** a mapped place standing right by a point on the route (for "Turn left by the Library") */
+  function landmarkAt(pt: LngLat, skip: Set<string>): string | null {
+    let best: { name: string; d: number } | null = null;
+    for (const p of places) {
+      if (skip.has(p.id) || p.category === 'entrance' || (p.footprintId && footprintToPlace.get(p.footprintId) !== p)) continue;
+      const rings = p.footprintId ? outlines.get(p.footprintId) : null;
+      const d = rings ? (rings.some((r) => touches(pt, r, 12)) ? 0 : Infinity) : distanceM(pt, p.position) <= 20 ? distanceM(pt, p.position) : Infinity;
+      if (d < (best?.d ?? Infinity)) best = { name: p.name.startsWith('The ') ? p.name.replace(/^The /, 'the ') : `the ${p.name}`, d };
+    }
+    return best?.name ?? null;
+  }
+
+  let lastLocateError: number | null = null; // 1 refused, 2 no fix, 3 timed out
+  /** why there's no position, as the start of a sentence that ends "…choose a starting point above." */
+  const noFixReason = () => lastLocateError === 1 ? 'Location is turned off for Roam in this browser. You can allow it in the browser\'s site settings, or'
+    : lastLocateError === 2 || lastLocateError === 3 ? 'We couldn\'t get a GPS fix (indoors, or a weak signal). Try again outside, or'
+    : 'Without your location,';
   async function planRoute() {
     const to = current;
     const out = document.querySelector<HTMLElement>('#route-result');
     if (!to || !out) return;
+    pickingStart = false;
     clearRoute();
     if (!fromValue) {
       out.innerHTML = `<p>Choose where you're starting from, or use your location.</p>
         <button class="btn ghost use-me">${icons.locate}<span>Use my location</span></button>`;
       out.querySelector('.use-me')!.addEventListener('click', async () => {
-        if ((await requestLocation()) && current === to && out.isConnected) { fromValue = 'me'; panelBody.querySelector<HTMLSelectElement>('#from')!.value = 'me'; planRoute(); }
+        const ok = await requestLocation();
+        if (current !== to || !out.isConnected) return;
+        if (!ok) { offerGate(out, `${noFixReason()} choose a starting point above.`); return; }
+        fromValue = 'me';
+        const inp = document.querySelector<HTMLInputElement>('#from-input');
+        if (inp) inp.value = fromLabel('me');
+        planRoute();
       });
       return;
     }
     let from: LngLat | Place;
+    let fromName: string | null = null;
+    const picked = pointOf(fromValue);
     if (fromValue === 'me') {
-      if (!fix && !(await requestLocation())) { if (out.isConnected) out.innerHTML = '<p>Choose a starting point from the list instead.</p>'; return; }
+      if (!fix && !(await requestLocation())) {
+        if (!out.isConnected) return;
+        offerGate(out, `${noFixReason()} choose a starting point above.`);
+        return;
+      }
       if (current !== to || !out.isConnected) return; // you moved on while the location prompt was up
       const f = fix!;
       const off = distanceToBounds(f.pos, doc.bounds);
       if (off > 0) {
-        out.innerHTML = `<p>You're not on campus yet (${formatDistance(off)} away). Routes start on campus, so choose a campus entrance as your starting point.</p>`;
+        offerGate(out, `You're not on campus yet (${formatDistance(off)} away). Walking routes start on campus: choose an entrance as your starting point.`);
         return;
       }
       from = f.pos;
+    } else if (picked) {
+      if (distanceToBounds(picked, doc.bounds) > 0) { offerGate(out, 'That spot is outside the campus map. Pick a spot on campus, or start from an entrance.'); return; }
+      from = picked;
+      startMarker.setLngLat(picked);
     } else {
       const p = byId.get(fromValue);
       if (!p) return;
       routeFrom = p;
       from = p;
+      fromName = p.category === 'entrance' ? `the ${p.name}` : p.name;
     }
     const r = router.route(Array.isArray(from) ? from : routeTarget(from), routeTarget(to), footprints);
     if (!r) {
-      out.innerHTML = `<p>We couldn't find a mapped walking route between these places. The building is highlighted on the map.</p>`;
+      offerGate(out, 'We couldn\'t find a mapped walking route between these two places.');
       return;
     }
+    rememberFrom(fromValue);
     drawRoute(r, from);
+    lastRoute = r;
+    const steps = routeSteps([...r.coordinates], {
+      from: fromName ?? (picked ? 'the spot you picked' : null),
+      startHopM: r.startHop.length === 2 ? distanceM(r.startHop[0], r.startHop[1]) : 0,
+      dest: destName(to),
+      arrive: r.endsAt === 'nearest-path' ? `You're by ${destName(to)}. ${to.footprintId ? 'Its entrance isn\'t verified yet.' : ''}`.trim() : `Arrive at ${destName(to)}.`,
+      landmark: (pt) => landmarkAt(pt, new Set([to.id, routeFrom?.id ?? ''])),
+    });
     const notes = [
-      r.toEntrance ? 'Ends at the entrance.' : "Ends on the path nearest the building: its entrance hasn't been mapped yet.",
+      endNote(r, to),
       r.hasSteps ? 'Includes steps.' : '',
       fromValue === 'me' && fix && fix.accuracy > config.weakGpsM ? `Your location is approximate (about ${Math.round(fix.accuracy)} m).` : '',
+      currentRoom ? `Room ${esc(currentRoom)}: inside the building, follow the signs (the room's floor isn't verified).` : '',
     ].filter(Boolean);
     out.innerHTML = `<p class="route-sum">${icons.walk}<span><b>About ${r.minutes} min</b> · ${formatDistance(r.distanceM)} along paths</span></p>
       ${map ? `<div class="route-go"><button class="btn primary nav-start">${icons.directions}<span>Start</span></button></div>` : ''}
       <ul class="route-notes">${notes.map((n) => `<li>${n}</li>`).join('')}</ul>
-      <p class="small">Follows footpaths and campus roads mapped on OpenStreetMap. Step-free routes aren't available yet.</p>`;
+      <details class="steps-wrap"${map ? '' : ' open'}><summary>Step by step (${steps.length})</summary>
+        <ol class="steps">${steps.map((st) => `<li>${esc(st.text)}</li>`).join('')}</ol></details>
+      <p class="small">Follows footpaths and campus roads mapped on OpenStreetMap. ${r.hasSteps ? 'Step-free routes' : 'No steps are mapped on this route, but step-free routes'} aren't offered yet: no route has been checked end to end for steps, kerbs and slopes.</p>`;
     out.querySelector('.nav-start')?.addEventListener('click', startNavigation);
   }
 
@@ -1290,13 +1472,17 @@ async function main() {
     setGeoJSON(map, 'hop', lineFeature(r.startHop));
     clearTreesAlong(map, routeLine);
     // from your own position the character already marks the start
-    if (Array.isArray(from)) startMarker.remove(); else startMarker.setLngLat(from.position).addTo(map);
-    endMarker.setLngLat(routeEnd).addTo(map);
+    // from your own position the character marks the start; a picked spot gets its A
+    if (Array.isArray(from)) { if (pointOf(fromValue)) startMarker.setLngLat(from).addTo(map); else startMarker.remove(); }
+    else startMarker.setLngLat(from.position).addTo(map);
+    // B only where it adds something: right by the destination's own pin it would just cover it
+    const destPin = current ? (markers.get(current.id)?.at ?? current.position) : null;
+    if (destPin && distanceM(routeEnd, destPin) < 30) endMarker.remove(); else endMarker.setLngLat(routeEnd).addTo(map);
     xrayKey = '';
     if (quiet) { scheduleXray(); return; }
     const all = [...r.coordinates, ...r.startHop, Array.isArray(from) ? from : from.position];
     // a lower tilt for the overview, so the far end of a long route stays readable
-    requestAnimationFrame(() => fitPoints(all, { pitch: tilt(40), maxZoom: 18 }));
+    requestAnimationFrame(() => fitPoints(all, { pitch: tilt(40), maxZoom: 18, side: 48 }));
   }
   function clearRoute() {
     routeShown = false;
@@ -1487,6 +1673,14 @@ async function main() {
   // tap a building footprint (footprintToPlace picks the building, so a café doesn't take it over)
   map?.on('click', (e) => {
     hideResults();
+    if (pickingStart && current && directionsOpen) {
+      // "Pick on the map": this tap is the start
+      fromValue = `pt:${e.lngLat.lng.toFixed(6)},${e.lngLat.lat.toFixed(6)}`;
+      const inp = document.querySelector<HTMLInputElement>('#from-input');
+      if (inp) inp.value = fromLabel(fromValue);
+      planRoute();
+      return;
+    }
     if (!key.hidden) toggleKey(false);
     if (navigating) return; // while walking, stray taps on the map shouldn't end the route
     const f = map!.queryRenderedFeatures(e.point, { layers: ['building-walls', 'building-roof', 'building-top', 'building-ghost'] })[0];

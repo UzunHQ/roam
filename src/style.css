@@ -522,6 +522,33 @@ svg { display: block; flex: none; }
   min-height: 48px; padding: 0 12px; border-radius: 14px; border: 2px solid var(--line);
   background: var(--surface-2); font-size: 16px; font-weight: 600;
 }
+.from-row { display: flex; gap: 8px; align-items: flex-start; }
+.combo { position: relative; flex: 1; min-width: 0; }
+.combo input {
+  width: 100%; min-height: 48px; padding: 0 12px; border-radius: 14px; border: 2px solid var(--line);
+  background: var(--surface-2); color: var(--text); font: inherit; font-size: 16px; font-weight: 600;
+}
+.combo input:focus-visible { border-color: var(--primary); outline: none; }
+/* in the flow of the sheet (not floating), so the sheet grows to show it instead of cutting it off */
+.from-list {
+  position: relative; z-index: 3; margin-top: 6px !important; max-height: min(46vh, 320px); overflow: auto;
+  margin: 0; padding: 4px; list-style: none; border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); font-weight: 600;
+}
+.from-list [role=option] { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 10px; border-radius: 10px; cursor: pointer; }
+.from-list [role=option]:hover, .from-list [aria-selected=true] { background: var(--surface-2); }
+.from-list [aria-selected=true] { outline: 2px solid var(--focus); outline-offset: -2px; }
+.from-list small { color: var(--muted); font-weight: 600; }
+.from-list .res-head { padding: 8px 10px 2px; font-size: 12px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.opt-icon { display: grid; place-items: center; width: 24px; height: 24px; color: var(--primary); }
+.opt-icon svg { width: 18px; height: 18px; }
+.from-row .swap { width: 48px; height: 48px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface-2); }
+.from-row .swap:disabled { opacity: 0.4; cursor: not-allowed; }
+.pick-note { display: flex; gap: 8px; align-items: center; font-weight: 650; }
+.steps-wrap { margin: 4px 0 8px; border-radius: 14px; background: var(--surface-2); padding: 0 12px; }
+.steps-wrap summary { min-height: 44px; display: flex; align-items: center; font-weight: 700; cursor: pointer; }
+.steps { margin: 0 0 10px; padding-left: 22px; font-size: 15px; }
+.steps li + li { margin-top: 6px; }
+.route-result .btn.from-gate { margin-top: 2px; }
 .route-result { margin-top: 12px; }
 .route-result p { margin: 0 0 10px; }
 .route-sum { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: var(--surface-2); font-size: 17px; }

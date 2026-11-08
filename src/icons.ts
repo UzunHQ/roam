@@ -41,6 +41,7 @@ export const icons = {
   external: svg('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>'),
   directions: svg('<path d="M12 2.8 21.2 12 12 21.2 2.8 12z"/><path d="M9 14v-2.5a1.5 1.5 0 0 1 1.5-1.5H15M13 8l2 2-2 2"/>'),
   back: svg('<path d="M15 5l-7 7 7 7"/>'),
+  swap: svg('<path d="M8 4v15M4 8l4-4 4 4M16 20V5M12 16l4 4 4-4"/>'),
   accessible: svg('<circle cx="12" cy="4.5" r="1.8"/><path d="M8 9h8M12 9v5h4l2 5"/><path d="M8.5 13a5 5 0 1 0 6.7 6.2"/>'),
   clock: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
   close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),

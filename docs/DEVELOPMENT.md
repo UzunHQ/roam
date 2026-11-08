@@ -92,8 +92,19 @@ Photos lazy-load when a card opens and are cached for offline use.
 
 "Directions" finds the shortest walk over OSM footpaths, steps and campus roads (`data/paths.json`). Restricted ways (`access=no`, `foot=no`, and private ways outside the university outline) are left out. You choose the starting point: your location (one fix, only when you ask), a campus entrance, or another place.
 
-- Until a place has a verified `entrance`, the route ends at the path nearest the building, and the card says so. Add entrances with the picker to fix this.
-- Routes with steps say "Includes steps". There's no step-free option yet: that needs verified path data first.
+- Until a place has an entrance, the route ends at the path nearest the building, and the card says so. Add entrances with the picker (`/picker.html`) after checking them on site:
+
+  ```json
+  "entrances": [
+    { "pos": [-0.24801, 51.45712], "type": "main", "name": "Front door on Digby Square", "verified": true, "source": "Checked on site", "checked": "2026-11-10" },
+    { "pos": [-0.24790, 51.45705], "type": "accessible", "verified": false }
+  ]
+  ```
+
+  `type` is `main`, `accessible`, `card-required` or `closed` (never routed to). When a place has any `verified` entrance, only verified ones are used; otherwise unverified ones are, and the directions say the door hasn't been checked. The old single `entrance` field still works and counts as an unverified main door.
+- Directions also come as text steps (heading, turns, distances), worked out from the route line; a turn names a mapped building only when the route passes right by it. Without a map the steps open by themselves.
+- The start is a searchable list: My location, Pick on the map, recent starts (kept on this device only), the campus entrances and every place. The ⇅ button swaps start and destination when the start is a place.
+- Routes with steps say "Includes steps". There's no step-free option yet: that needs a route checked end to end first, and Roam never labels an unchecked route as step-free.
 - Off campus, Roam asks you to start from an entrance instead.
 
 ## Configure
