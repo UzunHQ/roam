@@ -25,7 +25,46 @@ function editDistance(a: string, b: string, max: number): number {
   return d[a.length][b.length];
 }
 
-const allowedTypos = (len: number) => (len <= 3 ? 0 : len <= 6 ? 1 : 2);
+// short words get no typos at all: "halal" must not turn into "hall"
+const allowedTypos = (len: number) => (len <= 4 ? 0 : len <= 7 ? 1 : 2);
+
+/** A rough English stem, so "printer" finds "printing" and "curry" finds "curries". */
+export function stem(w: string): string {
+  if (w.length > 4 && w.endsWith('ies')) return w.slice(0, -3) + 'y';
+  if (w.length > 5 && w.endsWith('ing')) return w.slice(0, -3);
+  if (w.length > 5 && w.endsWith('ers')) return w.slice(0, -3);
+  if (w.length > 5 && w.endsWith('er')) return w.slice(0, -2);
+  if (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) return w.slice(0, -1);
+  return w;
+}
+/** a query word against a text word: prefix, or the same stem */
+const wordHit = (q: string, x: string) => x.startsWith(q) || (q.length >= 3 && stem(x) === stem(q)) || (q.length >= 4 && stem(q).length >= 4 && x.startsWith(stem(q)));
+
+/**
+ * Everyday words for what the data calls something else. A query word found here is also tried as
+ * each of its synonyms (scored a little lower than a direct match).
+ */
+const SYNONYMS: Record<string, string[]> = {
+  printer: ['printing'], printers: ['printing'], print: ['printing'], copier: ['printing'], photocopy: ['printing'], photocopier: ['printing'],
+  toilet: ['toilets', 'wc'], toilets: ['wc'], loo: ['toilets', 'wc'], wc: ['toilets'], bathroom: ['toilets', 'wc'],
+  coffee: ['cafe'], tea: ['cafe'], latte: ['cafe', 'coffee'],
+  lecture: ['lecture theatre', 'auditorium'], lectures: ['lecture theatre', 'auditorium'], theatre: ['lecture theatre', 'auditorium'],
+  gym: ['fitness'], fitness: ['gym'], workout: ['gym', 'fitness'],
+  nurse: ['medical', 'health'], doctor: ['medical', 'health'], gp: ['medical', 'health'], clinic: ['medical', 'health'],
+  microwave: ['heat food', 'warm your own food'], heat: ['heat food', 'warm your own food'],
+  water: ['water fountain', 'water refill'], refill: ['water refill'],
+  cash: ['cash machine', 'atm'], atm: ['cash machine'],
+  parcel: ['parcels', 'post room'], parcels: ['post room'], package: ['parcels', 'post room'], post: ['post room'],
+  wifi: ['wi fi'], pray: ['prayer'], mosque: ['prayer'], computer: ['computers'], pcs: ['computers'],
+};
+function variants(q: string): string[] {
+  const words = q.split(' ');
+  const out: string[] = [];
+  words.forEach((w, i) => {
+    for (const syn of SYNONYMS[w] ?? []) out.push([...words.slice(0, i), syn, ...words.slice(i + 1)].join(' '));
+  });
+  return out;
+}
 
 /** 0..1 how well query words match a text; every query word must match something. */
 function textScore(query: string, text: string): number {
@@ -42,9 +81,11 @@ function textScore(query: string, text: string): number {
     for (const w of words) {
       if (w === q) best = Math.max(best, 1);
       else if (w.startsWith(q) && q.length >= 2) best = Math.max(best, 0.85);
+      else if (q.length >= 3 && stem(w) === stem(q)) best = Math.max(best, 0.8);
       else {
         const max = allowedTypos(q.length);
-        if (max) {
+        // a typo is a missing, swapped or wrong letter; extra letters only count in longer words
+        if (max && w[0] === q[0] && (q.length <= w.length || q.length >= 7)) {
           // compare against the word, and against its prefix so "mandle" ~ "mandela"
           const d = Math.min(editDistance(q, w, max), editDistance(q, w.slice(0, q.length), max));
           if (d <= max) best = Math.max(best, 0.7 - d * 0.1);
@@ -75,10 +116,12 @@ function roomMatch(raw: string, places: Place[]): Hit | null {
 }
 
 export function search(raw: string, places: Place[], limit = 8): Hit[] {
-  const q = norm(raw);
-  if (!q) return [];
+  const q0 = norm(raw);
+  if (!q0) return [];
   const hits = new Map<string, Hit>();
+  let weight = 1;
   const add = (h: Hit) => {
+    h = { ...h, score: h.score * weight };
     const prev = hits.get(h.place.id);
     if (!prev || h.score > prev.score) hits.set(h.place.id, h);
   };
@@ -86,6 +129,9 @@ export function search(raw: string, places: Place[], limit = 8): Hit[] {
   const room = roomMatch(raw, places);
   if (room) add(room);
 
+  // the words as typed, then each everyday synonym a little lower
+  for (const q of [q0, ...variants(q0)]) {
+  weight = q === q0 ? 1 : 0.85;
   for (const p of places) {
     if (p.code && norm(p.code) === q) add({ place: p, score: 1.1, via: `Code ${p.code}` });
     const name = norm(p.name) === q ? 1.3 : textScore(q, p.name);
@@ -95,13 +141,15 @@ export function search(raw: string, places: Place[], limit = 8): Hit[] {
       const s = norm(a) === q && q.length >= 4 ? 1.25 : textScore(q, a) * 0.9;
       if (s) add({ place: p, score: s, via: a });
     }
-    for (const sv of p.services ?? []) {
-      // every query word must start a word of the service, so "shop" doesn't find "workshop"
-      const words = norm(sv).split(' ');
-      if (q.split(' ').every((w) => words.some((x) => x.startsWith(w)))) add({ place: p, score: 0.6, via: sv });
+    // services and tags, then the description: lower, and every query word must start a word
+    // there (or share its stem), so "shop" doesn't find "workshop"
+    const every = (text: string) => { const words = norm(text).split(' '); return q.split(' ').every((w) => words.some((x) => wordHit(w, x))); };
+    if (q.length >= 3) {
+      for (const sv of p.services ?? []) if (every(sv)) add({ place: p, score: 0.6, via: sv });
+      for (const t of p.tags ?? []) if (every(t)) add({ place: p, score: 0.58, via: t[0].toUpperCase() + t.slice(1) });
+      if (every(p.description)) add({ place: p, score: 0.45 });
     }
-    const dw = norm(p.description).split(' ');
-    if (q.length >= 3 && q.split(' ').every((w) => dw.some((x) => x.startsWith(w)))) add({ place: p, score: 0.45 });
+  }
   }
   return [...hits.values()]
     // ties: entrances last, then the shorter (closer) name, so "libary" → Library before Library Café

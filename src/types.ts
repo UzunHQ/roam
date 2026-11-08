@@ -24,6 +24,8 @@ export interface Place {
   // verified content (optional; only filled from official sources)
   officialUrl?: string | null;
   services?: string[];
+  /** extra search words for what a place offers ("printing", "lecture theatre"); only from a verified source */
+  tags?: string[];
   accessibility?: { url: string; summary: string } | null;
   sources?: { url: string; title: string; checked: string }[];
 }

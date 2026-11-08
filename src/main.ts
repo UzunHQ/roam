@@ -1487,27 +1487,41 @@ async function main() {
   let options: Option[] = [];
 
   function hideResults() { results.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+  function plural(n: number, one: string, many = one + 's') { return `${n} ${n === 1 ? one : many}`; }
+  /** a filter or "Open now" narrowing what you see */
+  function narrowed() { return filter !== 'all' || (openOnly && openApplies()); }
+  function clearFilters() { setOpenOnly(false); setFilter('all'); }
   function showResults() {
     const q = input.value.trim();
     clearBtn.hidden = !input.value;
     if (!$('#list').hidden) renderList();
     if (!q) { hideResults(); return; }
-    const hits = search(q, places.filter(passes), 6);
+    // search always looks at every place: matches in the chosen category come first, the rest
+    // follow under "Other categories", so a category never hides what you typed
+    const hits = search(q, places, 12);
+    const inside = narrowed() ? hits.filter((h) => passes(h.place)).slice(0, 6) : hits.slice(0, 6);
+    const outside = narrowed() ? hits.filter((h) => !passes(h.place)).slice(0, inside.length ? 3 : 6) : [];
     const groups = (matchingGroups(q) as GroupId[]).filter((g) => (groupCount.get(g) ?? 0) > 0 && g !== filter);
-    options = [...groups.map((group) => ({ kind: 'group' as const, group })), ...hits.map((h) => ({ kind: 'place' as const, place: h.place }))];
+    options = [...groups.map((group) => ({ kind: 'group' as const, group })), ...[...inside, ...outside].map((h) => ({ kind: 'place' as const, place: h.place }))];
     const via = new Map(hits.map((h) => [h.place.id, h.via]));
+    const firstOutside = inside.length + groups.length;
     if (!options.length) {
-      results.innerHTML = `<li class="empty"><p>No places match “${esc(q)}”${filter !== 'all' ? ` in ${esc(filterLabel(filter))}` : ''}.</p>
-        ${filter !== 'all' ? '<button class="btn ghost reset">Search all categories</button>' : '<p class="hint">Try a building name, a code such as D1, or a room such as Ma101.</p>'}</li>`;
-      results.querySelector('.reset')?.addEventListener('click', () => { setFilter('all'); input.focus(); });
+      results.innerHTML = `<li class="empty"><p>No places match “${esc(q)}”.</p>
+        <p class="hint">Try a building name, a code such as D1, a room such as Ma101, or what you need, like printing or coffee.</p>
+        <div class="empty-actions"><button class="btn ghost browse">Browse all places</button>${narrowed() ? '<button class="btn ghost reset">Clear filters</button>' : ''}</div></li>`;
+      results.querySelector('.browse')!.addEventListener('click', () => { clearFilters(); input.value = ''; clearBtn.hidden = true; hideResults(); showList(); });
+      results.querySelector('.reset')?.addEventListener('click', () => { clearFilters(); input.focus(); });
     } else {
-      results.innerHTML = options.map((o, i) => o.kind === 'group'
+      const head = (text: string) => `<li class="res-head" role="presentation">${esc(text)}</li>`;
+      results.innerHTML = options.map((o, i) => (narrowed() && i === groups.length && inside.length ? head(`In ${filterLabel(filter)}${openOnly && openApplies() ? ', open now' : ''}`) : '')
+        + (narrowed() && outside.length && i === firstOutside ? head(inside.length ? 'Other categories' : `Nothing in ${filterLabel(filter)}${openOnly && openApplies() ? ' open now' : ''}. Other categories:`) : '')
+        + (o.kind === 'group'
         ? `<li><button role="option" data-i="${i}"><span class="cat-icon small g-${o.group}">${groupIcon(o.group)}</span>
-            <span><b>Show all: ${esc(groupLabel(o.group))}</b><small>${groupCount.get(o.group)} places</small></span></button></li>`
+            <span><b>Show all: ${esc(groupLabel(o.group))}</b><small>${plural(groupCount.get(o.group) ?? 0, 'place')}</small></span></button></li>`
         : `<li><button role="option" data-i="${i}">
             <span class="cat-icon small g-${groupOf(o.place)}">${placeIcon(o.place.category, o.place.kind)}</span>
             <span><b>${esc(o.place.name)}</b>${o.place.code ? ` <span class="code">${esc(o.place.code)}</span>` : ''}
-            <small>${esc([via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]].filter(Boolean).join(' · '))}</small></span></button></li>`).join('');
+            <small>${esc([via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]].filter(Boolean).join(' · '))}</small></span></button></li>`)).join('');
     }
     results.hidden = false;
     input.setAttribute('aria-expanded', 'true');
@@ -1554,11 +1568,15 @@ async function main() {
   const listBtn = $('#list-btn');
   function renderList() {
     const q = input.value.trim();
-    const pool = (q ? search(q, places, 100).map((h) => h.place) : places).filter(passes);
+    const found = q ? search(q, places, 100).map((h) => h.place) : places;
+    const pool = found.filter(passes);
     const body = $('#list-body');
     if (!pool.length) {
-      body.innerHTML = `<p class="list-empty">No places match${q ? ` “${esc(q)}”` : ''}.</p>${filter !== 'all' ? '<button class="btn ghost reset">Show all categories</button>' : ''}`;
-      body.querySelector('.reset')?.addEventListener('click', () => setFilter('all'));
+      const elsewhere = found.length; // matches hidden by the category or Open now
+      body.innerHTML = `<p class="list-empty">${q ? `No places match “${esc(q)}”` : 'Nothing to show'}${narrowed() ? ` in ${esc(filterLabel(filter))}${openOnly && openApplies() ? ' open now' : ''}` : ''}.</p>
+        ${narrowed() && elsewhere ? `<p class="list-empty">${plural(elsewhere, 'match', 'matches')} in other categories.</p>` : ''}
+        ${narrowed() ? '<button class="btn ghost reset">Clear filters</button>' : ''}`;
+      body.querySelector('.reset')?.addEventListener('click', clearFilters);
       return;
     }
     body.innerHTML = GROUPS.filter((g) => pool.some((p) => groupOf(p) === g.id)).map((g) => `
