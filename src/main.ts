@@ -11,7 +11,7 @@ import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompa
 import { avatarSvg } from './avatar';
 import { Router, type Route } from './route';
 import { routeSteps } from './steps';
-import { isOpenNow, openState, refreshLiveHours, resolveHours, weekRows } from './hours';
+import { isOpenNow, openState, refreshLiveHours, resolveHours, weekRows, type OpenState } from './hours';
 import { initAnalytics, track } from './analytics';
 import { FILTERS, GROUPS, PRIORITY, chipOf, filterLabel, groupLabel, groupOf, passesFilter, type Filter, type GroupId } from './categories';
 import type { LngLat, Place } from './types';
@@ -502,7 +502,30 @@ async function main() {
     const n = places.filter((p) => groupOf(p) !== 'entrance' && passes(p)).length;
     $('#filter-bar').hidden = !narrowed();
     $('#filter-status').textContent = !narrowed() ? '' : openOnly && openApplies() ? `${n} open now` : plural(n, 'place');
+    $('#toast').hidden = true; // an old message about the previous filter
+    const empty = $('#open-empty');
+    empty.hidden = !(openOnly && openApplies() && n === 0);
+    empty.innerHTML = empty.hidden ? '' : openNowEmpty();
   }
+  /** Open now found nothing: what opens next, and the ways back */
+  function openNowEmpty(): string {
+    const pool = places.filter((p) => groupOf(p) !== 'entrance' && inFilter(p));
+    const next = pool.map((p) => { const h = resolveHours(p.id); const st = h && openState(h); return { p, st }; })
+      .filter((x): x is { p: Place; st: Extract<OpenState, { kind: 'closed' }> } => x.st?.kind === 'closed' && x.st.inMin != null)
+      .sort((a, b) => a.st.inMin! - b.st.inMin!).slice(0, 3);
+    const unknown = pool.filter((p) => { const h = resolveHours(p.id); return !h || ['unknown', 'stale'].includes(openState(h).kind); }).length;
+    const label = chipOf(filter) === 'food' ? 'food places' : 'study places';
+    return `<p><b>Nothing here is open right now.</b>${unknown ? ` ${plural(unknown, 'place has', 'places have')} no listed hours, so ${unknown === 1 ? 'it' : 'they'} can't show as open.` : ''}</p>
+      ${next.length ? `<p class="next-head">Next to open</p><ul class="next-open">${next.map(({ p, st }) => `<li><button type="button" data-next="${p.id}"><b>${esc(p.name)}</b><span>opens ${esc(st.opens!)}</span></button></li>`).join('')}</ul>` : ''}
+      <div class="empty-actions"><button type="button" class="btn ghost show-all-open">Show all ${label}</button><button type="button" class="btn ghost clear-all">Clear filters</button></div>`;
+  }
+  $('#open-empty').addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const next = t.closest<HTMLElement>('[data-next]');
+    if (next) { const p = byId.get(next.dataset.next!); if (p) select(p, { source: 'list' }); return; }
+    if (t.closest('.show-all-open')) { setOpenOnly(false); layoutMarkers(); updateFilterStatus(); fitMatches(); if (!$('#list').hidden) renderList(); }
+    if (t.closest('.clear-all')) clearFilters();
+  });
   /** after a category change: frame its places (all of them, clear of the search bar and panel) */
   function fitMatches() {
     if (!map || navigating || filter === 'all') return;
@@ -521,10 +544,6 @@ async function main() {
     if (places.some((p) => groupOf(p) !== 'entrance' && passes(p))) fitMatches();
     if (!$('#list').hidden) renderList();
     if (input.value) showResults();
-    if (!openOnly || places.some(passes)) return;
-    toast(places.some((p) => inFilter(p) && resolveHours(p.id))
-      ? 'Nothing here with listed hours is open right now.'
-      : "None of these places have listed hours yet, so none can show as open.", 5000);
   });
   chips.addEventListener('click', (e) => {
     const c = (e.target as HTMLElement).closest<HTMLElement>('.chip');
@@ -933,10 +952,13 @@ async function main() {
     });
   }
 
+  const HOURS_MATTER = new Set<GroupId>(['food', 'library', 'sport', 'services']);
   /** open or closed now, and where the hours come from (src/data/hours.ts). Nothing at all without hours. */
   function hoursBlock(p: Place): string {
     const h = resolveHours(p.id);
-    if (!h) return '';
+    // where opening times matter, say plainly that we don't know them (never "closed")
+    if (!h) return HOURS_MATTER.has(groupOf(p)) ? `<div class="hours-wrap"><div class="hours"><span class="badge unknown">Hours not listed</span></div>
+      <p class="hours-src">We haven't found verified hours yet.${p.officialUrl ? ' Check the official page before you go.' : ''}</p></div>` : '';
     const s = openState(h);
     const [cls, text] =
       s.kind === 'open' ? (s.closes === null ? ['open', 'Open 24 hours'] : [s.soon ? 'soon' : 'open', `${s.soon ? 'Closing soon' : 'Open now'} · closes ${s.closes}`])
@@ -948,7 +970,7 @@ async function main() {
       : ` · Source: ${esc(h.source.name)}`;
     return `<div class="hours-wrap"><div class="hours"><span class="badge ${cls}">${esc(text)}</span></div>
       ${h.serving ? `<p class="hours-serving">${esc(h.serving)}</p>` : ''}
-      <p class="hours-src">Last checked: ${fmtDate(h.checked)}${src}</p></div>`;
+      <p class="hours-src">Hours checked ${fmtDate(h.checked)}${src}</p></div>`;
   }
   /** the coming week, under "View details" (not for hours that may have changed, or none listed at all) */
   function weekBlock(p: Place): string {
@@ -965,7 +987,7 @@ async function main() {
       const week = panelBody.querySelector('.week-wrap');
       if (week) week.outerHTML = weekBlock(current) || '<div class="week-wrap" hidden></div>';
     }
-    if (openOnly && openApplies()) { layoutMarkers(); if (!$('#list').hidden) renderList(); }
+    if (openOnly && openApplies()) { layoutMarkers(); updateFilterStatus(); if (!$('#list').hidden) renderList(); }
   }
   setInterval(() => { if (!document.hidden) refreshHours(); }, 60000);
   const fetchLive = () => refreshLiveHours().then((changed) => changed && refreshHours());
@@ -1028,7 +1050,7 @@ async function main() {
           ${p.officialUrl ? `<a class="official" href="${esc(p.officialUrl)}" target="_blank" rel="noopener">Official page ${icons.external}</a>` : ''}
         </div>
         <p class="small">${[
-          src ? `Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)}</a>${checked ? `, checked ${fmtDate(checked)}` : ''}` : checked ? `Last checked ${fmtDate(checked)}` : '',
+          src ? `Info checked${checked ? ` ${fmtDate(checked)}` : ''} · Source: <a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)}</a>` : checked ? `Info checked ${fmtDate(checked)}` : '',
           report ? `<a href="${esc(report)}"${report.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>Report a mistake</a>` : '', // hidden until a form or inbox is set in config.ts
         ].filter(Boolean).join(' · ')}</p>
       </div>`;
@@ -1355,6 +1377,16 @@ async function main() {
     return best?.name ?? null;
   }
 
+  /** opening hours against the walk: "may close before you arrive", or closed now */
+  function arrivalHours(p: Place, minutes: number): string {
+    const h = resolveHours(p.id);
+    if (!h) return '';
+    const st = openState(h);
+    if (st.kind === 'open' && st.leftMin != null && st.leftMin <= minutes + 5) return `<b>${esc(p.name)} closes at ${st.closes}: it may close before you arrive.</b>`;
+    if (st.kind === 'closed') return `${esc(p.name)} is closed now${st.opens ? ` (opens ${st.opens})` : ''}.`;
+    return '';
+  }
+
   let lastLocateError: number | null = null; // 1 refused, 2 no fix, 3 timed out
   /** why there's no position, as the start of a sentence that ends "…choose a starting point above." */
   const noFixReason = () => lastLocateError === 1 ? 'Location is turned off for Roam in this browser. You can allow it in the browser\'s site settings, or'
@@ -1428,6 +1460,7 @@ async function main() {
       r.hasSteps ? 'Includes steps.' : '',
       fromValue === 'me' && fix && fix.accuracy > config.weakGpsM ? `Your location is approximate (about ${Math.round(fix.accuracy)} m).` : '',
       currentRoom ? `Room ${esc(currentRoom)}: inside the building, follow the signs (the room's floor isn't verified).` : '',
+      arrivalHours(to, r.minutes),
     ].filter(Boolean);
     out.innerHTML = `<p class="route-sum">${icons.walk}<span><b>About ${r.minutes} min</b> · ${formatDistance(r.distanceM)} along paths</span></p>
       ${map ? `<div class="route-go"><button class="btn primary nav-start">${icons.directions}<span>Start</span></button></div>` : ''}

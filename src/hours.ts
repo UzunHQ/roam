@@ -114,16 +114,24 @@ export function resolveHours(placeId: string, now = londonNow()): Resolved | nul
   const within = (h: HoursEntry, d: string) => h.from <= d && (!h.to || d <= h.to);
   const e = entries.find((h) => within(h, now.date)) ?? [...entries].sort((a, b) => (b.to ?? '9999').localeCompare(a.to ?? '9999'))[0];
   const stale = !within(e, now.date) || dayNumber(now.date) - dayNumber(e.checked) > STALE_DAYS;
+  // a holiday or a one-off change beats the usual week
+  const exceptionOn = (d: string) => e.exceptions?.find((x) => x.from <= d && d <= x.to);
+  const today = exceptionOn(now.date);
   return {
-    on: (d) => (within(e, d) ? e.weekly[dayOf(d)] : undefined),
-    source: e.source, checked: e.checked, live: false, stale, notes: e.notes, serving: e.serving, unknown: e.unknown,
+    on: (d) => {
+      const x = exceptionOn(d);
+      if (x) return x.closed ? [] : x.weekly?.[dayOf(d)];
+      return within(e, d) ? e.weekly[dayOf(d)] : undefined;
+    },
+    source: e.source, checked: e.checked, live: false, stale,
+    notes: today ? [today.label, e.notes].filter(Boolean).join(' · ') : e.notes, serving: e.serving, unknown: e.unknown,
   };
 }
 
 // ---------- open or closed ----------
 export type OpenState =
-  | { kind: 'open'; closes: string | null; soon: boolean } // closes null: open round the clock
-  | { kind: 'closed'; opens: string | null } // "10:00" (today), "Mon 08:00", or null: not listed
+  | { kind: 'open'; closes: string | null; soon: boolean; leftMin: number | null } // closes null: open round the clock; leftMin: minutes until it closes
+  | { kind: 'closed'; opens: string | null; inMin: number | null } // "10:00" (today), "Mon 08:00", or null: not listed; inMin: minutes until then
   | { kind: 'unknown' } // no hours listed for today: never counts as open
   | { kind: 'stale' }; // hours may have changed
 
@@ -145,8 +153,8 @@ export function openState(h: Resolved, now = londonNow()): OpenState {
     // back-to-back openings (open all day, days running) count as one
     let end = at.end;
     for (const s of spans) if (s.start <= end && s.end > end) end = s.end;
-    if (end - t >= 2 * 1440) return { kind: 'open', closes: null, soon: false };
-    return { kind: 'open', closes: toHHMM(end % 1440), soon: end - t <= SOON_MIN };
+    if (end - t >= 2 * 1440) return { kind: 'open', closes: null, soon: false, leftMin: null };
+    return { kind: 'open', closes: toHHMM(end % 1440), soon: end - t <= SOON_MIN, leftMin: end - t };
   }
   if (h.on(now.date) === undefined) return { kind: 'unknown' };
   // the next opening, unless a day with no listed hours comes first
@@ -154,9 +162,9 @@ export function openState(h: Resolved, now = londonNow()): OpenState {
     const date = addDays(now.date, i);
     if (h.on(date) === undefined) break;
     const next = spans.find((s) => s.day === i && s.start > t);
-    if (next) return { kind: 'closed', opens: i === 0 ? toHHMM(next.start) : `${DAY_NAME[dayOf(date)]} ${toHHMM(next.start - i * 1440)}` };
+    if (next) return { kind: 'closed', opens: i === 0 ? toHHMM(next.start) : `${DAY_NAME[dayOf(date)]} ${toHHMM(next.start - i * 1440)}`, inMin: next.start - t };
   }
-  return { kind: 'closed', opens: null };
+  return { kind: 'closed', opens: null, inMin: null };
 }
 
 /** Only places with hours can be open: unknown (or out-of-date) hours never count. */

@@ -17,6 +17,9 @@ import type { Day } from '../types';
  *   says "Hours may have changed" instead of "Open now".
  * unknown: what the card says on a day with no listed hours ("Check with the gym"). Such a day is
  *   never "Open now". An entry with an empty `weekly` says only this.
+ * exceptions: dates that differ from the usual week (bank holidays, Christmas closure, reading
+ *   week), from the same kind of source. `closed: true` for closed all day, or `weekly` with the
+ *   hours that apply on those dates instead. `label` is shown on the card while it applies.
  */
 export interface HoursEntry {
   place: string; // id in data/places.json
@@ -29,6 +32,7 @@ export interface HoursEntry {
   notes?: string;
   serving?: string; // a short line on the card under the open/closed badge, e.g. meal times
   unknown?: string;
+  exceptions?: { from: string; to: string; label: string; closed?: boolean; weekly?: Partial<Record<Day, [string, string][]>> }[];
 }
 
 const LIBCAL = { name: 'LibCal', url: 'https://roehampton.libcal.com/hours/' };
