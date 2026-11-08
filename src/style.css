@@ -168,6 +168,8 @@ svg { display: block; flex: none; }
 .results small, .list small { display: block; color: var(--muted); font-size: 13px; }
 .results .empty { padding: 10px 12px; }
 .results .empty p { margin: 0 0 8px; }
+.facilities { margin: 8px 0; font-size: 14px; }
+.off-campus { padding: 1px 7px; border-radius: 8px; background: var(--unknown-bg); font-weight: 750; }
 .room-line { display: flex; flex-direction: column; gap: 2px; margin: 0 0 10px; padding: 10px 12px; border-radius: 14px; background: var(--unknown-bg); font-size: 14px; }
 .room-line b { font-size: 15px; }
 .room-line small { color: var(--muted); }
@@ -247,6 +249,7 @@ svg { display: block; flex: none; }
 .g-services { --g: var(--g-services); }
 .g-faith { --g: var(--g-faith); }
 .g-outdoors { --g: var(--g-outdoors); }
+.g-nearby { --g: #5b7fa6; } /* a calm slate blue: off campus */
 .g-entrance { --g: #8b8578; }
 
 /* ---------- map controls ---------- */

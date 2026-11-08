@@ -1,5 +1,5 @@
 export type LngLat = [number, number];
-export type Category = 'building' | 'food' | 'sport' | 'entrance';
+export type Category = 'building' | 'food' | 'sport' | 'entrance' | 'nearby';
 export type College = 'digby-stuart' | 'froebel' | 'southlands' | null;
 export type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
@@ -42,6 +42,8 @@ export interface Place {
   services?: string[];
   /** extra search words for what a place offers ("printing", "lecture theatre"); only from a verified source */
   tags?: string[];
+  /** not on the Roehampton Lane campus (a hall down the road, a bus stop): walking routes don't cover it */
+  offCampus?: boolean;
   /** rooms whose spot inside has been checked (floor, which door). Only filled from a verified source. */
   rooms?: Record<string, { floor?: string; entrance?: string; note?: string; source: string; checked: string }>;
   accessibility?: { url: string; summary: string } | null;

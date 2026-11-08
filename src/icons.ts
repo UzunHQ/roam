@@ -41,6 +41,7 @@ export const icons = {
   external: svg('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>'),
   directions: svg('<path d="M12 2.8 21.2 12 12 21.2 2.8 12z"/><path d="M9 14v-2.5a1.5 1.5 0 0 1 1.5-1.5H15M13 8l2 2-2 2"/>'),
   back: svg('<path d="M15 5l-7 7 7 7"/>'),
+  bus: svg('<rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 18v2.5M16 18v2.5"/><circle cx="8.5" cy="14.5" r=".6"/><circle cx="15.5" cy="14.5" r=".6"/>'),
   swap: svg('<path d="M8 4v15M4 8l4-4 4 4M16 20V5M12 16l4 4 4-4"/>'),
   accessible: svg('<circle cx="12" cy="4.5" r="1.8"/><path d="M8 9h8M12 9v5h4l2 5"/><path d="M8.5 13a5 5 0 1 0 6.7 6.2"/>'),
   clock: svg('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
@@ -63,7 +64,7 @@ const byKind: Record<string, string> = {
   union: icons.union, faith: icons.faith, careers: icons.careers, security: icons.security, laundry: icons.laundry, post: icons.post,
   service: icons.service, cafe: icons.cafe, restaurant: icons.restaurant, bar: icons.bar, shop: icons.shop, parking: icons.parking,
   fountain: icons.fountain, garden: icons.garden, square: icons.square, monument: icons.monument, golf: icons.golf, coop: icons.coop, outdoors: icons.garden,
-  gym: icons.gym, court: icons.sport, field: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
+  'bus-stop': icons.bus, gym: icons.gym, court: icons.sport, field: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
 };
 
 export function placeIcon(category: string, kind: string): string {

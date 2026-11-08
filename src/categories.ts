@@ -10,6 +10,7 @@ export const GROUPS = [
   { id: 'services', label: 'Student services', short: 'Services' },
   { id: 'faith', label: 'Faith & prayer', short: 'Faith' },
   { id: 'outdoors', label: 'Outdoors & parking', short: 'Outdoors' },
+  { id: 'nearby', label: 'Nearby: bus stops and shops', short: 'Nearby' },
   { id: 'entrance', label: 'Campus entrances', short: 'Entrances' },
 ] as const;
 
@@ -21,6 +22,7 @@ export function groupOf(p: Place): GroupId {
   if (p.category === 'entrance') return 'entrance';
   if (p.category === 'food') return 'food';
   if (p.category === 'sport') return 'sport';
+  if (p.category === 'nearby') return 'nearby';
   if (OUTDOOR_KINDS.has(p.kind)) return 'outdoors';
   switch (p.kind) {
     case 'academic': return 'academic';
@@ -35,7 +37,7 @@ export const groupLabel = (id: GroupId) => GROUPS.find((g) => g.id === id)!.labe
 
 /** Higher wins when markers collide on screen. */
 export const PRIORITY: Record<GroupId, number> = {
-  library: 9, academic: 8, food: 7, sport: 7, services: 6, faith: 5, accommodation: 4, outdoors: 3, entrance: 2,
+  library: 9, academic: 8, food: 7, sport: 7, services: 6, faith: 5, accommodation: 4, outdoors: 3, nearby: 3, entrance: 2,
 };
 
 /** The category chips: a few broad filters, each covering one or more groups. */
@@ -45,6 +47,7 @@ export const FILTERS = [
   { id: 'living', label: 'Living', full: 'Living: halls of residence', groups: ['accommodation'], icon: 'accommodation' },
   { id: 'sport', label: 'Sport', full: 'Sport & fitness', groups: ['sport'], icon: 'sport' },
   { id: 'essentials', label: 'Essentials', full: 'Essentials: student services and faith spaces', groups: ['services', 'faith'], icon: 'services' },
+  { id: 'nearby', label: 'Nearby', full: 'Nearby: bus stops and shops just off campus', groups: ['nearby'], icon: 'nearby' },
 ] as const satisfies readonly { id: string; label: string; full: string; groups: readonly GroupId[]; icon: GroupId }[];
 
 export type FilterId = (typeof FILTERS)[number]['id'];

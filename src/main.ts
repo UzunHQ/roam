@@ -56,7 +56,7 @@ const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString(
 const COLLEGE: Record<string, string> = { 'digby-stuart': 'Digby Stuart', froebel: 'Froebel', southlands: 'Southlands' };
 /** icon for a whole category (chips, key, "show all" suggestions) */
 const groupIcon = (g: GroupId) =>
-  g === 'entrance' ? icons.entrance : placeIcon(g === 'food' ? 'food' : g === 'sport' ? 'sport' : 'building', g === 'services' ? 'service' : g);
+  g === 'entrance' ? icons.entrance : g === 'nearby' ? icons.bus : placeIcon(g === 'food' ? 'food' : g === 'sport' ? 'sport' : 'building', g === 'services' ? 'service' : g);
 
 $$('[data-icon]').forEach((el) => (el.innerHTML = icons[el.dataset.icon as keyof typeof icons] ?? ''));
 $$('.author').forEach((el) => (el.textContent = config.author));
@@ -418,7 +418,8 @@ async function main() {
       if (m.gate && m.offset[1] !== Math.round(lift)) { m.offset = [0, Math.round(lift)]; m.marker.setOffset(m.offset); }
       const sel = isSel(m);
       const filtered = off(m);
-      const tooFar = m.group === 'entrance' && z < 16.3;
+      // gates and off-campus context (bus stops, a shop) wait until you zoom in, unless Nearby is chosen
+      const tooFar = (m.group === 'entrance' || (m.group === 'nearby' && filter !== 'nearby')) && z < 16.3;
       // places outside the chosen category stay as faint context once you're zoomed in; matches always come first
       let show = sel || (!tooFar && (!filtered || z >= 16.6));
       m.el.classList.toggle('faded', filtered && !sel);
@@ -627,7 +628,8 @@ async function main() {
     }
     const keyRow = r(keyBtn);
     const bottom = hello ? hello.top : keyRow?.width ? keyRow.top : H;
-    return { l: 16, r: W - 16, t: $('#chips').getBoundingClientRect().bottom + 36, b: Math.min(bottom, H) - 12 };
+    // 24 px: a pin's touch target reaches 22 px either side of its point
+    return { l: 24, r: W - 24, t: $('#chips').getBoundingClientRect().bottom + 36, b: Math.min(bottom, H) - 12 };
   }
   // The home view is worked out once per screen size and then reused, so the ⛶ button brings back
   // exactly the opening view (closing the welcome card doesn't move the map either).
@@ -1047,7 +1049,7 @@ async function main() {
         <span class="cat-icon g-${g}">${placeIcon(p.category, p.kind)}</span>
         <div class="titles">
           <h2 id="panel-name" tabindex="-1">${esc(p.name)}</h2>
-          <p class="meta">${[p.code && `<span class="code">${esc(p.code)}</span>`, esc(groupLabel(g)), p.college && COLLEGE[p.college]].filter(Boolean).join(' · ')}</p>
+          <p class="meta">${[p.code && `<span class="code">${esc(p.code)}</span>`, esc(groupLabel(g)), p.college && COLLEGE[p.college], p.offCampus && '<span class="off-campus">Off campus</span>'].filter(Boolean).join(' · ')}</p>
         </div>
         <button class="icon-btn save" aria-pressed="${saved.has(p.id)}" aria-label="Save ${esc(p.name)}">${icons.bookmark}</button>
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
@@ -1063,6 +1065,7 @@ async function main() {
       <div id="details" class="details"${expanded ? '' : ' hidden'}>
         ${p.photo ? `<img class="photo" src="/${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy" decoding="async" width="1200" height="675">` : ''}
         ${p.services?.length ? `<ul class="services" aria-label="Services">${p.services.map((s, i) => `<li${i >= 4 ? ' hidden' : ''}>${esc(s)}</li>`).join('')}${p.services.length > 4 ? `<li><button class="more" aria-label="Show ${p.services.length - 4} more services">+${p.services.length - 4} more</button></li>` : ''}</ul>` : ''}
+        ${p.tags?.length ? `<p class="facilities"><b>Also here:</b> ${p.tags.map(esc).join(' · ')}</p>` : ''}
         ${weekBlock(p) || '<div class="week-wrap" hidden></div>'}
         ${p.accessibility ? `<p class="access"><a href="${esc(p.accessibility.url)}" target="_blank" rel="noopener">${icons.accessible}<span>${esc(p.accessibility.summary)}</span></a></p>` : ''}
         ${entranceInfo(p)}
@@ -1461,7 +1464,27 @@ async function main() {
       from = p;
       fromName = p.category === 'entrance' ? `the ${p.name}` : p.name;
     }
-    const r = router.route(Array.isArray(from) ? from : routeTarget(from), routeTarget(to), footprints);
+    // off campus (a hall down the road, a bus stop): the walking network stops at the campus wall
+    // Off campus (a hall down the road, a bus stop): the walking network stops at the campus wall.
+    // Right by a gate, the route goes to that gate and says how far the rest is; further away,
+    // Roam says so and leaves that part to a street map.
+    let rTo = to;
+    let offNote = '';
+    const offPlace = to.offCampus ? to : !Array.isArray(from) && from.offCampus ? from : null;
+    if (offPlace) {
+      const gates = places.filter((x) => x.category === 'entrance');
+      const near = gates.reduce((a, b) => (distanceM(a.position, offPlace.position) <= distanceM(b.position, offPlace.position) ? a : b));
+      const gap = distanceM(near.position, offPlace.position);
+      if (gap > 200 || near.id === (Array.isArray(from) ? '' : from.id) || near.id === to.id) {
+        offerGate(out, `${esc(offPlace.name)} is off campus, and Roam's walking routes only cover the campus. It's about ${formatDistance(gap)} in a straight line from the ${esc(near.name)}; use a street map for that part.`);
+        return;
+      }
+      offNote = offPlace === to
+        ? `The route ends at the ${esc(near.name)}. ${esc(to.name)} is off campus, about ${formatDistance(gap)} from there in a straight line.`
+        : `${esc(offPlace.name)} is off campus: the route starts at the ${esc(near.name)}, about ${formatDistance(gap)} from it in a straight line.`;
+      if (offPlace === to) rTo = near; else { from = near; routeFrom = near; fromName = `the ${near.name}`; }
+    }
+    const r = router.route(Array.isArray(from) ? from : routeTarget(from), routeTarget(rTo), footprints);
     if (!r) {
       offerGate(out, 'We couldn\'t find a mapped walking route between these two places.');
       return;
@@ -1473,11 +1496,11 @@ async function main() {
       from: fromName ?? (picked ? 'the spot you picked' : null),
       startHopM: r.startHop.length === 2 ? distanceM(r.startHop[0], r.startHop[1]) : 0,
       dest: destName(to),
-      arrive: r.endsAt === 'nearest-path' ? `You're by ${destName(to)}. ${to.footprintId ? 'Its entrance isn\'t verified yet.' : ''}`.trim() : `Arrive at ${destName(to)}.`,
+      arrive: offNote && rTo !== to ? `Arrive at the ${rTo.name}; ${to.name} is about ${formatDistance(distanceM(rTo.position, to.position))} away, off campus.` : r.endsAt === 'nearest-path' ? `You're by ${destName(to)}. ${to.footprintId ? 'Its entrance isn\'t verified yet.' : ''}`.trim() : `Arrive at ${destName(to)}.`,
       landmark: (pt) => landmarkAt(pt, new Set([to.id, routeFrom?.id ?? ''])),
     });
     const notes = [
-      endNote(r, to),
+      offNote || endNote(r, to),
       r.hasSteps ? 'Includes steps.' : '',
       fromValue === 'me' && fix && fix.accuracy > config.weakGpsM ? `Your location is approximate (about ${Math.round(fix.accuracy)} m).` : '',
       currentRoom ? `Room ${esc(currentRoom)}: inside the building, follow the signs (the room's floor isn't verified).` : '',
@@ -1887,7 +1910,7 @@ async function main() {
     const d = distanceTo(p);
     return `<li><button data-id="${p.id}"><span class="cat-icon small g-${g}">${placeIcon(p.category, p.kind)}</span>
       <span class="row-main"><b>${esc(p.name)}</b>${p.code ? ` <span class="code">${esc(p.code)}</span>` : ''}
-      <small>${esc([groupLabel(g), p.college && COLLEGE[p.college]].filter(Boolean).join(' · '))}</small></span>
+      <small>${esc([groupLabel(g), p.college && COLLEGE[p.college], p.offCampus && 'Off campus'].filter(Boolean).join(' · '))}</small></span>
       <span class="row-side">${statusBadge(p)}${d != null ? `<small>${formatDistance(d)}</small>` : ''}</span></button></li>`;
   }
   function renderList() {

@@ -50,11 +50,13 @@ const SYNONYMS: Record<string, string[]> = {
   printer: ['printing'], printers: ['printing'], print: ['printing'], copier: ['printing'], photocopy: ['printing'], photocopier: ['printing'],
   toilet: ['toilets', 'wc'], toilets: ['wc'], loo: ['toilets', 'wc'], wc: ['toilets'], bathroom: ['toilets', 'wc'],
   coffee: ['cafe'], tea: ['cafe'], latte: ['cafe', 'coffee'],
-  lecture: ['lecture theatre', 'auditorium'], lectures: ['lecture theatre', 'auditorium'], theatre: ['lecture theatre', 'auditorium'],
+  lecture: ['lecture theatre', 'lecture halls', 'auditorium'], lectures: ['lecture theatre', 'lecture halls', 'auditorium'], theatre: ['lecture theatre', 'auditorium'],
+  bike: ['bike storage', 'bicycle shelters'], bikes: ['bike storage', 'bicycle shelters'], bicycle: ['bike storage'], cycle: ['bike storage', 'bicycle shelters'],
+  aid: ['first aid'], defibrillator: ['first aid'], aed: ['first aid'], injury: ['first aid'],
   gym: ['fitness'], fitness: ['gym'], workout: ['gym', 'fitness'],
   nurse: ['medical', 'health'], doctor: ['medical', 'health'], gp: ['medical', 'health'], clinic: ['medical', 'health'],
   microwave: ['heat food', 'warm your own food'], heat: ['heat food', 'warm your own food'],
-  water: ['water fountain', 'water refill'], refill: ['water refill'],
+  refill: ['water refill'], drinking: ['water refill'],
   cash: ['cash machine', 'atm'], atm: ['cash machine'],
   parcel: ['parcels', 'post room'], parcels: ['post room'], package: ['parcels', 'post room'], post: ['post room'],
   wifi: ['wi fi'], pray: ['prayer'], mosque: ['prayer'], computer: ['computers'], pcs: ['computers'],
@@ -180,6 +182,7 @@ const GROUP_WORDS: Record<string, string[]> = {
   services: ['services', 'support', 'help', 'wellbeing', 'careers', 'security', 'health', 'doctor', 'gp', 'laundry', 'union', 'finance'],
   faith: ['faith', 'prayer', 'pray', 'chapel', 'chaplaincy', 'mosque', 'wudu', 'multifaith'],
   outdoors: ['outdoors', 'outdoor', 'outside', 'parking', 'car park', 'garden', 'fountain', 'square'],
+  nearby: ['nearby', 'bus', 'buses', 'bus stop', 'supermarket', 'groceries', 'off campus'],
 };
 
 export function matchingGroups(raw: string): string[] {

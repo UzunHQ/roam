@@ -56,6 +56,9 @@ Each place keeps the shape below. Only change what you've checked.
 | `footprintId` | filled in by the build script; you can override it with an id from the picker |
 | `officialUrl` | the official page shown as "Official page" on the card |
 | `services` | short list of what's there, from official sources (searchable; first four shown, then "+n more") |
+| `tags` | facilities found on official pages ("printers (ground and first floor)", "gender-neutral toilets"): searchable and shown as "Also here"; add the page to `sources` |
+| `offCampus` | `true` for places outside the campus (bus stops, a shop): category `nearby`, no walking route beyond the nearest gate |
+| `entrances`, `rooms` | checked doors and room details, see Directions; empty until verified |
 | `accessibility` | `{ "url", "summary" }`, a link to an access guide (currently AccessAble) |
 | `sources` | `[{ "url", "title", "checked": "2026-10-20" }]`. The first one is shown on the card. Keep these up to date. |
 
@@ -87,6 +90,8 @@ All hours live in `src/data/hours.ts`: weekly hours, the period they apply to (`
 3. Set `"photo": "photos/library.webp"` in `data/places.json`.
 
 Photos lazy-load when a card opens and are cached for offline use.
+
+Unverified data and gaps are listed in [TODO-data.md](TODO-data.md).
 
 ## Directions
 
