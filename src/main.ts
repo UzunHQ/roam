@@ -69,6 +69,10 @@ $$<HTMLAnchorElement>('[data-link]').forEach((a) => {
   a.hidden = !url;
 });
 initAnalytics();
+// the height you can actually see: smaller while a phone keyboard is up, so search results stay above it
+const setVisibleHeight = () => document.documentElement.style.setProperty('--vv-h', `${Math.round(window.visualViewport?.height ?? innerHeight)}px`);
+setVisibleHeight();
+window.visualViewport?.addEventListener('resize', setVisibleHeight);
 
 let toastTimer = 0;
 function toast(msg: string, time = 4500) {
@@ -306,7 +310,8 @@ async function main() {
   for (const p of places) {
     const group = groupOf(p);
     const el = document.createElement('button');
-    el.className = `pin g-${group}`;
+    el.className = `pin g-${group} hidden`; // shown by layoutMarkers once the map has loaded, never at made-up spots before
+    el.tabIndex = -1;
     el.setAttribute('aria-label', `${p.name}, ${groupLabel(group)}`);
     el.innerHTML = group === 'entrance'
       ? `<span class="gate">${icons.entrance}</span><span class="label">${esc(p.name)}</span>`
@@ -341,7 +346,8 @@ async function main() {
     const pts = places.filter((p) => p.college === college && p.category !== 'entrance').map((p) => p.position);
     const c: LngLat = [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
     const el = document.createElement('button');
-    el.className = `area-label area-${college}`;
+    el.className = `area-label area-${college} hidden`;
+    el.tabIndex = -1;
     el.innerHTML = `<span class="area-icon">${icons.campus}</span><span>${COLLEGE[college]}</span>`;
     el.setAttribute('aria-label', `${COLLEGE[college]} college: zoom in`);
     // straight to the college at street level (where building names take over)
@@ -363,8 +369,9 @@ async function main() {
 
   // Fewer markers when zoomed out, more detail when zoomed in. Runs on moveend only (not every
   // frame): greedy by category priority, the selected place and route start always show.
+  let mapReady = false;
   function layoutMarkers() {
-    if (!map) return;
+    if (!map || !mapReady) return; // before the map's first load, pins would sit against an unsettled camera
     const z = map.getZoom();
     document.body.classList.toggle('compact-pins', z < 16.6);
     document.body.classList.toggle('show-courts', z >= 18);
@@ -434,7 +441,7 @@ async function main() {
     }
   }
   map?.on('moveend', layoutMarkers);
-  map?.once('load', layoutMarkers);
+  map?.once('load', () => { mapReady = true; layoutMarkers(); });
   addEventListener('resize', () => layoutMarkers());
 
   // ---------- ambient: slow ripples on the larger ponds (CSS only; none in Reduced/Off or on low-end phones) ----------
@@ -807,6 +814,7 @@ async function main() {
   }
 
   function showFix(f: Fix) {
+    if (!$('#list').hidden) renderList(); // distances, and Nearest, now that we know where you are
     if (!map) return;
     cancelAnimationFrame(glide);
     shownPos = f.pos;
@@ -1759,6 +1767,12 @@ async function main() {
   type Option = { kind: 'place'; place: Place; room?: string } | { kind: 'group'; group: GroupId };
   let options: Option[] = [];
 
+  let announceTimer = 0;
+  /** a short polite message for screen readers, after typing pauses */
+  function announce(msg: string) {
+    clearTimeout(announceTimer);
+    announceTimer = window.setTimeout(() => { $('#sr-status').textContent = msg; }, 600);
+  }
   function hideResults() { results.hidden = true; input.setAttribute('aria-expanded', 'false'); }
   function plural(n: number, one: string, many = one + 's') { return `${n} ${n === 1 ? one : many}`; }
   /** a filter or "Open now" narrowing what you see */
@@ -1798,6 +1812,8 @@ async function main() {
     }
     results.hidden = false;
     input.setAttribute('aria-expanded', 'true');
+    const n = options.filter((o) => o.kind === 'place').length;
+    announce(n ? plural(n, 'result') : 'No results');
   }
   function pick(i: number) {
     const o = options[i];
@@ -1839,11 +1855,39 @@ async function main() {
 
   // ---------- list view (same data; works without the map) ----------
   const listBtn = $('#list-btn');
+  let listSort: 'az' | 'near' | 'open' = 'az';
+  /** straight-line distance from a fresh, decent fix on campus, or null */
+  const distanceTo = (p: Place) => (fix && !stale && fix.accuracy <= config.weakGpsM && distanceToBounds(fix.pos, doc.bounds) === 0 ? distanceM(fix.pos, p.position) : null);
+  /** open / closes soon / closed / hours unknown, for list rows (only where hours matter) */
+  function statusBadge(p: Place): string {
+    const h = resolveHours(p.id);
+    if (!h) return HOURS_MATTER.has(groupOf(p)) ? '<span class="badge unknown">Hours unknown</span>' : '';
+    const st = openState(h);
+    if (st.kind === 'open') return st.soon ? `<span class="badge soon">Closes ${st.closes}</span>` : '<span class="badge open">Open</span>';
+    if (st.kind === 'closed') return '<span class="badge closed">Closed</span>';
+    return '<span class="badge unknown">Hours unknown</span>';
+  }
+  const openRank = (p: Place) => { const h = resolveHours(p.id); const k = h ? openState(h).kind : 'none'; return k === 'open' ? 0 : k === 'closed' ? 1 : 2; };
+  /** a row: name and code, category and college, then open/closed and distance; the description waits for the card */
+  function listRow(p: Place): string {
+    const g = groupOf(p);
+    const d = distanceTo(p);
+    return `<li><button data-id="${p.id}"><span class="cat-icon small g-${g}">${placeIcon(p.category, p.kind)}</span>
+      <span class="row-main"><b>${esc(p.name)}</b>${p.code ? ` <span class="code">${esc(p.code)}</span>` : ''}
+      <small>${esc([groupLabel(g), p.college && COLLEGE[p.college]].filter(Boolean).join(' · '))}</small></span>
+      <span class="row-side">${statusBadge(p)}${d != null ? `<small>${formatDistance(d)}</small>` : ''}</span></button></li>`;
+  }
   function renderList() {
     const q = input.value.trim();
     const found = q ? search(q, places, 100).map((h) => h.place) : places;
     const pool = found.filter(passes);
     const body = $('#list-body');
+    // "Nearest" needs your location
+    const nearBtn = $<HTMLButtonElement>('.list-sort [data-sort=near]');
+    nearBtn.disabled = !fix;
+    nearBtn.title = fix ? '' : 'Share your location (Find me) to sort by distance';
+    if (listSort === 'near' && !fix) listSort = 'az';
+    $$('.list-sort [data-sort]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sort === listSort)));
     if (!pool.length) {
       const elsewhere = found.length; // matches hidden by the category or Open now
       body.innerHTML = `<p class="list-empty">${q ? `No places match “${esc(q)}”` : 'Nothing to show'}${narrowed() ? ` in ${esc(filterLabel(filter))}${openOnly && openApplies() ? ' open now' : ''}` : ''}.</p>
@@ -1852,12 +1896,43 @@ async function main() {
       body.querySelector('.reset')?.addEventListener('click', clearFilters);
       return;
     }
-    body.innerHTML = GROUPS.filter((g) => pool.some((p) => groupOf(p) === g.id)).map((g) => `
-      <h3>${g.label}</h3>
-      <ul>${pool.filter((p) => groupOf(p) === g.id).sort((a, b) => a.name.localeCompare(b.name)).map((p) => `
-        <li><button data-id="${p.id}"><span class="cat-icon small g-${g.id}">${placeIcon(p.category, p.kind)}</span>
-          <span><b>${esc(p.name)}</b>${p.code ? ` <span class="code">${esc(p.code)}</span>` : ''}
-          <small>${esc(p.description || (p.college ? COLLEGE[p.college] : ''))}</small></span></button></li>`).join('')}</ul>`).join('');
+    if (listSort === 'az' && !q) {
+      body.innerHTML = GROUPS.filter((g) => pool.some((p) => groupOf(p) === g.id)).map((g) => `
+        <h3>${g.label}</h3>
+        <ul>${pool.filter((p) => groupOf(p) === g.id).sort((a, b) => a.name.localeCompare(b.name)).map(listRow).join('')}</ul>`).join('');
+      return;
+    }
+    // a search keeps its best-first order under A–Z; Nearest and Open now first make one list
+    const sorted = listSort === 'near' ? [...pool].sort((a, b) => (distanceTo(a) ?? Infinity) - (distanceTo(b) ?? Infinity))
+      : listSort === 'open' ? [...pool].sort((a, b) => openRank(a) - openRank(b) || a.name.localeCompare(b.name))
+      : pool;
+    body.innerHTML = `<ul>${sorted.map(listRow).join('')}</ul>`;
+  }
+  $('.list-sort').addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-sort]');
+    if (!b || b.disabled) return;
+    listSort = b.dataset.sort as typeof listSort;
+    renderList();
+  });
+  // phones: the list is a sheet over the lower half of the map; the grip (or a swipe) makes it full height
+  const listEl = $('#list');
+  const grip = $('.list-grip');
+  function setListFull(full: boolean) {
+    listEl.classList.toggle('full', full);
+    grip.setAttribute('aria-expanded', String(full));
+    grip.setAttribute('aria-label', full ? 'Show less of the list' : 'Show more of the list');
+  }
+  grip.addEventListener('click', () => setListFull(!listEl.classList.contains('full')));
+  {
+    let y0 = 0, dy = 0, dragging = false;
+    grip.addEventListener('touchstart', (e) => { dragging = true; y0 = e.touches[0].clientY; dy = 0; }, { passive: true });
+    grip.addEventListener('touchmove', (e) => { if (dragging) dy = e.touches[0].clientY - y0; }, { passive: true });
+    grip.addEventListener('touchend', () => {
+      if (!dragging) return;
+      dragging = false;
+      if (dy < -40) setListFull(true);
+      else if (dy > 60) { if (listEl.classList.contains('full')) setListFull(false); else hideList(); }
+    });
   }
   function showList(note?: string) {
     renderList();
@@ -1865,13 +1940,18 @@ async function main() {
     n.hidden = !note;
     if (note) n.textContent = note;
     $('#list').hidden = false;
+    document.body.classList.add('list-open');
     listBtn.setAttribute('aria-pressed', 'true');
     listBtn.setAttribute('aria-label', 'Show map');
     listBtn.innerHTML = icons.map;
   }
   function hideList() {
     if (!map) return; // without a map the list is the whole app
+    const hadFocus = $('#list').contains(document.activeElement);
     $('#list').hidden = true;
+    document.body.classList.remove('list-open');
+    setListFull(false);
+    if (hadFocus) listBtn.focus(); // focus goes back to the button that opened it
     listBtn.setAttribute('aria-pressed', 'false');
     listBtn.setAttribute('aria-label', 'Show list of places');
     listBtn.innerHTML = icons.list;

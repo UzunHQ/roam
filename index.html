@@ -69,7 +69,14 @@
     <div id="map" role="application" aria-label="Campus map. Use the list view for a text version."></div>
 
     <section id="list" class="list" aria-label="List of places" hidden>
+      <button type="button" class="list-grip" aria-label="Show more of the list" aria-expanded="false"></button>
       <p id="list-note" class="list-note" hidden></p>
+      <div class="list-sort" role="group" aria-label="Sort places">
+        <span>Sort</span>
+        <button type="button" data-sort="az" aria-pressed="true">A–Z</button>
+        <button type="button" data-sort="near" aria-pressed="false">Nearest</button>
+        <button type="button" data-sort="open" aria-pressed="false">Open now first</button>
+      </div>
       <div id="list-body"></div>
     </section>
 
@@ -155,6 +162,9 @@
       </div>
       <p>Unofficial student project - not affiliated with the University of Roehampton · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</p>
     </footer>
+
+    <!-- search results counted for screen readers -->
+    <div id="sr-status" class="sr-only" role="status" aria-live="polite"></div>
 
     <noscript><p class="noscript">Roam needs JavaScript to show the campus map.</p></noscript>
     <script type="module" src="/src/main.ts"></script>

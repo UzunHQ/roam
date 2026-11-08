@@ -145,8 +145,21 @@ svg { display: block; flex: none; }
 .results {
   list-style: none; margin: 6px 0 0; padding: 6px;
   background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
-  max-height: min(55vh, 420px); overflow: auto;
+  /* --vv-h: the visible height (smaller while the phone keyboard is up), set in main.ts */
+  max-height: min(calc(var(--vv-h, 100vh) - 150px), 55vh, 420px); overflow: auto;
 }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.row-main { flex: 1; min-width: 0; }
+.row-side { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: none; text-align: right; }
+.row-side .badge { font-size: 12.5px; padding: 2px 8px; }
+.list-sort { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 6px 0; font-size: 13px; font-weight: 700; color: var(--muted); }
+.list .list-sort button {
+  width: auto; min-height: 36px; padding: 0 12px; border-radius: 18px; border: 2px solid var(--line); background: var(--surface);
+  font-size: 13px; font-weight: 700; color: var(--text); display: inline-flex; gap: 0;
+}
+.list .list-sort button[aria-pressed=true] { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); }
+.list .list-sort button:disabled { opacity: 0.45; cursor: not-allowed; }
+.list-grip { display: none; }
 .results button, .list button {
   width: 100%; min-height: 50px; display: flex; align-items: center; gap: 12px;
   padding: 6px 10px; border: 0; border-radius: 14px; background: transparent; text-align: left;
@@ -614,6 +627,17 @@ svg { display: block; flex: none; }
   .no-map:not(.panel-open) .detail-hint { display: none; }
 }
 @media (max-width: 899px) {
+  /* the list is a sheet over the lower half of the map; full height with the grip */
+  body:not(.no-map) .list { top: 46vh; transition: top 0.2s var(--ease); padding-top: 0; }
+  body:not(.no-map) .list.full { top: calc(var(--top-b, 118px) + 8px); }
+  body:not(.no-map) .list-grip {
+    display: block; position: sticky; top: 0; z-index: 1; width: 100%; height: 26px; margin: 0; padding: 0; border: 0; background: var(--surface); cursor: grab;
+  }
+  /* the essential controls ride above the half sheet (Find me, compass, whole campus); none over the full one */
+  body.list-open:not(.no-map) .controls { bottom: calc(54vh + 10px); }
+  body.list-open #zoom-in, body.list-open #zoom-out, body.list-open #dim, body.list-open .key-btn { display: none; }
+  body.list-open:has(.list.full) .controls { opacity: 0; pointer-events: none; }
+  body:not(.no-map) .list-grip::before { content: ''; display: block; width: 40px; height: 5px; margin: 10px auto 0; border-radius: 3px; background: var(--line); }
   .no-map .list { top: calc(var(--top-b, 118px) + 8px); border-radius: 22px 22px 0 0; }
   .no-map .panel { max-height: 86vh; }
 }
