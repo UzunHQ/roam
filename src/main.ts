@@ -872,7 +872,9 @@ async function main() {
 
   function openPanel() {
     if (panel.hidden) {
-      panelOpener = document.activeElement as HTMLElement;
+      // a search result or list row is gone once picked: then focus goes back to the search box
+      const a = document.activeElement as HTMLElement;
+      panelOpener = a?.closest('#results, #list') ? (a.closest('#results') || !map ? input : listBtn) : a;
       panel.hidden = false;
       void panel.offsetHeight; // start the transition from the closed position
     }

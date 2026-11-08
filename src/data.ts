@@ -7,13 +7,32 @@ import type { Place, PlacesDoc } from './types';
 
 export { placesUrl, campusUrl };
 
+/**
+ * Fetch JSON, giving up only when nothing has arrived for 20 s: a slow phone connection (sharing
+ * its bandwidth with the map download) still gets there, a dead one gets the retry message.
+ */
 async function getJSON<T>(url: string): Promise<T> {
   const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 15000); // never an endless spinner
+  let timer = setTimeout(() => ctrl.abort(), 20000);
+  const alive = () => { clearTimeout(timer); timer = setTimeout(() => ctrl.abort(), 20000); };
   try {
     const r = await fetch(url, { signal: ctrl.signal });
     if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
-    return (await r.json()) as T;
+    if (!r.body) return (await r.json()) as T;
+    const reader = r.body.getReader();
+    const parts: Uint8Array[] = [];
+    let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      parts.push(value);
+      size += value.length;
+      alive();
+    }
+    const all = new Uint8Array(size);
+    let at = 0;
+    for (const part of parts) { all.set(part, at); at += part.length; }
+    return JSON.parse(new TextDecoder().decode(all)) as T;
   } finally {
     clearTimeout(timer);
   }
