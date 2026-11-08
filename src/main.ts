@@ -52,6 +52,9 @@ document.documentElement.classList.toggle('lite', lite);
 /** animation length, or 0 (jump) unless motion is Full */
 const ms = (d: number) => (motion() === 'full' ? d : 0);
 const isDesktop = () => innerWidth >= 900;
+/** a place's name inside a sentence: "the Library", "the Main entrance", but "Shaw House", "Froebel Gate" */
+const PROPER = /(House|Building|Hall|Court|Centre|Auditorium|Mausoleum|Chapel|Gate|Grove|Square|Diner|Costa|Londis.*)$/;
+const theName = (name: string) => (/^The /.test(name) ? name.replace(/^The /, 'the ') : PROPER.test(name) ? name : `the ${name}`);
 const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const COLLEGE: Record<string, string> = { 'digby-stuart': 'Digby Stuart', froebel: 'Froebel', southlands: 'Southlands' };
 /** icon for a whole category (chips, key, "show all" suggestions) */
@@ -1111,6 +1114,7 @@ async function main() {
   /** Bottom sheet: compact by default, taller with details. The handle and "View details" both toggle it. */
   function setExpanded(on: boolean) {
     panel.classList.toggle('expanded', on);
+    if (on) panel.classList.remove('route-peek');
     handle.setAttribute('aria-expanded', String(on));
     handle.setAttribute('aria-label', on ? 'Show less' : 'Show more');
     const details = panelBody.querySelector<HTMLElement>('#details');
@@ -1122,7 +1126,8 @@ async function main() {
   }
   const handle = $('.handle');
   handle.addEventListener('click', () => {
-    if (panelBody.querySelector('#details')) setExpanded(!panel.classList.contains('expanded'));
+    if (panel.classList.contains('route-peek')) panel.classList.remove('route-peek'); // the steps, full height
+    else if (panelBody.querySelector('#details')) setExpanded(!panel.classList.contains('expanded'));
   });
   // swipe the sheet: up shows more, down shows less (or closes)
   {
@@ -1144,7 +1149,8 @@ async function main() {
       panel.classList.remove('dragging');
       panel.style.transform = '';
       const hasDetails = !!panelBody.querySelector('#details');
-      if (dy < -40 && hasDetails) setExpanded(true);
+      if (dy < -40 && panel.classList.contains('route-peek')) panel.classList.remove('route-peek');
+      else if (dy < -40 && hasDetails) setExpanded(true);
       else if (dy > 70) { if (panel.classList.contains('expanded')) setExpanded(false); else closePanel(); }
     });
   }
@@ -1177,6 +1183,8 @@ async function main() {
   const placeQuery = (p: Place) => `?place=${encodeURIComponent(p.id)}${currentRoom && current?.id === p.id ? `&room=${encodeURIComponent(currentRoom)}` : ''}`;
   /** "Ma101, Mandela Building" or just the building */
   const destName = (p: Place) => (currentRoom && current?.id === p.id ? `${currentRoom}, ${p.name}` : p.name);
+  /** the same inside a sentence: "the Library", "Ma101, Mandela Building" */
+  const destInText = (p: Place) => (currentRoom && current?.id === p.id ? destName(p) : theName(p.name));
   /** what we know about the searched room: the building always, the inside only from checked data */
   function roomBlock(p: Place): string {
     if (!currentRoom) return '';
@@ -1398,7 +1406,7 @@ async function main() {
       if (skip.has(p.id) || p.category === 'entrance' || (p.footprintId && footprintToPlace.get(p.footprintId) !== p)) continue;
       const rings = p.footprintId ? outlines.get(p.footprintId) : null;
       const d = rings ? (rings.some((r) => touches(pt, r, 12)) ? 0 : Infinity) : distanceM(pt, p.position) <= 20 ? distanceM(pt, p.position) : Infinity;
-      if (d < (best?.d ?? Infinity)) best = { name: p.name.startsWith('The ') ? p.name.replace(/^The /, 'the ') : `the ${p.name}`, d };
+      if (d < (best?.d ?? Infinity)) best = { name: theName(p.name), d };
     }
     return best?.name ?? null;
   }
@@ -1464,7 +1472,7 @@ async function main() {
       if (!p) return;
       routeFrom = p;
       from = p;
-      fromName = p.category === 'entrance' ? `the ${p.name}` : p.name;
+      fromName = theName(p.name);
     }
     // off campus (a hall down the road, a bus stop): the walking network stops at the campus wall
     // Off campus (a hall down the road, a bus stop): the walking network stops at the campus wall.
@@ -1478,13 +1486,13 @@ async function main() {
       const near = gates.reduce((a, b) => (distanceM(a.position, offPlace.position) <= distanceM(b.position, offPlace.position) ? a : b));
       const gap = distanceM(near.position, offPlace.position);
       if (gap > 200 || near.id === (Array.isArray(from) ? '' : from.id) || near.id === to.id) {
-        offerGate(out, `${esc(offPlace.name)} is off campus, and Roam's walking routes only cover the campus. It's about ${formatDistance(gap)} in a straight line from the ${esc(near.name)}; use a street map for that part.`);
+        offerGate(out, `${esc(offPlace.name)} is off campus, and Roam's walking routes only cover the campus. It's about ${formatDistance(gap)} in a straight line from ${esc(theName(near.name))}; use a street map for that part.`);
         return;
       }
       offNote = offPlace === to
-        ? `The route ends at the ${esc(near.name)}. ${esc(to.name)} is off campus, about ${formatDistance(gap)} from there in a straight line.`
-        : `${esc(offPlace.name)} is off campus: the route starts at the ${esc(near.name)}, about ${formatDistance(gap)} from it in a straight line.`;
-      if (offPlace === to) rTo = near; else { from = near; routeFrom = near; fromName = `the ${near.name}`; }
+        ? `The route ends at ${esc(theName(near.name))}. ${esc(to.name)} is off campus, about ${formatDistance(gap)} from there in a straight line.`
+        : `${esc(offPlace.name)} is off campus: the route starts at ${esc(theName(near.name))}, about ${formatDistance(gap)} from it in a straight line.`;
+      if (offPlace === to) rTo = near; else { from = near; routeFrom = near; fromName = theName(near.name); }
     }
     const r = router.route(Array.isArray(from) ? from : routeTarget(from), routeTarget(rTo), footprints);
     if (!r) {
@@ -1492,13 +1500,14 @@ async function main() {
       return;
     }
     rememberFrom(fromValue);
+    if (!isDesktop()) { setExpanded(false); panel.classList.add('route-peek'); panel.scrollTop = 0; }
     drawRoute(r, from);
     lastRoute = r;
     const steps = routeSteps([...r.coordinates], {
       from: fromName ?? (picked ? 'the spot you picked' : null),
       startHopM: r.startHop.length === 2 ? distanceM(r.startHop[0], r.startHop[1]) : 0,
-      dest: destName(to),
-      arrive: offNote && rTo !== to ? `Arrive at the ${rTo.name}; ${to.name} is about ${formatDistance(distanceM(rTo.position, to.position))} away, off campus.` : r.endsAt === 'nearest-path' ? `You're by ${destName(to)}. ${to.footprintId ? 'Its entrance isn\'t verified yet.' : ''}`.trim() : `Arrive at ${destName(to)}.`,
+      dest: destInText(to),
+      arrive: offNote && rTo !== to ? `Arrive at ${theName(rTo.name)}; ${to.name} is about ${formatDistance(distanceM(rTo.position, to.position))} away, off campus.` : r.endsAt === 'nearest-path' ? `You're by ${destInText(to)}. ${to.footprintId ? 'Its entrance isn\'t verified yet.' : ''}`.trim() : `Arrive at ${destInText(to)}.`,
       landmark: (pt) => landmarkAt(pt, new Set([to.id, routeFrom?.id ?? ''])),
     });
     const notes = [
@@ -1590,6 +1599,7 @@ async function main() {
     requestAnimationFrame(() => fitPoints(all, { pitch: tilt(40), maxZoom: 18, side: 48 }));
   }
   function clearRoute() {
+    panel.classList.remove('route-peek');
     routeShown = false;
     routeFrom = null;
     routeEnd = null;

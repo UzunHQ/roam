@@ -55,7 +55,7 @@ export function routeSteps(
     dest: string;
     /** what the last line says about where it ends */
     arrive: string;
-    /** a mapped place right by a point, if any ("the Library") */
+    /** a mapped place right by a point, if any ("the Library", "Shaw House") */
     landmark?: (p: LngLat) => string | null;
   },
 ): Step[] {
@@ -77,10 +77,16 @@ export function routeSteps(
   if (opts.startHopM > 15) steps.push({ text: `Walk to the nearest path, about ${formatDistance(opts.startHopM)}.`, distanceM: opts.startHopM });
   legs.forEach((leg, i) => {
     const dist = formatDistance(leg.d);
-    if (i === 0) { steps.push({ text: `Head ${compass(leg.head)} for ${dist}.`, distanceM: leg.d }); return; }
+    if (i === 0) {
+      // a building you can see beats a compass point; the compass is the fallback
+      const ahead = opts.landmark?.(leg.to) ?? (legs.length === 1 ? opts.dest : null);
+      steps.push({ text: ahead ? `Head towards ${ahead} for ${dist}.` : `Head ${compass(leg.head)} for ${dist}.`, distanceM: leg.d });
+      return;
+    }
     const turn = ((leg.head - legs[i - 1].head + 540) % 360) - 180;
     const near = opts.landmark?.(leg.from);
-    steps.push({ text: `${turnWord(turn)}${near ? ` by ${near}` : ''} and walk ${dist}.`, distanceM: leg.d });
+    const ahead = i < legs.length - 1 ? opts.landmark?.(leg.to) : null;
+    steps.push({ text: `${turnWord(turn)}${near ? ` by ${near}` : ''} and walk ${dist}${ahead && ahead !== near ? ` towards ${ahead}` : ''}.`, distanceM: leg.d });
   });
   steps.push({ text: opts.arrive, distanceM: 0 });
   return steps;

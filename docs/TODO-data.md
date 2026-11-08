@@ -51,4 +51,4 @@ LibCal shows no hours from 20 Dec 2026 yet, and no 2026 festive notice was found
 - [ ] Londis (Aubyn Square): from OpenStreetMap, no hours. Is there a closer supermarket on Roehampton Lane? Not in OSM.
 - [ ] Positions taken from the official map (±20 m) or estimates: Dorothy Buchanan, Chapman Hall, Elm Grove, The Base, MUGA, the car parks, Convent Parlour, the prayer rooms, The Reef, Digby Square, the cafés and the gates. Re-pick on site.
 - [ ] No source at all: Fountain, Garden, Froebel car park, Froebel Gate car park.
-- [ ] "Fountain" lists "Water fountain" as a service: check it's a drinking fountain and not just the ornamental one, or remove it.
+- [ ] Fountain (Froebel garden): to verify on campus whether it is a drinking fountain. Until then the "Water fountain" name was removed, so a search for water doesn't send anyone to it.

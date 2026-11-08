@@ -492,6 +492,7 @@ svg { display: block; flex: none; }
 .handle { display: block; position: relative; width: 72px; height: 22px; margin: -4px auto 2px; padding: 0; border: 0; background: none; touch-action: none; }
 .handle::before { content: ""; position: absolute; left: 16px; right: 16px; top: 8px; height: 5px; border-radius: 3px; background: var(--line); }
 .panel.expanded { max-height: 86vh; }
+@media (max-width: 899px) { .panel.route-peek { max-height: 46vh; } } /* a route is drawn: half the screen for it */
 .panel.dragging { transition: none; }
 .p-head { display: flex; align-items: center; gap: 12px; }
 .p-head .back { margin-left: -8px; }
