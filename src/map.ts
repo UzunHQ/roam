@@ -1,3 +1,4 @@
+import 'maplibre-gl/dist/maplibre-gl.css';
 import * as maplibregl from 'maplibre-gl';
 import { type ExpressionSpecification as Expr, type LayerSpecification, type Map as MLMap, type StyleSpecification } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
@@ -8,6 +9,8 @@ import { ROOFS, isPitched } from './roofs';
 maplibregl.setWorkerUrl(workerUrl);
 
 export type Theme = 'light' | 'dark';
+/** main.ts loads this module on demand and takes MapLibre from here */
+export { maplibregl };
 
 // Pastel daytime miniature: sage grass, cream footpaths, grey roads, turquoise water.
 // Walls are warm cream; roofs carry a pastel colour per college (Digby Stuart blue,

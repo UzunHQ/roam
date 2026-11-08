@@ -1,10 +1,8 @@
-import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
-import * as maplibregl from 'maplibre-gl';
-import { type EaseToOptions, type Map as MLMap } from 'maplibre-gl';
+import type { EaseToOptions, LngLat as MLLngLat, Map as MLMap, Marker as MLMarker, MarkerOptions } from 'maplibre-gl';
 import { config } from './config';
 import { loadData } from './data';
-import { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, pickHalf, selectBuilding, setGeoJSON, setXray, type Theme } from './map';
+import type { Theme } from './map';
 import { icons, placeIcon } from './icons';
 import { matchingGroups, parseRoom, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
@@ -176,6 +174,21 @@ settings.addEventListener('click', (e) => { if (e.target === settings) closeDial
 $('#settings-btn').addEventListener('click', openSettings);
 
 // ---------- start ----------
+// The map (MapLibre, about 250 KB compressed, and our 3D style) is its own file. It starts loading
+// now, alongside the campus data, and is skipped entirely where WebGL2 is missing: the list then
+// carries the app. If it fails to load, the list takes over too.
+const hasWebGL2 = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } })();
+const mapModule = hasWebGL2 ? import('./map').catch((err) => { console.error(err); return null; }) : Promise.resolve(null);
+
+/** stands in for map markers when there is no map: every call does nothing */
+class NoMarker {
+  constructor(_o?: MarkerOptions) {}
+  setLngLat() { return this; }
+  addTo() { return this; }
+  remove() { return this; }
+  setOffset() { return this; }
+}
+
 main().catch((err) => {
   console.error(err);
   const l = $('#loading');
@@ -187,7 +200,9 @@ main().catch((err) => {
 });
 
 async function main() {
-  const { doc, places, campus, walls, paths } = await loadData();
+  const [{ doc, places, campus, walls, paths }, mapMod] = await Promise.all([loadData(), mapModule]);
+  const { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, pickHalf, selectBuilding, setGeoJSON, setXray } = mapMod ?? ({} as NonNullable<typeof mapMod>);
+  const Marker = (mapMod?.maplibregl.Marker ?? NoMarker) as unknown as new (o?: MarkerOptions) => MLMarker;
   const byId = new Map(places.map((p) => [p.id, p]));
   const groupCount = new Map<GroupId, number>();
   for (const p of places) groupCount.set(groupOf(p), (groupCount.get(groupOf(p)) ?? 0) + 1);
@@ -232,9 +247,7 @@ async function main() {
   // ---------- map (falls back to the list if WebGL is unavailable) ----------
   const theme = (): Theme => themeChoice();
   let map: MLMap | null = null;
-  // MapLibre needs WebGL2: check first, so a browser without it goes straight to the list
-  const hasWebGL2 = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } })();
-  if (hasWebGL2) {
+  if (mapMod) {
     try {
       map = createMap({ container: 'map', campus, walls, bounds: doc.bounds, theme: theme() });
     } catch (err) {
@@ -298,7 +311,7 @@ async function main() {
   const passes = (p: Place) => inFilter(p) && (!openOnly || !openApplies() || isOpenNow(p.id));
 
   // ---------- markers ----------
-  type M = { p: Place; group: GroupId; marker: maplibregl.Marker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; gate: boolean };
+  type M = { p: Place; group: GroupId; marker: MLMarker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; gate: boolean };
   const markers = new Map<string, M>();
   // a named entrance's pin stands over its garden gate in the wall (data/walls.geojson)
   const gateAt = new Map<string, LngLat>();
@@ -318,7 +331,7 @@ async function main() {
       : `<span class="dot">${placeIcon(p.category, p.kind)}</span><span class="label"><span class="lname">${esc(p.name)}</span>${p.code ? `<span class="lcode">${esc(p.code)}</span>` : ''}</span>`;
     el.addEventListener('click', (e) => { e.stopPropagation(); select(p, { source: 'marker' }); });
     const at = gateAt.get(p.id) ?? p.position;
-    const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(at);
+    const marker = new Marker({ element: el, anchor: 'center' }).setLngLat(at);
     if (map) marker.addTo(map);
     markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0, at, gate: gateAt.has(p.id) });
   }
@@ -352,7 +365,7 @@ async function main() {
     el.setAttribute('aria-label', `${COLLEGE[college]} college: zoom in`);
     // straight to the college at street level (where building names take over)
     el.addEventListener('click', (e) => { e.stopPropagation(); setFollowing(false); camMove({ center: c, zoom: 16.9, pitch: tilt(50), duration: ms(600) }); });
-    const marker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(c);
+    const marker = new Marker({ element: el, anchor: 'center' }).setLngLat(c);
     if (map) marker.addTo(map);
     return { el, c };
   });
@@ -364,7 +377,7 @@ async function main() {
     el.className = 'court-label';
     el.setAttribute('aria-hidden', 'true');
     el.textContent = String(f.properties.name);
-    new maplibregl.Marker({ element: el, anchor: 'center', pitchAlignment: 'map', rotationAlignment: 'map' }).setLngLat(f.geometry.coordinates as LngLat).addTo(map);
+    new Marker({ element: el, anchor: 'center', pitchAlignment: 'map', rotationAlignment: 'map' }).setLngLat(f.geometry.coordinates as LngLat).addTo(map);
   }
 
   // Fewer markers when zoomed out, more detail when zoomed in. Runs on moveend only (not every
@@ -467,7 +480,7 @@ async function main() {
       el.setAttribute('aria-hidden', 'true');
       el.style.setProperty('--d', `${i * 1.4}s`);
       el.innerHTML = '<i></i><i></i>';
-      new maplibregl.Marker({ element: el, pitchAlignment: 'map', rotationAlignment: 'map' }).setLngLat(p.c).addTo(map!);
+      new Marker({ element: el, pitchAlignment: 'map', rotationAlignment: 'map' }).setLngLat(p.c).addTo(map!);
     });
     // ripples keep a real-world size: about 45 m across
     const rippleSize = () => document.documentElement.style.setProperty('--ripple', `${Math.round(60 * 2 ** (map!.getZoom() - 17))}px`);
@@ -618,7 +631,7 @@ async function main() {
   }
   // The home view is worked out once per screen size and then reused, so the ⛶ button brings back
   // exactly the opening view (closing the welcome card doesn't move the map either).
-  let home: { size: string; center: maplibregl.LngLat; zoom: number } | null = null;
+  let home: { size: string; center: MLLngLat; zoom: number } | null = null;
   function showWholeCampus(duration = 500) {
     if (!map) return;
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
@@ -644,7 +657,7 @@ async function main() {
   avatarEl.setAttribute('aria-hidden', 'true');
   avatarEl.innerHTML = `<div class="arrow" hidden></div><div class="halo"></div>${avatarSvg}`;
   // feet on the spot: the SVG's ground line is 2 px above its bottom edge
-  const avatar = new maplibregl.Marker({ element: avatarEl, anchor: 'bottom', offset: [0, 2] });
+  const avatar = new Marker({ element: avatarEl, anchor: 'bottom', offset: [0, 2] });
 
   function drawHeading() {
     const arrow = avatarEl.querySelector<HTMLElement>('.arrow')!;
@@ -907,7 +920,7 @@ async function main() {
     const box = opts.box ?? { l: a.left + side, r: Math.min(a.right, W) - side, t: a.top + 30, b: Math.min(a.bottom, H) - 8 };
     const zero = { top: 0, bottom: 0, left: 0, right: 0 };
     const before = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), padding: map.getPadding() };
-    const b = new maplibregl.LngLatBounds(points[0], points[0]);
+    const b = new mapMod!.maplibregl.LngLatBounds(points[0], points[0]);
     for (const p of points) b.extend(p);
     map.jumpTo({ center: b.getCenter(), zoom: opts.maxZoom ?? 18, pitch: opts.pitch ?? map.getPitch(), bearing: opts.bearing ?? map.getBearing(), padding: zero });
     /** centre the points in the box at this zoom (a few steps: the tilt skews it); true if they fit */
@@ -1152,7 +1165,7 @@ async function main() {
   doorEl.className = 'door-pin';
   doorEl.setAttribute('aria-hidden', 'true');
   doorEl.innerHTML = icons.entrance;
-  const doorMarker = new maplibregl.Marker({ element: doorEl, anchor: 'bottom' });
+  const doorMarker = new Marker({ element: doorEl, anchor: 'bottom' });
   const showDoor = (p: Place | null) => { if (map && p?.entrance) doorMarker.setLngLat(p.entrance).addTo(map); else doorMarker.remove(); };
 
   /** ?place=…, plus &room=… when a room was searched for */
@@ -1216,8 +1229,8 @@ async function main() {
     el.textContent = text;
     return el;
   };
-  const startMarker = new maplibregl.Marker({ element: pinEl('start', 'A') });
-  const endMarker = new maplibregl.Marker({ element: pinEl('end', 'B') });
+  const startMarker = new Marker({ element: pinEl('start', 'A') });
+  const endMarker = new Marker({ element: pinEl('end', 'B') });
   let fromValue = '';
 
   // Where a walk starts: 'me', a place id, or 'pt:lng,lat' (a spot picked on the map)
