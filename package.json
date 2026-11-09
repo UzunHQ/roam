@@ -15,7 +15,8 @@
     "build:walls": "node scripts/build-walls.mjs",
     "icons": "node scripts/make-icons.mjs",
     "photos": "node scripts/make-photos.mjs",
-    "check:hours": "node scripts/check-hours.mjs"
+    "check:hours": "node scripts/check-hours.mjs",
+    "check:data": "node scripts/check-data.mjs"
   },
   "dependencies": {
     "maplibre-gl": "^6.15.0"

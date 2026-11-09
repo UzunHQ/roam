@@ -1,0 +1,20 @@
+{
+  "note": "The only places allowed outside the university's own sites (records with no college that aren't campus entrances). The owner chose each one; nothing else outside the campus gets a record, pin or name. To add one, the owner has to ask for it by name: add its id here in the same change. npm run check:data fails on any record missing from this list.",
+  "ids": [
+    "roehampton-club-golf-course",
+    "downshire-house",
+    "queen-marys-hospital",
+    "queen-marys-hospital-car-park",
+    "bus-main-entrance-x",
+    "bus-main-entrance-u",
+    "bus-clarence-lane-s",
+    "bus-clarence-lane-t",
+    "bus-queen-marys-hospital-w",
+    "bus-queen-marys-hospital-v",
+    "bus-danebury-avenue-a",
+    "bus-roehampton-library-b",
+    "bus-roehampton-library-c",
+    "coop-danebury-avenue",
+    "roehampton-library-public"
+  ]
+}
