@@ -4802,6 +4802,8 @@
       "footprintId": "relation/1481954",
       "photo": null,
       "services": [
+        "Roehampton Lane, London SW15 5PN",
+        "Switchboard: 020 8487 6000 (the site is open 24 hours)",
         "Minor Injuries Unit temporarily closed (suspended): an Enhanced Primary Care Hub sees minor injuries by appointment only, 8am to 8pm, 7 days a week"
       ],
       "tags": [
@@ -4824,6 +4826,11 @@
         {
           "url": "https://www.stgeorges.nhs.uk/service/emergency-department/minor-injuries-unit/",
           "title": "St George's: Enhanced Primary Care Hub at Queen Mary's (the former minor injuries unit is suspended; appointments only, 8am to 8pm)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.stgeorges.nhs.uk/contact-and-find-us/",
+          "title": "St George’s: Contact and find us (Queen Mary’s Hospital, Roehampton Lane, SW15 5PN; switchboard 020 8487 6000, open 24 hours)",
           "checked": "2026-11-09"
         }
       ],

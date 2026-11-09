@@ -23,6 +23,7 @@ const PALETTE = {
     digbyRoof: '#a8cdee', froebelRoof: '#f6d77a', southlandsRoof: '#bba9e8', otherRoof: '#ecd3bb', offRoof: '#d8d3c9',
     digbyRim: '#86b3dc', froebelRim: '#e2bd55', southlandsRim: '#9f8ad6', otherRim: '#d6b799', offRim: '#c3bdb2',
     glass: '#b9d3e6', frame: '#e6dccb', glassOff: '#cfd6db',
+    hospWall: '#fbfaf7', hospGlass: '#a9cbe4', hospRoof: '#f1eee8', hospRim: '#d7372f',
     slate1: '#7d8896', slate2: '#919cab', slate3: '#a8b2c0', tile1: '#c7876a', tile2: '#d49a7c', tile3: '#e0ad91',
     greenRoof: '#9fcb7c', solar: '#6a86a8', metal: '#bfcdd8',
     selected: '#ff7a59', selectedWall: '#ffe2d8', trunk: '#a27b5b', leaf: '#8fcb7d', leafDark: '#6fb465', accuracy: '#3b82f6',
@@ -40,6 +41,7 @@ const PALETTE = {
     digbyRoof: '#5689b0', froebelRoof: '#b39545', southlandsRoof: '#7666a8', otherRoof: '#7a6a5a', offRoof: '#454a52',
     digbyRim: '#456f90', froebelRim: '#917834', southlandsRim: '#5e5188', otherRim: '#625548', offRim: '#3a3f46',
     glass: '#e9d8a0', frame: '#4b5157', glassOff: '#8a8466',
+    hospWall: '#6c727a', hospGlass: '#e9d8a0', hospRoof: '#7d838b', hospRim: '#a8443d',
     slate1: '#3f4650', slate2: '#4b535e', slate3: '#58616d', tile1: '#7a4f3f', tile2: '#86594a', tile3: '#926556',
     greenRoof: '#4f7a45', solar: '#2c4058', metal: '#66737d',
     selected: '#ff8a6b', selectedWall: '#8a5d52', trunk: '#6e5340', leaf: '#3f7a4c', leafDark: '#2f6140', accuracy: '#6ea6ff',
@@ -54,8 +56,11 @@ const PALETTE = {
 
 type Pal = (typeof PALETTE)[Theme];
 
+// Queen Mary's Hospital (scripts/build-context.mjs marks it): a light roof with a red edge, so it reads
+// as the hospital and never as a campus building
+const HOSPITAL: Expr = ['coalesce', ['get', 'hospital'], false];
 const roofColor = (p: Pal): Expr => [
-  'case', ['!', ['coalesce', ['get', 'campus'], true]], p.offRoof,
+  'case', HOSPITAL, p.hospRoof, ['!', ['coalesce', ['get', 'campus'], true]], p.offRoof,
   ['match', ['get', 'college'],
     'digby-stuart', p.digbyRoof,
     'froebel', p.froebelRoof,
@@ -63,7 +68,7 @@ const roofColor = (p: Pal): Expr => [
     p.otherRoof],
 ];
 const rimColor = (p: Pal): Expr => [
-  'case', ['!', ['coalesce', ['get', 'campus'], true]], p.offRim,
+  'case', HOSPITAL, p.hospRim, ['!', ['coalesce', ['get', 'campus'], true]], p.offRim,
   ['match', ['get', 'college'],
     'digby-stuart', p.digbyRim,
     'froebel', p.froebelRim,
@@ -101,11 +106,11 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
   return {
     background: { 'background-color': p.bg },
     outside: { 'fill-color': p.outside },
+    'zone-fade': { 'line-color': p.outside },
     // every lawn, meadow and wood in one green, so neighbouring OSM areas don't show as patches; sports fields stand out
     green: { 'fill-color': ['case', ['coalesce', ['get', 'field'], false], p.pitch, p.wood] },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
     parking: { 'fill-color': p.road }, // the same asphalt as the roads
-    'parking-context': { 'fill-color': p.road },
     golf: { 'fill-color': ['match', ['get', 'kind'], 'fairway', p.golf.fairway, 'tee', p.golf.tee, 'green', p.golf.green, 'bunker', p.golf.bunker, 'water', p.golf.water, p.golf.rough] },
     courtline: { 'line-color': p.pitchLine },
     'fence-mesh': { 'fill-extrusion-color': p.fenceMesh },
@@ -368,7 +373,7 @@ function roofParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
       const poly = shape(ring, d);
       // courtyards (a multipolygon's inner rings) stay open through the flat roof panel
       const holes = part === 'panel' ? (f.geometry as GeoJSON.Polygon).coordinates.slice(1) : [];
-      if (poly) out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part, base, top }, geometry: { type: 'Polygon', coordinates: [poly, ...holes] } });
+      if (poly) out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, hospital: pr.hospital ?? false, kind, h, part, base, top }, geometry: { type: 'Polygon', coordinates: [poly, ...holes] } });
       return !!poly;
     };
     if (isPitched(kind)) {
@@ -377,13 +382,13 @@ function roofParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
       add(1, 'panel', ROOF, ROOF + 0.45);
       // planted area or solar panels: as far in as the outline allows
       const area = [3.5, 2.5, 1.6].map((d) => inset(ring, d)).find(Boolean) ?? innerRect(ring, 5);
-      if (kind === 'green' && area) out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part: 'patch', base: ROOF + 0.45, top: ROOF + 0.6 }, geometry: { type: 'Polygon', coordinates: [area] } });
+      if (kind === 'green' && area) out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, hospital: pr.hospital ?? false, kind, h, part: 'patch', base: ROOF + 0.45, top: ROOF + 0.6 }, geometry: { type: 'Polygon', coordinates: [area] } });
       if (kind === 'solar' && area) {
-        out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part: 'solar', base: SOLAR.base, top: SOLAR.top }, geometry: { type: 'Polygon', coordinates: [area] } });
+        out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, hospital: pr.hospital ?? false, kind, h, part: 'solar', base: SOLAR.base, top: SOLAR.top }, geometry: { type: 'Polygon', coordinates: [area] } });
         const lng0 = area[0][0], lat0 = area[0][1];
         const local = area.map(([x, y]) => [x - lng0, y - lat0] as LngLat); // rows are laid out near 0,0, then moved back
         for (const r of solarRows(local)) {
-          out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part: 'cells', base: SOLAR.base, top: SOLAR.top }, geometry: { type: 'Polygon', coordinates: [r.map(([x, y]) => [x + lng0, y + lat0])] } });
+          out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, hospital: pr.hospital ?? false, kind, h, part: 'cells', base: SOLAR.base, top: SOLAR.top }, geometry: { type: 'Polygon', coordinates: [r.map(([x, y]) => [x + lng0, y + lat0])] } });
         }
       }
     }
@@ -403,16 +408,16 @@ function windowTile(wall: string, frame: string, glass: string): ImageData {
 }
 // The same tile twice: full size close up, and at half size ("-s", pixel ratio 4) from further out,
 // so the overview has rows of small windows instead of a few big ones (or none)
-const WINDOW_IMAGES = ['win', 'win-off', 'win-s', 'win-off-s'];
+const WINDOW_IMAGES = ['win', 'win-off', 'win-hosp', 'win-s', 'win-off-s', 'win-hosp-s'];
 function setWindowImages(map: MLMap, p: Pal) {
-  const on = windowTile(p.wall, p.frame, p.glass), off = windowTile(p.wallOff, p.frame, p.glassOff);
-  for (const [id, data, ratio] of [['win', on, 2], ['win-off', off, 2], ['win-s', on, 4], ['win-off-s', off, 4]] as const) {
+  const on = windowTile(p.wall, p.frame, p.glass), off = windowTile(p.wallOff, p.frame, p.glassOff), hosp = windowTile(p.hospWall, p.frame, p.hospGlass);
+  for (const [id, data, ratio] of [['win', on, 2], ['win-off', off, 2], ['win-hosp', hosp, 2], ['win-s', on, 4], ['win-off-s', off, 4], ['win-hosp-s', hosp, 4]] as const) {
     if (map.hasImage(id)) map.updateImage(id, data); else map.addImage(id, data, { pixelRatio: ratio });
   }
 }
 /** Windows show at every zoom: the small tile from afar, the full one once you're close. */
 const WINDOW_ZOOM = 17.4;
-const windowPattern = (near: boolean): Expr => ['case', ['coalesce', ['get', 'campus'], true], near ? 'win' : 'win-s', near ? 'win-off' : 'win-off-s'];
+const windowPattern = (near: boolean): Expr => ['case', HOSPITAL, near ? 'win-hosp' : 'win-hosp-s', ['coalesce', ['get', 'campus'], true], near ? 'win' : 'win-s', near ? 'win-off' : 'win-off-s'];
 let windowsNear: boolean | null = null;
 function updateWindows(map: MLMap) {
   const near = map.getZoom() >= WINDOW_ZOOM;
@@ -942,16 +947,21 @@ export function createMap(opts: {
   // a big frame around campus, so the edge of the world reads as "off the map". Its hole is the map's
   // own edge (layer "mapedge", from build-campus.mjs: campus plus the strip of golf course beside it),
   // or the bounds when there is none.
+  // With the context zone (layer "contextzone", scripts/build-context.mjs: campus, Chadwick Hall, the
+  // hospital and a corridor along the two main roads) the frame is solid and plain, its edge faded
+  // (layer "zone-fade"), and the zone is its hole.
   const pad = 0.02;
+  const frame = [[w - pad, s - pad], [e + pad, s - pad], [e + pad, n + pad], [w - pad, n + pad], [w - pad, s - pad]];
+  const zone = campus.features.find((f) => f.properties?.layer === 'contextzone' && f.geometry.type === 'MultiPolygon');
   const edge = campus.features.find((f) => f.properties?.layer === 'mapedge' && f.geometry.type === 'Polygon');
-  const hole = edge ? [...(edge.geometry as GeoJSON.Polygon).coordinates[0]].reverse() : [[w, s], [w, n], [e, n], [e, s], [w, s]];
+  const zonePolys = zone ? (zone.geometry as GeoJSON.MultiPolygon).coordinates : null;
   const outside: GeoJSON.Feature = {
     type: 'Feature', properties: {},
-    geometry: { type: 'Polygon', coordinates: [
-      [[w - pad, s - pad], [e + pad, s - pad], [e + pad, n + pad], [w - pad, n + pad], [w - pad, s - pad]],
-      hole,
-    ] },
+    geometry: zonePolys
+      ? { type: 'MultiPolygon', coordinates: [[frame, ...zonePolys.map((p) => [...p[0]].reverse())], ...zonePolys.flatMap((p) => p.slice(1).map((h) => [[...h].reverse()]))] }
+      : { type: 'Polygon', coordinates: [frame, edge ? [...(edge.geometry as GeoJSON.Polygon).coordinates[0]].reverse() : [[w, s], [w, n], [e, n], [e, s], [w, s]]] },
   };
+  const zoneLines: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: (zonePolys ?? []).flat().map((r) => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: r } })) };
 
   const style: StyleSpecification = {
     version: 8,
@@ -969,6 +979,7 @@ export function createMap(opts: {
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
       flags: { type: 'geojson', data: { type: 'FeatureCollection', features: flagParts(byLayer('golfflag').features) }, tolerance: 0 },
       outside: { type: 'geojson', data: outside },
+      zoneedge: { type: 'geojson', data: zoneLines },
       user: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       route: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
       hop: { type: 'geojson', data: { type: 'FeatureCollection', features: [] } },
@@ -1011,9 +1022,15 @@ export function createMap(opts: {
             ['match', ['get', 'kind'], 'footpath', 12, 'service', 18, 'wall', 6, 26]],
         },
       },
-      { id: 'outside', type: 'fill', source: 'outside', paint: { 'fill-opacity': 0.85 } },
-      // the hospital's car park across the road (scripts/build-context.mjs): over the dimmed frame, like its buildings
-      { id: 'parking-context', type: 'fill', source: 'campus', filter: ['all', ['==', ['get', 'layer'], 'parking'], ['==', ['get', 'context'], true]], paint: { 'fill-opacity': 0.75 } },
+      { id: 'outside', type: 'fill', source: 'outside', paint: { 'fill-opacity': zonePolys ? 1 : 0.85 } },
+      // the zone's edge: a wide blurred line in the frame's colour, so the map fades out instead of stopping at a line
+      {
+        id: 'zone-fade', type: 'line', source: 'zoneedge', layout: { 'line-join': 'round' },
+        paint: {
+          'line-width': ['interpolate', ['exponential', 2], ['zoom'], 14, 10, 16, 36, 19, 200],
+          'line-blur': ['interpolate', ['exponential', 2], ['zoom'], 14, 10, 16, 36, 19, 200],
+        },
+      },
       // the campus wall sits under the route, the labels and the pins
       {
         id: 'wall-3d', type: 'fill-extrusion', source: 'wallparts', minzoom: 16.8,

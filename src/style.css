@@ -901,3 +901,8 @@ body.navigating .top > :not(.toast), body.navigating .key-btn, body.navigating .
   body.navigating .panel { top: 16px; }
   body.navigating .top { top: 104px; } /* its toasts show under the walking card, not over it */
 }
+
+/* the hospital: a red square with a white H, the usual hospital sign, in its pin, card and search results */
+.k-hospital { --g: #d7372f; }
+.pin.k-hospital .dot, .cat-icon.k-hospital { border-radius: 7px; background: #d7372f; color: #fff; }
+.pin.k-hospital .dot svg { width: 16px; height: 16px; stroke-width: 3; }

@@ -56,6 +56,8 @@ const isDesktop = () => innerWidth >= 900;
 const PROPER = /(House|Building|Hall|Court|Centre|Auditorium|Mausoleum|Chapel|Gate|Grove|Square|Diner|Costa|Londis.*)( (North|South|East|West))?$/;
 const theName = (name: string) => (/^The /.test(name) ? name.replace(/^The /, 'the ') : PROPER.test(name) ? name : `the ${name}`);
 const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+/** a few kinds keep their own look whatever their group: the hospital's red H sign */
+const kindClass = (p: Place) => (p.kind === 'hospital' ? ' k-hospital' : '');
 const COLLEGE: Record<string, string> = { 'digby-stuart': 'Digby Stuart', froebel: 'Froebel', southlands: 'Southlands' };
 /** icon for a whole category (chips, key, "show all" suggestions) */
 const groupIcon = (g: GroupId) =>
@@ -339,7 +341,7 @@ async function main() {
   for (const p of places) {
     const group = groupOf(p);
     const el = document.createElement('button');
-    el.className = `pin g-${group} hidden`; // shown by layoutMarkers once the map has loaded, never at made-up spots before
+    el.className = `pin g-${group}${kindClass(p)} hidden`; // shown by layoutMarkers once the map has loaded, never at made-up spots before
     el.tabIndex = -1;
     el.setAttribute('aria-label', `${p.name}, ${groupLabel(group)}`);
     el.innerHTML = group === 'entrance'
@@ -712,7 +714,8 @@ async function main() {
     if (isDesktop()) {
       const left = Math.max($('.top').getBoundingClientRect().right, hello?.right ?? 0) + 24;
       const right = Math.min(...[$('.controls'), keyBtn].map(r).filter((x) => x?.width).map((x) => x!.left)) - 24;
-      return { l: left, r: Math.min(right, W - 24), t: 48, b: H - 20 };
+      // (the right edge stays well clear of the controls: an area name like Chadwick Hall's reaches ~80 px past its point)
+      return { l: left, r: Math.min(right - 56, W - 24), t: 48, b: H - 20 };
     }
     const keyRow = r(keyBtn);
     const bottom = hello ? hello.top : keyRow?.width ? keyRow.top : H;
@@ -1151,7 +1154,7 @@ async function main() {
     // compact first: name, what it is, one line of description, the way there. Everything else under "View details".
     panelBody.innerHTML = `
       <div class="p-head">
-        <span class="cat-icon g-${g}">${placeIcon(p.category, p.kind)}</span>
+        <span class="cat-icon g-${g}${kindClass(p)}">${placeIcon(p.category, p.kind)}</span>
         <div class="titles">
           <h2 id="panel-name" tabindex="-1">${esc(p.name)}</h2>
           <p class="meta">${[p.code && `<span class="code">${esc(p.code)}</span>`, esc(groupLabel(g)), p.college && COLLEGE[p.college], p.offCampus && '<span class="off-campus">Off campus</span>'].filter(Boolean).join(' · ')}</p>
@@ -1974,7 +1977,7 @@ async function main() {
         ? `<li><button role="option" data-i="${i}"><span class="cat-icon small g-${o.group}">${groupIcon(o.group)}</span>
             <span><b>Show all: ${esc(groupLabel(o.group))}</b><small>${plural(groupCount.get(o.group) ?? 0, 'place')}</small></span></button></li>`
         : `<li><button role="option" data-i="${i}">
-            <span class="cat-icon small g-${groupOf(o.place)}">${placeIcon(o.place.category, o.place.kind)}</span>
+            <span class="cat-icon small g-${groupOf(o.place)}${kindClass(o.place)}">${placeIcon(o.place.category, o.place.kind)}</span>
             <span><b>${esc(o.place.name)}</b>${o.place.code ? ` <span class="code">${esc(o.place.code)}</span>` : ''}
             <small>${esc([via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]].filter(Boolean).join(' · '))}</small></span></button></li>`)).join('');
     }
@@ -2040,7 +2043,7 @@ async function main() {
   function listRow(p: Place): string {
     const g = groupOf(p);
     const d = distanceTo(p);
-    return `<li><button data-id="${p.id}"><span class="cat-icon small g-${g}">${placeIcon(p.category, p.kind)}</span>
+    return `<li><button data-id="${p.id}"><span class="cat-icon small g-${g}${kindClass(p)}">${placeIcon(p.category, p.kind)}</span>
       <span class="row-main"><b>${esc(p.name)}</b>${p.code ? ` <span class="code">${esc(p.code)}</span>` : ''}
       <small>${esc([groupLabel(g), p.college && COLLEGE[p.college], p.offCampus && 'Off campus'].filter(Boolean).join(' · '))}</small></span>
       <span class="row-side">${statusBadge(p)}${d != null ? `<small>${formatDistance(d)}</small>` : ''}</span></button></li>`;

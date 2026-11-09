@@ -3,6 +3,8 @@ const svg = (body: string, fill = false) =>
   `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" ${fill ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"'}>${body}</svg>`;
 
 export const icons = {
+  /** a hospital sign: the letter H (white on the red square its pin draws round it) */
+  hospital: svg('<path d="M7.5 5.5v13M16.5 5.5v13M7.5 12h9"/>'),
   building: svg('<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/><path d="M9 10h.01M15 10h.01"/>'),
   accommodation: svg('<path d="M3 18v-7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1h8a2 2 0 0 1 2 2v4"/><path d="M3 15h18M3 20v-2M21 20v-2"/>'),
   service: svg('<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/>'),
@@ -64,7 +66,7 @@ const byKind: Record<string, string> = {
   union: icons.union, faith: icons.faith, careers: icons.careers, security: icons.security, laundry: icons.laundry, post: icons.post,
   service: icons.service, cafe: icons.cafe, restaurant: icons.restaurant, bar: icons.bar, shop: icons.shop, parking: icons.parking,
   fountain: icons.fountain, garden: icons.garden, square: icons.square, monument: icons.monument, golf: icons.golf, coop: icons.coop, outdoors: icons.garden,
-  'bus-stop': icons.bus, hospital: icons.health, gym: icons.gym, court: icons.sport, field: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
+  'bus-stop': icons.bus, hospital: icons.hospital, gym: icons.gym, court: icons.sport, field: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
 };
 
 export function placeIcon(category: string, kind: string): string {
