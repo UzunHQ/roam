@@ -277,13 +277,23 @@ async function main() {
     return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
   })();
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
-  // The home view faces north-east, like the university's own campus map
-  const HOME = { bearing: 28, pitch: 45 };
-  map?.jumpTo({ center: campusCenter, zoom: homeZoom(), bearing: HOME.bearing });
+  // The home view: the four parts of campus (Southlands, Digby Stuart, Froebel and Chadwick Hall)
+  // filling the screen, a little tilted. On a wide screen it faces north-east, like the university's
+  // own campus map (40°: the campus fills the most of the screen); on a phone held upright it faces north (as wide a view as any angle there, and a turn of the
+  // fingers near north snaps back to it anyway), so the campus's long side (north
+  // to south, Southlands down to Chadwick Hall) runs up the screen.
+  const HOME = { get bearing() { return isDesktop() ? 40 : 0; }, get pitch() { return isDesktop() ? 50 : 45; } };
+  map?.jumpTo({ center: campusCenter, zoom: homeZoom(), bearing: HOME.bearing, pitch: HOME.pitch });
   // Every deliberate camera move goes through here: live GPS following waits for it to finish
   // instead of cutting it short (MapLibre's easeTo stops whatever move is running).
   let camBusyUntil = 0;
   const camMove = (opts: EaseToOptions) => { camBusyUntil = Date.now() + (opts.duration ?? 0) + 80; map?.easeTo(opts); };
+  /** a longer move (to a chosen place): a short flight, or a jump with Reduced/Off motion */
+  const camFly = (opts: EaseToOptions) => {
+    if (!opts.duration) { camMove(opts); return; }
+    camBusyUntil = Date.now() + opts.duration + 80;
+    map?.flyTo({ ...opts, curve: 1.2, essential: true });
+  };
   // the home view frames the campus itself: its wall and gates, and every campus building (its
   // footprint's corners). The park to the west and the houses across the road are left out.
   const campusPoints: LngLat[] = places.filter(onCampus).map((p) => p.position);
@@ -361,19 +371,25 @@ async function main() {
 
   // ---------- college areas: their names over the overview; tap one to zoom in ----------
   const AREA_Z = 16.65;
-  const areas = (['digby-stuart', 'froebel', 'southlands'] as const).map((college) => {
-    const pts = places.filter((p) => p.college === college && p.category !== 'entrance').map((p) => p.position);
+  // (Chadwick Hall, Froebel's halls down the road, gets its own: it is a walk from the rest of Froebel)
+  const isChadwick = (p: Place) => p.id.startsWith('chadwick-hall') || p.id === 'downshire-house';
+  const AREAS = [
+    ...(['digby-stuart', 'froebel', 'southlands'] as const).map((college) => ({ key: college, name: COLLEGE[college], what: 'college', of: (p: Place) => p.college === college && !isChadwick(p) })),
+    { key: 'chadwick', name: 'Chadwick Hall', what: 'halls', of: (p: Place) => isChadwick(p) && p.category === 'building' && p.kind === 'accommodation' },
+  ];
+  const areas = AREAS.map(({ key, name, what, of }) => {
+    const pts = places.filter((p) => of(p) && p.category !== 'entrance').map((p) => p.position);
     const c: LngLat = [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
     const el = document.createElement('button');
-    el.className = `area-label area-${college} hidden`;
+    el.className = `area-label area-${key} hidden`;
     el.tabIndex = -1;
-    el.innerHTML = `<span class="area-icon">${icons.campus}</span><span>${COLLEGE[college]}</span>`;
-    el.setAttribute('aria-label', `${COLLEGE[college]} college: zoom in`);
+    el.innerHTML = `<span class="area-icon">${icons.campus}</span><span>${name}</span>`;
+    el.setAttribute('aria-label', `${name} ${what}: zoom in`);
     // straight to the college at street level (where building names take over)
     el.addEventListener('click', (e) => { e.stopPropagation(); setFollowing(false); camMove({ center: c, zoom: 16.9, pitch: tilt(50), duration: ms(600) }); });
     const marker = new Marker({ element: el, anchor: 'center' }).setLngLat(c);
     if (map) marker.addTo(map);
-    return { el, c };
+    return { el, c, marker };
   });
 
   // ---------- tennis court numbers, painted flat on the MUGA (close up only, not tappable) ----------
@@ -404,12 +420,17 @@ async function main() {
     // (not while a category is chosen: then the places matter, not the college names)
     const showAreas = z < AREA_Z && !narrowed();
     const areaBoxes: [number, number, number, number][] = [];
+    // a name near the screen's edge slides in to stay whole, clear of the map controls
+    const ctl = $('.controls').getBoundingClientRect();
     for (const a of areas) {
       a.el.classList.toggle('hidden', !showAreas);
       a.el.tabIndex = showAreas ? 0 : -1;
       if (!showAreas) continue;
       const pt = map.project(a.c), w = a.el.offsetWidth / 2 + 8;
-      areaBoxes.push([pt.x - w, pt.y - 24, pt.x + w, pt.y + 24]);
+      const right = ctl.width && pt.y > ctl.top - 24 && pt.y < ctl.bottom + 24 ? ctl.left - 4 : W - 8;
+      const dx = Math.round(pt.x + w > right ? right - (pt.x + w) : pt.x - w < 8 ? 8 - (pt.x - w) : 0);
+      a.marker.setOffset([dx, 0]);
+      areaBoxes.push([pt.x + dx - w, pt.y - 24, pt.x + dx + w, pt.y + 24]);
     }
     // outside the chosen category (entrances, car parks and open-air spots have no chip and always show)
     // (entrances always stay, as small gates; open-air spots and car parks used to as well, now only under All)
@@ -612,7 +633,7 @@ async function main() {
     const a = freeArea();
     const around = map.unproject([(a.left + Math.min(a.right, innerWidth)) / 2, (a.top + a.bottom) / 2]);
     const target = Math.max(lowestZoom(), Math.min(map.getMaxZoom(), map.getZoom() + dz));
-    camMove({ zoom: target, around, duration: ms(250) });
+    camMove({ zoom: target, around, ...(flat || pitchedByHand ? {} : { pitch: autoPitch(target) }), duration: ms(250) });
   };
   zoomInBtn.addEventListener('click', () => zoomBy(1));
   zoomOutBtn.addEventListener('click', () => zoomBy(-1));
@@ -648,12 +669,33 @@ async function main() {
   map?.once('load', updateZoomButtons);
   let flat = false; // 2D: looking straight down
   const tilt = (pitch: number) => (flat ? 0 : pitch);
-  $('#north').addEventListener('click', () => camMove({ bearing: 0, pitch: tilt(55), duration: ms(400) }));
+  /**
+   * Like Apple Maps, the view tilts a little more as you zoom in and flattens as you zoom out: 42°
+   * at the widest, the home view's 50° at street level, 60° close up. It settles after a pinch or
+   * scroll (never during one, which would fight the gesture), and stops once you tilt by hand
+   * (two fingers up or down) until the compass, the 2D/3D button or the home view resets it.
+   */
+  const autoPitch = (z: number) => (z <= 14.5 ? 42 : z <= 16.2 ? 42 + ((z - 14.5) / 1.7) * 8 : Math.min(60, 50 + ((z - 16.2) / 2.3) * 10));
+  let pitchedByHand = false;
+  let gestureZoom = false;
+  map?.on('pitchstart', (e) => { if ((e as { originalEvent?: Event }).originalEvent) pitchedByHand = true; });
+  map?.on('zoomstart', (e) => { if ((e as { originalEvent?: Event }).originalEvent) gestureZoom = true; });
+  // after the whole move has ended (a pinch can end in MapLibre's snap back to north, which would cut a tilt short)
+  map?.on('moveend', () => {
+    if (map?.isMoving()) return;
+    const byGesture = gestureZoom;
+    gestureZoom = false;
+    if (!map || !byGesture || flat || pitchedByHand || Date.now() < camBusyUntil) return;
+    const want = autoPitch(map.getZoom());
+    if (Math.abs(map.getPitch() - want) > 1.5) map.easeTo({ pitch: want, duration: ms(350) });
+  });
+  $('#north').addEventListener('click', () => { pitchedByHand = false; camMove({ bearing: 0, pitch: tilt(autoPitch(map?.getZoom() ?? 16)), duration: ms(400) }); });
   $('#whole').addEventListener('click', () => showWholeCampus());
   const dimBtn = $('#dim');
   dimBtn.addEventListener('click', () => {
     flat = !flat;
-    camMove({ pitch: tilt(55), duration: ms(450) });
+    pitchedByHand = false;
+    camMove({ pitch: tilt(autoPitch(map?.getZoom() ?? 16)), duration: ms(450) });
     dimBtn.textContent = flat ? '2D' : '3D';
     dimBtn.setAttribute('aria-pressed', String(!flat));
     dimBtn.setAttribute('aria-label', flat ? 'Switch to a 3D map' : 'Switch to a flat 2D map');
@@ -674,14 +716,18 @@ async function main() {
     }
     const keyRow = r(keyBtn);
     const bottom = hello ? hello.top : keyRow?.width ? keyRow.top : H;
-    // 24 px: a pin's touch target reaches 22 px either side of its point
-    return { l: 24, r: W - 24, t: $('#chips').getBoundingClientRect().bottom + 36, b: Math.min(bottom, H) - 12 };
+    // 24 px: a pin's touch target reaches 22 px either side of its point. The map controls stand
+    // down the right side: the campus keeps clear of them (only where they are, below their top)
+    const ctl = r($('.controls'));
+    const right = ctl?.width && ctl.top < bottom ? Math.min(W - 24, ctl.left - 6) : W - 24;
+    return { l: 16, r: right, t: $('#chips').getBoundingClientRect().bottom + 30, b: Math.min(bottom, H) - 10 };
   }
   // The home view is worked out once per screen size and then reused, so the ⛶ button brings back
   // exactly the opening view (closing the welcome card doesn't move the map either).
   let home: { size: string; center: MLLngLat; zoom: number } | null = null;
   function showWholeCampus(duration = 500) {
     if (!map) return;
+    pitchedByHand = false;
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
     const size = `${W}x${H}`;
     if (home?.size === size) {
@@ -1016,10 +1062,10 @@ async function main() {
     const inside = pt.x > a.left && pt.x < a.right && pt.y > a.top && pt.y < a.bottom;
     if (inside && zoom === map.getZoom()) return;
     setFollowing(false);
-    camMove({
+    camFly({
       center: p.position, zoom,
       padding: pad(a.top, a.mapH - a.bottom, a.left, innerWidth - a.right),
-      duration: ms(450),
+      duration: ms(1000),
     });
   }
 

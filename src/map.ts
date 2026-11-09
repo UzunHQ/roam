@@ -105,6 +105,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     green: { 'fill-color': ['case', ['coalesce', ['get', 'field'], false], p.pitch, p.wood] },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
     parking: { 'fill-color': p.road }, // the same asphalt as the roads
+    'parking-context': { 'fill-color': p.road },
     golf: { 'fill-color': ['match', ['get', 'kind'], 'fairway', p.golf.fairway, 'tee', p.golf.tee, 'green', p.golf.green, 'bunker', p.golf.bunker, 'water', p.golf.water, p.golf.rough] },
     courtline: { 'line-color': p.pitchLine },
     'fence-mesh': { 'fill-extrusion-color': p.fenceMesh },
@@ -365,7 +366,9 @@ function roofParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
     const ring = f.geometry.coordinates[0] as LngLat[];
     const add = (d: number, part: string, base: number, top: number, shape = inset) => {
       const poly = shape(ring, d);
-      if (poly) out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part, base, top }, geometry: { type: 'Polygon', coordinates: [poly] } });
+      // courtyards (a multipolygon's inner rings) stay open through the flat roof panel
+      const holes = part === 'panel' ? (f.geometry as GeoJSON.Polygon).coordinates.slice(1) : [];
+      if (poly) out.push({ type: 'Feature', properties: { osmId: pr.osmId, college: pr.college, campus: pr.campus, kind, h, part, base, top }, geometry: { type: 'Polygon', coordinates: [poly, ...holes] } });
       return !!poly;
     };
     if (isPitched(kind)) {
@@ -398,18 +401,24 @@ function windowTile(wall: string, frame: string, glass: string): ImageData {
   g.fillStyle = glass; g.fillRect(7.5, 7.5, 9, 8);
   return g.getImageData(0, 0, 24, 24);
 }
+// The same tile twice: full size close up, and at half size ("-s", pixel ratio 4) from further out,
+// so the overview has rows of small windows instead of a few big ones (or none)
+const WINDOW_IMAGES = ['win', 'win-off', 'win-s', 'win-off-s'];
 function setWindowImages(map: MLMap, p: Pal) {
-  for (const [id, data] of [['win', windowTile(p.wall, p.frame, p.glass)], ['win-off', windowTile(p.wallOff, p.frame, p.glassOff)]] as const) {
-    if (map.hasImage(id)) map.updateImage(id, data); else map.addImage(id, data, { pixelRatio: 2 });
+  const on = windowTile(p.wall, p.frame, p.glass), off = windowTile(p.wallOff, p.frame, p.glassOff);
+  for (const [id, data, ratio] of [['win', on, 2], ['win-off', off, 2], ['win-s', on, 4], ['win-off-s', off, 4]] as const) {
+    if (map.hasImage(id)) map.updateImage(id, data); else map.addImage(id, data, { pixelRatio: ratio });
   }
 }
-/** Windows appear on the walls only when you're close enough to see them. */
+/** Windows show at every zoom: the small tile from afar, the full one once you're close. */
 const WINDOW_ZOOM = 17.4;
+const windowPattern = (near: boolean): Expr => ['case', ['coalesce', ['get', 'campus'], true], near ? 'win' : 'win-s', near ? 'win-off' : 'win-off-s'];
+let windowsNear: boolean | null = null;
 function updateWindows(map: MLMap) {
-  const want = map.getZoom() >= WINDOW_ZOOM;
-  const has = map.getPaintProperty('building-walls', 'fill-extrusion-pattern') != null;
-  if (want === has) return;
-  map.setPaintProperty('building-walls', 'fill-extrusion-pattern', want ? ['case', ['coalesce', ['get', 'campus'], true], 'win', 'win-off'] : undefined);
+  const near = map.getZoom() >= WINDOW_ZOOM;
+  if (near === windowsNear) return;
+  windowsNear = near;
+  map.setPaintProperty('building-walls', 'fill-extrusion-pattern', windowPattern(near));
 }
 
 /**
@@ -928,7 +937,7 @@ export function createMap(opts: {
   const fences = fenceParts(byLayer('fence').features);
   halves = halfLayer.features.map((f) => ({ id: f.properties!.osmId, block: f.properties!.block, ring: (f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[] }));
   halfLayer.features = halfLayer.features.map((f) => ({ ...f, geometry: { type: 'Polygon', coordinates: [grown((f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[], 0.12)] } }));
-  buildings.features = buildings.features.map((f) => ({ ...f, properties: { ...f.properties, roof: ROOFS[f.properties?.osmId] ?? 'flat' } }));
+  buildings.features = buildings.features.map((f) => ({ ...f, properties: { ...f.properties, roof: ROOFS[f.properties?.osmId] ?? f.properties?.roof ?? 'flat' } }));
   const [w, s, e, n] = bounds;
   // a big frame around campus, so the edge of the world reads as "off the map". Its hole is the map's
   // own edge (layer "mapedge", from build-campus.mjs: campus plus the strip of golf course beside it),
@@ -984,6 +993,8 @@ export function createMap(opts: {
         filter: ['==', ['get', 'layer'], 'path'],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
+          // footpaths fade in as you zoom in (the roads and the wall's line stay)
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 15.2, ['match', ['get', 'kind'], 'footpath', 0.4, 1], 16.2, 1],
           'line-width': ['interpolate', ['exponential', 2], ['zoom'], 15,
             ['match', ['get', 'kind'], 'footpath', 3, 'service', 3.5, 'wall', 3.6, 4.5], 19,
             ['match', ['get', 'kind'], 'footpath', 15, 'service', 21, 'wall', 8, 30]],
@@ -993,12 +1004,16 @@ export function createMap(opts: {
         id: 'road', type: 'line', source: 'campus', filter: ['==', ['get', 'layer'], 'path'],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: {
+          // footpaths fade in as you zoom in (the roads and the wall's line stay)
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 15.2, ['match', ['get', 'kind'], 'footpath', 0.4, 1], 16.2, 1],
           'line-width': ['interpolate', ['exponential', 2], ['zoom'], 15,
             ['match', ['get', 'kind'], 'footpath', 1.7, 'service', 2, 'wall', 2.2, 3], 19,
             ['match', ['get', 'kind'], 'footpath', 12, 'service', 18, 'wall', 6, 26]],
         },
       },
       { id: 'outside', type: 'fill', source: 'outside', paint: { 'fill-opacity': 0.85 } },
+      // the hospital's car park across the road (scripts/build-context.mjs): over the dimmed frame, like its buildings
+      { id: 'parking-context', type: 'fill', source: 'campus', filter: ['all', ['==', ['get', 'layer'], 'parking'], ['==', ['get', 'context'], true]], paint: { 'fill-opacity': 0.75 } },
       // the campus wall sits under the route, the labels and the pins
       {
         id: 'wall-3d', type: 'fill-extrusion', source: 'wallparts', minzoom: 16.8,
@@ -1022,7 +1037,8 @@ export function createMap(opts: {
       },
       {
         id: 'building-walls', type: 'fill-extrusion', source: 'buildings',
-        paint: { 'fill-extrusion-height': ['+', HEIGHT, BOUNCE], 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 1, 'fill-extrusion-vertical-gradient': true },
+        // windows from the first frame (the images come from the missing-image resolver below)
+        paint: { 'fill-extrusion-height': ['+', HEIGHT, BOUNCE], 'fill-extrusion-base': 0, 'fill-extrusion-opacity': 1, 'fill-extrusion-vertical-gradient': true, 'fill-extrusion-pattern': windowPattern(false) },
       },
       {
         id: 'building-roof', type: 'fill-extrusion', source: 'buildings',
@@ -1121,7 +1137,7 @@ export function createMap(opts: {
     })(),
     pitch: 55,
     maxPitch: 65,
-    minZoom: 14.5, // the whole campus fits a phone held upright at about 14.9
+    minZoom: 14, // the whole campus, Chadwick Hall included, fits a phone held upright at about 14.3
     maxZoom: 19.5,
     attributionControl: false,
     dragRotate: true,
@@ -1130,12 +1146,13 @@ export function createMap(opts: {
     fadeDuration: 0,
     pixelRatio: Math.min(devicePixelRatio || 1, 2), // sharp enough, cheaper on 3x phones
   });
-  map.touchPitch.disable();
+  // two fingers: pinch to zoom, twist to turn, slide up or down together to tilt
   currentTheme = theme;
   // pattern images are drawn on demand, so the first frame never asks for a missing one
   map.setMissingStyleImageResolver((id) => {
-    if (id === 'win' || id === 'win-off') setWindowImages(map, PALETTE[currentTheme]);
+    if (WINDOW_IMAGES.includes(id)) setWindowImages(map, PALETTE[currentTheme]);
   });
+  windowsNear = false;
   map.once('load', () => {
     setWindowImages(map, PALETTE[currentTheme]);
     updateWindows(map);

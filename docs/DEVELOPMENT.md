@@ -29,6 +29,7 @@ data/paths.json        walking graph for directions (generated from OSM, committ
 data/walls.geojson     the campus wall: its line, piers, pillars and gates (generated from OSM, committed)
 data/unmatched.txt     places the snapping could not match by name; check these
 scripts/build-campus.mjs   Overpass → campus.geojson, snaps places to footprints
+scripts/build-context.mjs  adds the surroundings to campus.geojson (see below)
 src/config.ts          author, LinkedIn/GitHub, report e-mail, analytics
 src/main.ts            UI: markers, sheet, search, filters, location, deep links
 src/map.ts             MapLibre style: extrusions, roofs, low-poly trees, colours
@@ -72,7 +73,11 @@ npm run build:campus           # downloads from Overpass once, re-snaps, rewrite
 npm run build:campus -- --cache  # re-snap using the last download
 ```
 
-Chadwick Hall's paths, wall openings and car area aren't in OSM: they live in `scripts/chadwick.mjs`, which `build:campus`, `build:paths` and `build:walls` all read. Buildings outside the map's edge are left out (except Queen Mary's Hospital's main building, which the edge takes in).
+Chadwick Hall's paths, wall openings and car area aren't in OSM: they live in `scripts/chadwick.mjs`, which `build:campus`, `build:paths` and `build:walls` all read. `build-campus` draws only the university's buildings (and a building a place points at, like the hospital's main one). `scripts/build-context.mjs` (run by `build:campus`, or alone with `npm run build:context`, which downloads its own wider Overpass extract to `scripts/.overpass-context-cache.json`) then adds the surroundings, all marked `context: true` so a rerun replaces them:
+- the first row of buildings along Roehampton Lane (nearest corner within 30 m of the road's centre line, from Chadwick Hall up past Southlands) and along Clarence Lane (24 m), and every other building inside the map's edge west of Roehampton Lane (Ibstock Place School by the 5-a-side pitch). They are drawn plain (`campus: false`: pale walls and windows, grey roofs; houses get a tiled pitched roof);
+- Queen Mary's Hospital's other buildings, its courtyards and its car park (`parking-context`, drawn over the dimmed frame);
+- street trees: OSM's own `natural=tree` / `tree_row` near the lane (there are almost none), otherwise generated rows along both pavements of Roehampton Lane, round Chadwick Hall's plot and north-east of Southlands, clear of roads, paths, walls, bus stops and buildings;
+- the grass running track on the Playing Field (OSM relation/21170980) as white lines.
 
 After rebuilding, also run `npm run build:paths` to refresh the walking graph, and `npm run build:walls` to refresh the campus wall. The campus wall is one continuous line (plus a separate ring round Chadwick Hall's plot): the university boundary along Roehampton Lane, then the `barrier=wall` ways along Clarence Lane. It opens only at entrances: a garden gate at each named one (the entrances in `places.json` and named OSM gates), a closed iron gate at other OSM gates, and a doorway at `entrance=*` doors on the line. Where a building stands on the line, the wall runs round its street side. The script prints every opening and why it is there.
 

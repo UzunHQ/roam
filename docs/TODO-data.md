@@ -1,7 +1,7 @@
 # Data still to verify
 
 Roam only shows what has a source. Everything below is missing or unverified, with where to check it.
-Last reviewed: 8 Nov 2026.
+Last reviewed: 9 Nov 2026.
 
 ## Entrances (no place has any yet)
 
@@ -46,6 +46,11 @@ LibCal shows no hours from 20 Dec 2026 yet, and no 2026 festive notice was found
 
 ## Places
 
+- [ ] Queen Mary's Hospital: OpenStreetMap has no heights or floor counts for its buildings, so they are drawn at the default height (about 3 floors). The main entrance is OSM's `entrance=main` node (south-west side), not checked on site. The "Minor Injuries Unit temporarily closed" note is from St George's page (checked 9 Nov 2026): re-check, as it says the unit was suspended during Covid and replaced by an appointment-only hub.
+- [ ] Buildings around the map (Roehampton Lane, Clarence Lane, Ibstock Place School, the hospital): from OpenStreetMap, drawn as plain context with default heights where OSM has no `building:levels`. Roof shapes of houses are a guess (tiled, pitched) unless OSM says flat.
+- [ ] Street trees along Roehampton Lane, round Chadwick Hall and north-east of Southlands: OpenStreetMap maps almost none there, so the rows are generated (decoration, `generated: true`). Real positions and species not checked.
+- [ ] The building south-west of Chadwick Hall: taken to be Eastwood Nursery School's (166 Roehampton Lane, OSM relation/13124867 on the nursery's site, way/393563929). The screenshot this came from didn't arrive with the request, so check it's the building meant; Mosaic Jewish Primary School (Hartfield House) is just south of it.
+- [ ] Ibstock Place School and the 5-a-side pitch: OpenStreetMap draws the Playing Field and the 5-a-side pitch inside Ibstock Place School's grounds (relation/8657820), while Roam lists them as the university's (Froebel). Check who they belong to. Ibstock's sports hall is private, so it isn't listed under Sport.
 - [ ] Chadwick Hall (Froebel College, shown as a hall on campus): the map now reaches its plot (OSM way/393563937) along Roehampton Lane, with its three buildings as separate places. Building names were given on site by a resident (8 Nov 2026) and are the reverse of OpenStreetMap's: by Roehampton Lane = North (OSM says South), cross-shaped = West (OSM says North), south = South (OSM says West). Correct the names on OpenStreetMap; build-campus.mjs overrides them until then (NAME_FIX). Doors still unverified.
 - [ ] Chadwick Hall's grounds (`scripts/chadwick.mjs`): the paths (lawn, garden loop, front of South), the three openings in the plot's wall (top of the lawn from the car area, a pedestrian gate by bus stop S, a car gate at the south-east corner), the wall itself and the small car area in the plot's north-east notch were drawn from a resident's sketch over the aerial view (9 Nov 2026), about ±5 m. None of it is in OpenStreetMap. Walk them and re-pick with `/picker.html`; the car area's size and use are a guess from the sketch.
 - [ ] Queen Mary's Hospital: added as a nearby place on its OSM main building (relation/1481954, no name in OSM). No entrance, departments or hours: Roam only says to check with the NHS. Map buildings outside Roam's area are no longer drawn; the hospital's main building is the one exception.

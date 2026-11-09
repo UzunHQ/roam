@@ -2367,7 +2367,16 @@
           "url": "https://www.openstreetmap.org/way/1546333125",
           "title": "OpenStreetMap: recreation ground west of Davies",
           "checked": "2026-10-23"
+        },
+        {
+          "url": "https://www.openstreetmap.org/relation/21170980",
+          "title": "OpenStreetMap: an 8-lane grass running track marked on the field (leisure=track)",
+          "checked": "2026-11-09"
         }
+      ],
+      "tags": [
+        "running track",
+        "athletics"
       ]
     },
     {
@@ -4780,8 +4789,8 @@
       "category": "nearby",
       "kind": "hospital",
       "college": null,
-      "description": "A hospital on Roehampton Lane, across the road from the campus. Not part of the university: check its services and opening times with the NHS.",
-      "lastVerified": null,
+      "description": "A hospital on Roehampton Lane, across the road from the campus, run by St George's University Hospitals NHS Foundation Trust. Not part of the university: check its services and opening times with the NHS.",
+      "lastVerified": "2026-11-09",
       "status": "confirmed",
       "position": [
         -0.241733,
@@ -4792,17 +4801,133 @@
       "entrance": null,
       "footprintId": "relation/1481954",
       "photo": null,
-      "services": [],
+      "services": [
+        "Minor Injuries Unit temporarily closed (suspended): an Enhanced Primary Care Hub sees minor injuries by appointment only, 8am to 8pm, 7 days a week"
+      ],
       "tags": [
         "hospital"
       ],
       "offCampus": true,
-      "officialUrl": null,
+      "officialUrl": "https://www.stgeorges.nhs.uk/service/emergency-department/minor-injuries-unit/",
       "accessibility": null,
       "sources": [
         {
           "url": "https://www.openstreetmap.org/relation/1481954",
-          "title": "OpenStreetMap relation 1481954 (building=hospital)",
+          "title": "OpenStreetMap relation 1481954 (building=hospital); the other buildings and the car park from the hospital site, way/35781504",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/node/1207440442",
+          "title": "OpenStreetMap node 1207440442 (entrance=main)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.stgeorges.nhs.uk/service/emergency-department/minor-injuries-unit/",
+          "title": "St George's: Enhanced Primary Care Hub at Queen Mary's (the former minor injuries unit is suspended; appointments only, 8am to 8pm)",
+          "checked": "2026-11-09"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.242075,
+            51.455251
+          ],
+          "type": "main",
+          "name": "Main entrance (south side)",
+          "verified": false,
+          "source": "https://www.openstreetmap.org/node/1207440442",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "eastwood-nursery",
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "name": "Eastwood Nursery School",
+      "aliases": [
+        "Eastwood Nursery School and Centre for Children and Families",
+        "Eastwood Nursery",
+        "Nursery",
+        "166 Roehampton Lane"
+      ],
+      "category": "nearby",
+      "kind": "school",
+      "college": null,
+      "description": "A nursery school and centre for children and families at 166–168 Roehampton Lane, just south of Chadwick Hall. Not part of the university.",
+      "position": [
+        -0.244674,
+        51.452374
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": "relation/13124867",
+      "services": [],
+      "tags": [
+        "nursery",
+        "school"
+      ],
+      "offCampus": true,
+      "officialUrl": "https://www.eastwood.wandsworth.sch.uk/",
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/393563929",
+          "title": "OpenStreetMap: Eastwood Nursery School and Centre for Children and Families (amenity=kindergarten, 166-168 Roehampton Lane)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/relation/13124867",
+          "title": "OpenStreetMap: the building at 166 Roehampton Lane, on the nursery site",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "ibstock-place-school",
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "name": "Ibstock Place School",
+      "aliases": [
+        "Ibstock",
+        "Ibstock Sports Hall"
+      ],
+      "category": "nearby",
+      "kind": "school",
+      "college": null,
+      "description": "An independent school next to the Froebel playing field, with its own sports hall. Not part of the university, and its grounds are private.",
+      "position": [
+        -0.250974,
+        51.45515
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": "way/653483623",
+      "services": [],
+      "tags": [
+        "school"
+      ],
+      "offCampus": true,
+      "officialUrl": "https://www.ibstockplaceschool.co.uk/",
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/relation/8657820",
+          "title": "OpenStreetMap: Ibstock Place School (amenity=school)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/653483623",
+          "title": "OpenStreetMap: Ibstock Sports Hall (access=private)",
           "checked": "2026-11-09"
         }
       ]

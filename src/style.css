@@ -835,6 +835,7 @@ body.has-fix .find-label, body.panel-open .find-label { display: none; }
 .area-digby-stuart .area-icon { background: var(--roof-digby); }
 .area-froebel .area-icon { background: var(--roof-froebel); }
 .area-southlands .area-icon { background: var(--roof-southlands); }
+.area-chadwick .area-icon { background: var(--roof-froebel); }
 
 /* ---------- saved places ---------- */
 .icon-btn.save[aria-pressed="true"] { color: var(--primary); }

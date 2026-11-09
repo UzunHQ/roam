@@ -11,7 +11,7 @@ export const GROUPS = [
   { id: 'faith', label: 'Faith & prayer', short: 'Faith' },
   { id: 'outdoors', label: 'Outdoors & parking', short: 'Outdoors' },
   { id: 'other', label: 'Other university buildings', short: 'Other' },
-  { id: 'nearby', label: 'Nearby: bus stops and shops', short: 'Nearby' },
+  { id: 'nearby', label: 'Nearby, off campus', short: 'Nearby' },
   { id: 'entrance', label: 'Campus entrances', short: 'Entrances' },
 ] as const;
 
@@ -49,7 +49,7 @@ export const FILTERS = [
   { id: 'living', label: 'Living', full: 'Living: halls of residence', groups: ['accommodation'], icon: 'accommodation' },
   { id: 'sport', label: 'Sport', full: 'Sport & fitness', groups: ['sport'], icon: 'sport' },
   { id: 'essentials', label: 'Essentials', full: 'Essentials: student services and faith spaces', groups: ['services', 'faith'], icon: 'services' },
-  { id: 'nearby', label: 'Nearby', full: 'Nearby: bus stops and shops just off campus', groups: ['nearby'], icon: 'nearby' },
+  { id: 'nearby', label: 'Nearby', full: 'Nearby: bus stops, shops, the hospital and schools just off campus', groups: ['nearby'], icon: 'nearby' },
 ] as const satisfies readonly { id: string; label: string; full: string; groups: readonly GroupId[]; icon: GroupId }[];
 
 export type FilterId = (typeof FILTERS)[number]['id'];

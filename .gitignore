@@ -6,3 +6,4 @@ scripts/.overpass-walls-cache.json
 photos-src
 .vercel
 .env*
+scripts/.overpass-context-cache.json
