@@ -543,6 +543,9 @@ async function main() {
     // pins a little way off the screen still take part, so one sliding in or out as you pan
     // doesn't shift its neighbours
     const M_OUT = 160;
+    const LH = innerWidth < 600 ? 19 : 22; // a name's height with its edge (11 px type on a phone, 12 px otherwise)
+    // the chosen place's name (and a route's start) always shows below its pin: other pins keep off it
+    const selBoxes: Box[] = [];
     for (const m of list) {
       if (m.lift) m.offset = [m.offset[0], lift(m)];
       const sel = isSel(m);
@@ -574,6 +577,7 @@ async function main() {
             const x = x0 + i, y = y0 + j;
             if (dots.some(([a, b]) => Math.hypot(a - x, b - y) < room)) return false; // (dots and their shadows are round: two diagonal neighbours have room)
             if (!near && areaBoxes.some(over([x - 10, y - 10, x + 10, y + 10]))) return false;
+            if (selBoxes.some(over([x - 14, y - 14, x + 14, y + 14]))) return false;
             return (i === 0 && j === 0) || !taken.some(over([x - 12, y - 12, x + 12, y + 12]));
           };
           const [pi, pj] = m.nudge;
@@ -588,6 +592,10 @@ async function main() {
           }
         }
         const x = x0 + nudge[0], y = y0 + nudge[1];
+        if (sel && onScreen && !m.p.noPin) {
+          if (!m.labelW) m.labelW = m.el.querySelector<HTMLElement>('.label')!.offsetWidth || 120;
+          selBoxes.push([x - m.labelW / 2, y + 13, x + m.labelW / 2, y + 13 + LH]);
+        }
         dots.push([x, y]);
         if (onScreen && (!filtered || sel) && !farH) { shown.push({ m, x, y, sel }); if (!m.ctx || sel) keyDots.push([x, y]); }
       }
@@ -599,7 +607,6 @@ async function main() {
     // second pass: names where they cover neither another name, a pin nor an area's name (most
     // important first: the list is sorted by priority). Each tries below its pin, then right, left
     // and above (its last side first), so a crowded spot still shows most names.
-    const LH = innerWidth < 600 ? 19 : 22; // a name's height with its edge (11 px type on a phone, 12 px otherwise)
     // a name already showing keeps its place as you pan: one coming onto the screen waits for room
     // rather than pushing it off (a zoom starts over, most important first)
     const wasNamed = new Set(shown.filter(({ m }) => m.named).map(({ m }) => m));
