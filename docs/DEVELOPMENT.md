@@ -72,7 +72,9 @@ npm run build:campus           # downloads from Overpass once, re-snaps, rewrite
 npm run build:campus -- --cache  # re-snap using the last download
 ```
 
-After rebuilding, also run `npm run build:paths` to refresh the walking graph, and `npm run build:walls` to refresh the campus wall. The wall is one continuous line: the university boundary along Roehampton Lane, then the `barrier=wall` ways along Clarence Lane. It opens only at entrances: a garden gate at each named one (the entrances in `places.json` and named OSM gates), a closed iron gate at other OSM gates, and a doorway at `entrance=*` doors on the line. Where a building stands on the line, the wall runs round its street side. The script prints every opening and why it is there.
+Chadwick Hall's paths, wall openings and car area aren't in OSM: they live in `scripts/chadwick.mjs`, which `build:campus`, `build:paths` and `build:walls` all read. Buildings outside the map's edge are left out (except Queen Mary's Hospital's main building, which the edge takes in).
+
+After rebuilding, also run `npm run build:paths` to refresh the walking graph, and `npm run build:walls` to refresh the campus wall. The campus wall is one continuous line (plus a separate ring round Chadwick Hall's plot): the university boundary along Roehampton Lane, then the `barrier=wall` ways along Clarence Lane. It opens only at entrances: a garden gate at each named one (the entrances in `places.json` and named OSM gates), a closed iron gate at other OSM gates, and a doorway at `entrance=*` doors on the line. Where a building stands on the line, the wall runs round its street side. The script prints every opening and why it is there.
 
 The script prints each match. Anything it couldn't match by name goes to `data/unmatched.txt`. Note that it overwrites `footprintId` values you set by hand. The app never calls Overpass itself.
 

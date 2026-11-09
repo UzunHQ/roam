@@ -14,6 +14,7 @@ Mark `type` (`main`, `accessible`, `card-required`, `closed`) and `verified: tru
 - [ ] Food places inside other buildings: Costa, Froebel Diner, Union Bar, Pub & Grub (Montefiore); Library Café; Quad Café
 - [ ] Which doors need a card, and which are closed out of hours
 - [ ] Halls: every block's door (Chadwick Hall's three buildings included)
+- [ ] Chadwick Hall South's door: placed from a resident's sketch (north side, near the east end), `verified: false`. North's and West's doors unknown.
 
 ## Rooms
 
@@ -46,6 +47,8 @@ LibCal shows no hours from 20 Dec 2026 yet, and no 2026 festive notice was found
 ## Places
 
 - [ ] Chadwick Hall (Froebel College, shown as a hall on campus): the map now reaches its plot (OSM way/393563937) along Roehampton Lane, with its three buildings as separate places. Building names were given on site by a resident (8 Nov 2026) and are the reverse of OpenStreetMap's: by Roehampton Lane = North (OSM says South), cross-shaped = West (OSM says North), south = South (OSM says West). Correct the names on OpenStreetMap; build-campus.mjs overrides them until then (NAME_FIX). Doors still unverified.
+- [ ] Chadwick Hall's grounds (`scripts/chadwick.mjs`): the paths (lawn, garden loop, front of South), the three openings in the plot's wall (top of the lawn from the car area, a pedestrian gate by bus stop S, a car gate at the south-east corner), the wall itself and the small car area in the plot's north-east notch were drawn from a resident's sketch over the aerial view (9 Nov 2026), about ±5 m. None of it is in OpenStreetMap. Walk them and re-pick with `/picker.html`; the car area's size and use are a guess from the sketch.
+- [ ] Queen Mary's Hospital: added as a nearby place on its OSM main building (relation/1481954, no name in OSM). No entrance, departments or hours: Roam only says to check with the NHS. Map buildings outside Roam's area are no longer drawn; the hospital's main building is the one exception.
 - [ ] Downshire House (inside the Chadwick plot, between North and South): drawn as a campus building, no place yet. Listed on the gender-neutral toilets page; what else is in it isn't known.
 - [ ] Whitelands College (Holybourne Avenue, SW15 4JD) and its halls (Beverley, Cheltenham, Durham, Gilesgate, Kings, Melrose, Walpole, Sutherland): a separate site outside this map's area. Not added.
 - [ ] Bus stops X, U, S, T, W, V: routes and direction from TfL's StopPoint API (9 Nov 2026), positions from OpenStreetMap. Check the positions on site, and re-check routes after TfL changes. Live times stay on TfL's site (linked from each stop).

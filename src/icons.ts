@@ -64,7 +64,7 @@ const byKind: Record<string, string> = {
   union: icons.union, faith: icons.faith, careers: icons.careers, security: icons.security, laundry: icons.laundry, post: icons.post,
   service: icons.service, cafe: icons.cafe, restaurant: icons.restaurant, bar: icons.bar, shop: icons.shop, parking: icons.parking,
   fountain: icons.fountain, garden: icons.garden, square: icons.square, monument: icons.monument, golf: icons.golf, coop: icons.coop, outdoors: icons.garden,
-  'bus-stop': icons.bus, gym: icons.gym, court: icons.sport, field: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
+  'bus-stop': icons.bus, hospital: icons.health, gym: icons.gym, court: icons.sport, field: icons.sport, 'sports-hall': icons.sport, entrance: icons.entrance,
 };
 
 export function placeIcon(category: string, kind: string): string {

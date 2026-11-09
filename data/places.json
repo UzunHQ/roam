@@ -4480,6 +4480,19 @@
           "title": "OpenStreetMap: building outline (name corrected on site)",
           "checked": "2026-11-08"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244256,
+            51.452727
+          ],
+          "type": "main",
+          "name": "North side, by the lawn path",
+          "verified": false,
+          "source": "A resident's sketch on the map",
+          "checked": "2026-11-09"
+        }
       ]
     },
     {
@@ -4589,6 +4602,47 @@
           "url": "https://www.openstreetmap.org/way/451250763",
           "title": "OpenStreetMap: building outline (name corrected on site)",
           "checked": "2026-11-08"
+        }
+      ]
+    },
+    {
+      "id": "queen-marys-hospital",
+      "code": "",
+      "name": "Queen Mary's Hospital",
+      "aliases": [
+        "Queen Mary's",
+        "Queen Marys Hospital",
+        "Hospital",
+        "QMH"
+      ],
+      "roomCodePrefixes": [],
+      "category": "nearby",
+      "kind": "hospital",
+      "college": null,
+      "description": "A hospital on Roehampton Lane, across the road from the campus. Not part of the university: check its services and opening times with the NHS.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.241733,
+        51.455572
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": "relation/1481954",
+      "photo": null,
+      "services": [],
+      "tags": [
+        "hospital"
+      ],
+      "offCampus": true,
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/relation/1481954",
+          "title": "OpenStreetMap relation 1481954 (building=hospital)",
+          "checked": "2026-11-09"
         }
       ]
     }

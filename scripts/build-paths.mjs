@@ -6,6 +6,7 @@
 // authorised there). Steps are flagged so a step-free option can be added once verified.
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { CHADWICK_PATHS } from './chadwick.mjs';
 
 const CACHE = new URL('.overpass-cache.json', import.meta.url);
 const OUT = new URL('../data/paths.json', import.meta.url);
@@ -65,6 +66,36 @@ for (const w of osm.elements) {
     const a = nodeIdx(w.nodes[i], g1.lon, g1.lat), b = nodeIdx(w.nodes[i + 1], g2.lon, g2.lat);
     edges.push([a, b, Math.round(metres(nodes[a], nodes[b]) * 10) / 10, flags]);
   }
+}
+
+// Chadwick Hall's grounds (scripts/chadwick.mjs, not in OSM): their paths share nodes where they
+// meet, and each one marked `lane` joins the nearest OSM node on Roehampton Lane where it starts
+{
+  const osmCount = nodes.length;
+  const key = ([lng, lat]) => `${round(lng)},${round(lat)}`;
+  const drawn = new Map();
+  const at = (p) => {
+    const k = key(p);
+    if (!drawn.has(k)) { drawn.set(k, nodes.length); nodes.push([round(p[0]), round(p[1])]); }
+    return drawn.get(k);
+  };
+  for (const w of CHADWICK_PATHS) {
+    const ids = w.ll.map(at);
+    for (let i = 0; i < ids.length - 1; i++) edges.push([ids[i], ids[i + 1], Math.round(metres(nodes[ids[i]], nodes[ids[i + 1]]) * 10) / 10, 0]);
+    if (w.lane) {
+      const lane = osm.elements.find((x) => x.type === 'way' && x.id === 763392451);
+      let best = -1, bestD = Infinity;
+      for (const id of lane?.nodes ?? []) {
+        const k = index.get(id);
+        if (k == null || k >= osmCount) continue;
+        const d = metres(nodes[k], nodes[ids[0]]);
+        if (d < bestD) { bestD = d; best = k; }
+      }
+      if (best < 0 || bestD > 40) throw new Error(`${w.id}: no Roehampton Lane node within 40 m`);
+      edges.push([best, ids[0], Math.round(bestD * 10) / 10, 0]);
+    }
+  }
+  console.log(`Chadwick Hall: ${CHADWICK_PATHS.length} drawn paths, ${drawn.size} points`);
 }
 
 // keep only the largest connected network, so a route can always be completed

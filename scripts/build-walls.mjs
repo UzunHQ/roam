@@ -15,6 +15,7 @@
 // the building's outer side, against its walls. Piers stiffen it every ~17 m and at corners.
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { CHADWICK_GATES } from './chadwick.mjs';
 
 const ROOT = new URL('..', import.meta.url);
 const OUT = new URL('data/walls.geojson', ROOT);
@@ -290,6 +291,8 @@ for (let i = cuts.length - 1; i >= 0; i--) {
 // ---------- 4. wall pieces, piers, pillars, gates ----------
 const out = [];
 const point = (part, p, dir, extra = {}) => out.push({ type: 'Feature', properties: { part, angle: Math.round(Math.atan2(dir[1], dir[0]) * 1000) / 1000, ...extra }, geometry: { type: 'Point', coordinates: ll(p) } });
+/** the wall along M between the openings `cuts`, with its pillars and piers; returns its pieces */
+function wallPieces(M, cuts) {
 const edges = [0, ...cuts.flatMap((c) => [c.from, c.to]), M.L];
 const pieces = [];
 for (let i = 0; i < edges.length; i += 2) {
@@ -318,6 +321,9 @@ for (const [d0, d1, before, after] of pieces) {
     for (let j = 1; j < m; j++) { const d = anchors[k - 1] + (gap * j) / m; point('pier', M.at(d), M.dirAt(d)); }
   }
 }
+return pieces;
+}
+const pieces = wallPieces(M, cuts);
 // plain OSM gates: a closed iron gate across the opening (doorways stay open)
 for (const c of cuts.filter((c) => !c.named && c.gate)) {
   out.push({ type: 'Feature', properties: { part: 'railing' }, geometry: { type: 'LineString', coordinates: [ll(M.at(c.from)), ll(M.at(c.to))] } });
@@ -329,6 +335,29 @@ for (const c of cuts.filter((c) => c.named)) {
   out.push({ type: 'Feature', properties: { part: 'gate', name: c.name, place: c.place ?? null, in: campusSide }, geometry: { type: 'LineString', coordinates: [ll(a), ll(b)] } });
 }
 
+// ---------- 5. Chadwick Hall's plot ----------
+// A wall all round the halls' plot (OSM way/393563937), as a resident describes it (9 Nov 2026),
+// open where its drive, its pedestrian gate and its car gate pass (scripts/chadwick.mjs).
+const CAMPUS_CACHE = new URL('scripts/.overpass-cache.json', ROOT);
+let chadwick = null;
+if (existsSync(CAMPUS_CACHE)) {
+  const plot = JSON.parse(await readFile(CAMPUS_CACHE, 'utf8')).elements.find((el) => el.type === 'way' && el.id === 393563937);
+  if (plot) {
+    let r = plot.geometry.map((p) => xy([p.lon, p.lat]));
+    if (same(r[0], r.at(-1))) r = r.slice(0, -1);
+    // start (and end) at the south-west corner, away from every opening
+    const k = r.reduce((b, p, i) => (p[0] + p[1] < r[b][0] + r[b][1] ? i : b), 0);
+    const C = measure([...r.slice(k), ...r.slice(0, k), r[k]]);
+    const ccuts = CHADWICK_GATES.map((g) => {
+      const pr = C.project(xy(g.at));
+      if (pr.dist > 3) console.warn(`! Chadwick ${g.name} is ${r1(pr.dist)} m off the plot's edge`);
+      return { from: pr.along - g.width / 2, to: pr.along + g.width / 2, named: false, why: `Chadwick Hall: ${g.name}` };
+    }).sort((a, b) => a.from - b.from);
+    chadwick = { L: C.L, pieces: wallPieces(C, ccuts), cuts: ccuts };
+  }
+}
+if (!chadwick) console.warn('! No Chadwick Hall plot (run build:campus first): its wall is left out');
+
 // ---------- report ----------
 console.log(`Wall: ${Math.round(M.L)} m in one line, ${pieces.length} pieces, ${cuts.length} openings`);
 if (rerouted.length) console.log(`Runs round the outside of: ${[...new Set(rerouted)].join(', ')}`);
@@ -337,6 +366,10 @@ for (const p of places.places.filter((p) => p.category === 'entrance')) {
   const g = out.find((f) => f.properties.part === 'gate' && f.properties.place === p.id);
   console.log(`${g ? 'ok  ' : 'MISS'} ${p.name}: ${g ? 'garden gate' : 'no gate!'}`);
 }
+if (chadwick) {
+  console.log(`Chadwick Hall wall: ${Math.round(chadwick.L)} m round the plot, ${chadwick.pieces.length} pieces`);
+  for (const c of chadwick.cuts) console.log(`  door  ${r1(c.to - c.from)} m wide  ${c.why}`);
+}
 const short = pieces.filter(([d0, d1]) => d1 - d0 < MIN_PIECE);
 if (short.length) console.warn(`! ${short.length} pieces shorter than ${MIN_PIECE} m`);
 
@@ -344,7 +377,7 @@ await writeFile(OUT, JSON.stringify({
   type: 'FeatureCollection',
   generated: new Date().toISOString().slice(0, 10),
   attribution: '© OpenStreetMap contributors (ODbL)',
-  source: `OSM ways ${CLARENCE_WALLS.join(', ')} (barrier=wall), relation ${UNIVERSITY} (university boundary), gates and entrances`,
+  source: `OSM ways ${CLARENCE_WALLS.join(', ')} (barrier=wall), relation ${UNIVERSITY} (university boundary), gates and entrances; Chadwick Hall: plot way/393563937, its wall and gates from a resident (9 Nov 2026)`,
   features: out,
 }));
 const count = (part) => out.filter((f) => f.properties.part === part).length;

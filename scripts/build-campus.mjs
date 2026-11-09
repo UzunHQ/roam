@@ -4,6 +4,7 @@
 // Flags: --cache  reuse scripts/.overpass-cache.json instead of downloading
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { CHADWICK_PATHS, CHADWICK_CAR_AREA, CHADWICK_EDGE_EXTRA } from './chadwick.mjs';
 
 const ROOT = new URL('..', import.meta.url);
 const PLACES = new URL('data/places.json', ROOT);
@@ -132,6 +133,7 @@ const NAME_FIX = {
   'way/451250763': 'Chadwick Hall North', // OSM: "Chadwick Hall South"
   'way/451250764': 'Chadwick Hall West', // OSM: "Chadwick Hall North"
   'way/451250765': 'Chadwick Hall South', // OSM: "Chadwick Hall West"
+  'relation/1481954': "Queen Mary's Hospital", // the hospital's main building; OSM has no name on it
 };
 for (const el of osm.elements) {
   const t = el.tags || {};
@@ -1051,6 +1053,9 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   if (plot) {
     const r = ring(plot.geometry);
     features.unshift({ type: 'Feature', properties: { layer: 'green', wooded: false, campus: true }, geometry: { type: 'Polygon', coordinates: [r] } });
+    // its paths, gates and car area (scripts/chadwick.mjs: a resident's sketch, not in OSM)
+    for (const p of CHADWICK_PATHS) features.push({ type: 'Feature', id: p.id, properties: { layer: 'path', kind: p.kind, drawn: true }, geometry: { type: 'LineString', coordinates: p.ll } });
+    features.push({ type: 'Feature', id: 'chadwick/car-area', properties: { layer: 'parking', drawn: true }, geometry: { type: 'Polygon', coordinates: [CHADWICK_CAR_AREA] } });
     let seed4 = 23, added = 0;
     const rand4 = () => ((seed4 = (seed4 * 1664525 + 1013904223) % 4294967296) / 4294967296);
     const pathsHere = features.filter((f) => f.properties.layer === 'path');
@@ -1145,8 +1150,12 @@ const hull = (pts) => {
   for (const p of q.reverse()) { while (up.length >= 2 && cross(up.at(-2), up.at(-1), p) <= 0) up.pop(); up.push(p); }
   return [...lo.slice(0, -1), ...up.slice(0, -1)];
 };
-const CHADWICK = plotRing ? hull(plotRing) : null;
-const EDGE_PIECES = [MAP_EDGE, LANE_PIECE, ...(CHADWICK ? [CHADWICK] : [])];
+// (with the car area in the plot's north-east notch, scripts/chadwick.mjs)
+const CHADWICK = plotRing ? hull([...plotRing, ...CHADWICK_EDGE_EXTRA]) : null;
+// Queen Mary's Hospital's main building (OSM relation/1481954, east of Roehampton Lane): the
+// map's east side (x = 296) runs through it, so a box round the rest of it joins the map
+const HOSPITAL = [[296, -33], [378, -33], [378, 54], [296, 54]];
+const EDGE_PIECES = [MAP_EDGE, LANE_PIECE, HOSPITAL, ...(CHADWICK ? [CHADWICK] : [])];
 // the outline of all three, for the dimmed frame: the main ring, with its south side detoured down
 // the lane's west side, round the plot (west, south) and back up the lane's east side
 const EDGE_OUTLINE = (() => {
@@ -1155,11 +1164,17 @@ const EDGE_OUTLINE = (() => {
   // the plot's outline from its north side round by the west to its south-east corner
   const westKerbX = (y) => lane.wTop[0] + ((y - lane.wTop[1]) / (lane.wBot[1] - lane.wTop[1])) * (lane.wBot[0] - lane.wTop[0]);
   const outside = CHADWICK.filter((p) => p[0] < westKerbX(p[1]) - 0.5);
-  // walk west along the north side, down the west side, east along the south side
-  const north = outside.filter((p) => p[1] > -240).sort((a, b) => b[0] - a[0]);
-  const rest = outside.filter((p) => p[1] <= -240).sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+  // walk west along the north side, down the west side, east along the south side: the hull is
+  // anticlockwise, so that is its own order, starting after the corner under the lane
+  const isOut = (p) => outside.includes(p);
+  const k0 = CHADWICK.findIndex((p, k) => isOut(p) && !isOut(CHADWICK[(k - 1 + CHADWICK.length) % CHADWICK.length]));
+  const round = [];
+  for (let k = k0; isOut(CHADWICK[k % CHADWICK.length]) && round.length < CHADWICK.length; k++) round.push(CHADWICK[k % CHADWICK.length]);
   const plotTop = Math.max(...CHADWICK.map((p) => p[1]));
-  return [...MAP_EDGE.slice(0, i + 1), lane.wTop, [westKerbX(plotTop), plotTop], ...north, ...rest, lane.wBot, lane.eBot, lane.eTop, ...MAP_EDGE.slice(i + 1)];
+  // and on the east side, out round the hospital
+  const j = MAP_EDGE.findIndex((p) => p[0] === 296 && p[1] === 532);
+  return [...MAP_EDGE.slice(0, i + 1), lane.wTop, [westKerbX(plotTop), plotTop], ...round, lane.wBot, lane.eBot, lane.eTop,
+    ...MAP_EDGE.slice(i + 1, j), HOSPITAL[0], HOSPITAL[1], HOSPITAL[2], HOSPITAL[3], ...MAP_EDGE.slice(j)];
 })();
 {
   const orientOf = (R) => Math.sign(R.reduce((a, p, i) => { const q = R[(i + 1) % R.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0));
@@ -1190,6 +1205,10 @@ const EDGE_OUTLINE = (() => {
     const f = features[i], layer = f.properties.layer;
     if (['tree', 'golfflag'].includes(layer)) {
       if (!inEdge(toM(f.geometry.coordinates))) { features.splice(i, 1); dropped++; }
+    } else if (layer === 'building' && !f.properties.campus && !placesDoc.places.some((p) => p.footprintId === f.properties.osmId)) {
+      // buildings that aren't the university's aren't drawn at all, inside the edge or out: Roam
+      // shows only what it covers (a place on someone else's building, like the hospital, keeps it)
+      features.splice(i, 1); dropped++;
     } else if (['green', 'golf'].includes(layer) && f.geometry.type === 'Polygon') {
       const r = f.geometry.coordinates[0];
       if (EDGE_PIECES.some((R) => r.every((p) => inPiece(R, toM(p))))) continue; // wholly inside one piece
