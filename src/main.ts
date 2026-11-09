@@ -555,13 +555,18 @@ async function main() {
       if (away) continue;
       const right = ctl.width && pt.y > ctl.top - 24 && pt.y < ctl.bottom + 24 ? ctl.left - 4 : W - 8;
       const dx = Math.round(pt.x + w > right ? right - (pt.x + w) : pt.x - w < 8 ? 8 - (pt.x - w) : 0);
-      a.marker.setOffset([dx, 0]);
       const hh = near ? 16 : 20;
       // (4 px each side between two names is room enough: 8 hid Froebel's next to Digby Stuart's on a phone)
       const bw = w - 4;
-      const box: Box = [pt.x + dx - bw, pt.y - hh, pt.x + dx + bw, pt.y + hh];
-      // a route's start and end pins (and their names) come first; and two names never overlap
-      if (routePinBoxes.some((r) => box[0] < r.right && box[2] > r.left && box[1] < r.bottom && box[3] > r.top) || areaBoxes.some(over(box))) { a.el.classList.add('hidden'); continue; }
+      // a route's start and end pins (and their names) come first; and two names never overlap. A name
+      // that would sits a little lower or higher instead (Froebel's under Digby Stuart's on a phone),
+      // and only with nowhere to go is it left out
+      const boxAt = (dy: number): Box => [pt.x + dx - bw, pt.y + dy - hh, pt.x + dx + bw, pt.y + dy + hh];
+      const clear = (b: Box) => b[1] > 4 && b[3] < H - 4 && !routePinBoxes.some((r) => b[0] < r.right && b[2] > r.left && b[1] < r.bottom && b[3] > r.top) && !areaBoxes.some(over(b));
+      const dy = [0, 24, -24, 44, -44].find((d) => clear(boxAt(d)));
+      if (dy === undefined) { a.marker.setOffset([dx, 0]); a.el.classList.add('hidden'); continue; }
+      a.marker.setOffset([dx, dy]);
+      const box = boxAt(dy);
       areaBoxes.push(box);
       areaOf.push(a.el);
     }
