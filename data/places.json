@@ -2517,6 +2517,43 @@
       "sources": []
     },
     {
+      "id": "chadwick-hall-car-park",
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "officialUrl": null,
+      "accessibility": null,
+      "name": "Chadwick Hall Car Park",
+      "aliases": [
+        "Car park",
+        "Parking",
+        "Chadwick parking",
+        "Chadwick car park"
+      ],
+      "category": "building",
+      "kind": "parking",
+      "college": "froebel",
+      "description": "An open car park at Chadwick Hall, by South and Downshire House on the Roehampton Lane side, reached through the vehicle gate. Its outline is not on OpenStreetMap, so the pin is approximate.",
+      "position": [
+        -0.244104,
+        51.452877
+      ],
+      "positionSource": "estimate",
+      "positionAccuracyM": 25,
+      "footprintId": null,
+      "services": [],
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/393563937",
+          "title": "OpenStreetMap: Chadwick Hall's plot (the position is an estimate from a resident's sketch over it, not checked on site)",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
       "id": "davies-sports-hall",
       "code": "F2",
       "name": "Davies Sports Hall",
@@ -3865,6 +3902,77 @@
       ]
     },
     {
+      "id": "gate-chadwick",
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "officialUrl": null,
+      "accessibility": null,
+      "name": "Chadwick Hall entrance",
+      "aliases": [
+        "Chadwick Hall gate",
+        "Chadwick gate",
+        "Chadwick pedestrian gate"
+      ],
+      "category": "entrance",
+      "kind": "entrance",
+      "college": null,
+      "description": "The pedestrian gate into Chadwick Hall from Roehampton Lane, by bus stop S. Not verified: the position is approximate.",
+      "position": [
+        -0.243944,
+        51.453124
+      ],
+      "positionSource": "estimate",
+      "positionAccuracyM": 25,
+      "footprintId": null,
+      "services": [],
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/393563937",
+          "title": "OpenStreetMap: Chadwick Hall's plot (the position is an estimate from a resident's sketch over it, not checked on site)",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "gate-chadwick-vehicle",
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "officialUrl": null,
+      "accessibility": null,
+      "name": "Chadwick Hall vehicle gate",
+      "aliases": [
+        "Chadwick car gate",
+        "Chadwick Hall car park entrance"
+      ],
+      "category": "entrance",
+      "kind": "entrance",
+      "college": null,
+      "description": "The vehicle gate at Chadwick Hall's south-east corner, from Roehampton Lane to the car park. Not verified: the position is approximate.",
+      "position": [
+        -0.244067,
+        51.452625
+      ],
+      "positionSource": "estimate",
+      "positionAccuracyM": 25,
+      "footprintId": null,
+      "services": [],
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/393563937",
+          "title": "OpenStreetMap: Chadwick Hall's plot (the position is an estimate from a resident's sketch over it, not checked on site)",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
       "id": "coexist-cafe",
       "code": "",
       "name": "The Coexist Café",
@@ -4433,7 +4541,8 @@
       "aliases": [
         "Chadwick Hall",
         "Chadwick",
-        "Chadwick South"
+        "Chadwick South",
+        "South Court"
       ],
       "roomCodePrefixes": [],
       "category": "building",
@@ -4502,7 +4611,8 @@
       "aliases": [
         "Chadwick Hall",
         "Chadwick",
-        "Chadwick West"
+        "Chadwick West",
+        "West Court"
       ],
       "roomCodePrefixes": [],
       "category": "building",
@@ -4557,7 +4667,8 @@
       "aliases": [
         "Chadwick Hall",
         "Chadwick",
-        "Chadwick North"
+        "Chadwick North",
+        "North Court"
       ],
       "roomCodePrefixes": [],
       "category": "building",
@@ -4602,6 +4713,56 @@
           "url": "https://www.openstreetmap.org/way/451250763",
           "title": "OpenStreetMap: building outline (name corrected on site)",
           "checked": "2026-11-08"
+        }
+      ]
+    },
+    {
+      "id": "downshire-house",
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "officialUrl": "https://historicengland.org.uk/listing/the-list/list-entry/1065522",
+      "accessibility": null,
+      "name": "Downshire House",
+      "aliases": [
+        "Downshire"
+      ],
+      "category": "building",
+      "kind": "other",
+      "college": null,
+      "description": "Grade II* listed Georgian villa (c. 1770) at the heart of Chadwick Hall.",
+      "position": [
+        -0.244308,
+        51.452898
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 5,
+      "footprintId": "way/451250762",
+      "services": [],
+      "tags": [
+        "listed building",
+        "historic",
+        "heritage",
+        "Georgian"
+      ],
+      "sources": [
+        {
+          "url": "https://historicengland.org.uk/listing/the-list/list-entry/1065522",
+          "title": "Historic England list entry 1065522: Downshire House (Grade II*)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://britishlistedbuildings.co.uk/101065522-downshire-house-roehampton-ward",
+          "title": "British Listed Buildings: the list entry text (circa 1770, for the Marquess of Downshire)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/451250762",
+          "title": "OpenStreetMap: Downshire House (footprint)",
+          "checked": "2026-11-09"
         }
       ]
     },

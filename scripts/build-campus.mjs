@@ -339,6 +339,8 @@ for (const p of placesDoc.places) {
     p.footprintId = match.b.f.properties.osmId;
     match.b.f.properties.placeId ??= p.id;
     match.b.f.properties.college ??= p.college;
+    // a building that isn't a hall or a college's (Downshire House): the "other university building" roof
+    if (p.kind === 'other') match.b.f.properties.noCollege = true;
     if (p.status !== 'pending-legend') report.push(`${how.startsWith('name') ? 'OK ' : '~~ '} ${p.id} -> ${p.footprintId} (${how})`);
   } else {
     p.footprintId = null;
@@ -349,7 +351,7 @@ for (const p of placesDoc.places) {
 // college zone for unlinked footprints: nearest place's college within 120 m
 const withCollege = placesDoc.places.filter((p) => p.college && p.category !== 'entrance');
 for (const { f, ring: r, monument } of buildings) {
-  if (monument || f.properties.college) continue;
+  if (monument || f.properties.college || f.properties.noCollege) { delete f.properties.noCollege; continue; }
   const c = centroid(r);
   f.properties.campus = !campusRings.length || campusRings.some((cr) => pointInRing(c, cr));
   if (!f.properties.campus) { f.properties.college = null; continue; }

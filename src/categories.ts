@@ -10,6 +10,7 @@ export const GROUPS = [
   { id: 'services', label: 'Student services', short: 'Services' },
   { id: 'faith', label: 'Faith & prayer', short: 'Faith' },
   { id: 'outdoors', label: 'Outdoors & parking', short: 'Outdoors' },
+  { id: 'other', label: 'Other university buildings', short: 'Other' },
   { id: 'nearby', label: 'Nearby: bus stops and shops', short: 'Nearby' },
   { id: 'entrance', label: 'Campus entrances', short: 'Entrances' },
 ] as const;
@@ -29,6 +30,7 @@ export function groupOf(p: Place): GroupId {
     case 'library': return 'library';
     case 'accommodation': return 'accommodation';
     case 'faith': return 'faith';
+    case 'other': return 'other'; // a university building with nothing for students to use (Downshire House)
     default: return 'services';
   }
 }
@@ -37,7 +39,7 @@ export const groupLabel = (id: GroupId) => GROUPS.find((g) => g.id === id)!.labe
 
 /** Higher wins when markers collide on screen. */
 export const PRIORITY: Record<GroupId, number> = {
-  library: 9, academic: 8, food: 7, sport: 7, services: 6, faith: 5, accommodation: 4, outdoors: 3, nearby: 3, entrance: 2,
+  library: 9, academic: 8, food: 7, sport: 7, services: 6, faith: 5, accommodation: 4, other: 3, outdoors: 3, nearby: 3, entrance: 2,
 };
 
 /** The category chips: a few broad filters, each covering one or more groups. */

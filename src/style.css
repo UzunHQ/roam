@@ -256,6 +256,7 @@ svg { display: block; flex: none; }
 .g-services { --g: var(--g-services); }
 .g-faith { --g: var(--g-faith); }
 .g-outdoors { --g: var(--g-outdoors); }
+.g-other { --g: #9a7b5f; } /* warm brown, like the 'other university building' roof */
 .g-nearby { --g: #5b7fa6; } /* a calm slate blue: off campus */
 .g-entrance { --g: #8b8578; }
 

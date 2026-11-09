@@ -182,6 +182,7 @@ const GROUP_WORDS: Record<string, string[]> = {
   services: ['services', 'support', 'help', 'wellbeing', 'careers', 'security', 'health', 'doctor', 'gp', 'laundry', 'union', 'finance'],
   faith: ['faith', 'prayer', 'pray', 'chapel', 'chaplaincy', 'mosque', 'wudu', 'multifaith'],
   outdoors: ['outdoors', 'outdoor', 'outside', 'parking', 'car park', 'garden', 'fountain', 'square'],
+  other: ['historic', 'heritage', 'listed building'],
   nearby: ['nearby', 'bus', 'buses', 'bus stop', 'supermarket', 'groceries', 'off campus'],
 };
 
