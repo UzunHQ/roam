@@ -2,11 +2,11 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
 import * as maplibregl from 'maplibre-gl';
-import { campusUrl, placesUrl } from './data';
+import { campusUrl, placesUrl, unpackCampus } from './data';
 import { createMap } from './map';
 import type { PlacesDoc } from './types';
 
-const [doc, campus] = await Promise.all([fetch(placesUrl).then((r) => r.json() as Promise<PlacesDoc>), fetch(campusUrl).then((r) => r.json())]);
+const [doc, campus] = await Promise.all([fetch(placesUrl).then((r) => r.json() as Promise<PlacesDoc>), fetch(campusUrl).then((r) => r.json()).then(unpackCampus)]);
 const map = createMap({ container: 'map', campus, bounds: doc.bounds, theme: 'light' });
 map.setPitch(0);
 map.setMaxZoom(21);

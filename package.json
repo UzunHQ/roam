@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/pack-campus.mjs && vite",
     "dev:phone": "vite --host",
-    "build": "tsc --noEmit && vite build",
+    "build": "node scripts/pack-campus.mjs && tsc --noEmit && vite build",
     "preview": "vite preview",
     "preview:phone": "vite preview --host",
     "build:campus": "node scripts/build-campus.mjs && node scripts/build-context.mjs --cache && node scripts/slim-geojson.mjs",

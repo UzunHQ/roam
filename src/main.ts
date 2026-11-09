@@ -1,7 +1,7 @@
 import './style.css';
 import type { EaseToOptions, LngLat as MLLngLat, Map as MLMap, Marker as MLMarker, MarkerOptions } from 'maplibre-gl';
 import { config } from './config';
-import { loadData } from './data';
+import { loadData, loadPaths } from './data';
 import type { Theme } from './map';
 import { icons, placeIcon } from './icons';
 import { matchingGroups, parseRoom, search } from './search';
@@ -221,7 +221,7 @@ main().catch((err) => {
 });
 
 async function main() {
-  const [{ doc, places, campus, walls, paths }, mapMod] = await Promise.all([loadData(), mapModule]);
+  const [{ doc, places, campus, walls }, mapMod] = await Promise.all([loadData(), mapModule]);
   const { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, pickHalf, selectBuilding, setGeoJSON, setXray } = mapMod ?? ({} as NonNullable<typeof mapMod>);
   const Marker = (mapMod?.maplibregl.Marker ?? NoMarker) as unknown as new (o?: MarkerOptions) => MLMarker;
   const byId = new Map(places.map((p) => [p.id, p]));
@@ -242,7 +242,10 @@ async function main() {
     footprints.set(f.properties.osmId, ring);
     outlines.set(f.properties.osmId, [ring]);
   }
-  const router = new Router(paths);
+  // the walking graph arrives after the first draw (data.ts loadPaths); until then no route
+  let router: Router | null = null;
+  const routerReady = () => loadPaths().then((g) => (router ??= new Router(g)));
+  const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 3000 }) : setTimeout(fn, 1500));
   // Which place a building tap opens when several share one building: the building itself (named
   // like it in OpenStreetMap), not the café, prayer room or post room inside it.
   const SUB_KINDS = new Set(['faith', 'post', 'cafe', 'restaurant', 'bar', 'shop']);
@@ -271,6 +274,8 @@ async function main() {
   if (mapMod) {
     try {
       map = createMap({ container: 'map', campus, walls, bounds: doc.bounds, theme: theme() });
+      // the walking graph: once the map has drawn and the page is idle
+      map.once('idle', () => idle(() => { routerReady(); }));
     } catch (err) {
       console.error(err);
     }
@@ -446,6 +451,9 @@ async function main() {
     // (not while a category is chosen: then the places matter, not the college names)
     const showAreas = z < AREA_Z && !narrowed();
     const areaBoxes: [number, number, number, number][] = [];
+    const areaOf: HTMLElement[] = []; // the label each box belongs to
+    const routePinBoxes = [...document.querySelectorAll<HTMLElement>('.route-pin')].map((e) => e.getBoundingClientRect()).filter((r) => r.width)
+      .map((r) => ({ left: r.left - 70, right: r.right + 70, top: r.top - 4, bottom: r.bottom + 26 })); // and the name under it
     // a name near the screen's edge slides in to stay whole, clear of the map controls
     const ctl = $('.controls').getBoundingClientRect();
     document.body.classList.toggle('areas-small', z > 15.9);
@@ -462,7 +470,11 @@ async function main() {
       const right = ctl.width && pt.y > ctl.top - 24 && pt.y < ctl.bottom + 24 ? ctl.left - 4 : W - 8;
       const dx = Math.round(pt.x + w > right ? right - (pt.x + w) : pt.x - w < 8 ? 8 - (pt.x - w) : 0);
       a.marker.setOffset([dx, 0]);
-      areaBoxes.push([pt.x + dx - w, pt.y - 24, pt.x + dx + w, pt.y + 24]);
+      // a route's start and end pins (and their names) come first
+      const box: [number, number, number, number] = [pt.x + dx - w, pt.y - 24, pt.x + dx + w, pt.y + 24];
+      if (routePinBoxes.some((r) => box[0] < r.right && box[2] > r.left && box[1] < r.bottom && box[3] > r.top)) { a.el.classList.add('hidden'); continue; }
+      areaBoxes.push(box);
+      areaOf.push(a.el);
     }
     // outside the chosen category (entrances, car parks and open-air spots have no chip and always show)
     // (entrances always stay, as small gates; open-air spots and car parks used to as well, now only under All)
@@ -516,7 +528,12 @@ async function main() {
       if (!sel && clipped) continue;
       const hitsDot = keyDots.some(([dx, dy]) => (dx !== x || dy !== y) && dx + 12 > box[0] && dx - 12 < box[2] && dy + 12 > box[1] && dy - 12 < box[3]);
       const hitsLabel = labels.some(([a, b, c, d]) => box[0] < c && box[2] > a && box[1] < d && box[3] > b);
-      if (sel || (!hitsDot && !hitsLabel)) { labels.push(box); m.el.classList.add('show-label'); }
+      // a college's name and a building's name never overlap: the building's waits, unless it's the
+      // chosen place, in which case the college's name steps aside (pin and name both)
+      const over = (r: number[]) => (q: [number, number, number, number]) => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1];
+      const hitsArea = areaBoxes.some(over(box));
+      if (sel) areaBoxes.forEach((q, i) => { if (over(box)(q) || over([x - 16, y - 16, x + 16, y + 16])(q)) areaOf[i].classList.add('hidden'); });
+      if (sel || (!hitsDot && !hitsLabel && !hitsArea)) { labels.push(box); m.el.classList.add('show-label'); }
     }
   }
   map?.on('moveend', layoutMarkers);
@@ -647,6 +664,11 @@ async function main() {
   key.innerHTML = `<h3>Key</h3><ul>` +
     visibleGroups.map((g) => `<li><span class="chip-dot g-${g.id}">${groupIcon(g.id)}</span>${g.label}</li>`).join('') +
     `<li><span class="chip-dot g-entrance">${icons.entrance}</span>Campus entrance</li></ul>
+    <h4>Off campus, nearby</h4><ul>
+      ${[['hospital', 'Hospital (Queen Mary\'s)'], ['bus-stop', 'Bus stop'], ['shop', 'Shop or supermarket'], ['library', 'Public library']]
+        .map(([k, label]) => `<li><span class="chip-dot g-nearby${k === 'hospital' ? ' k-hospital' : ''}">${placeIcon('nearby', k)}</span>${label}</li>`).join('')}
+      <li><span class="swatch ctx-ground"></span>Grey ground: outside the university</li>
+    </ul>
     <h4>Roof and roof-edge colours: the college</h4><ul>
       <li><span class="swatch roof-digby"></span>Digby Stuart</li>
       <li><span class="swatch roof-froebel"></span>Froebel</li>
@@ -1183,7 +1205,7 @@ async function main() {
   /** "About 4 min walk from you", only from a fresh, decent fix on campus and a real path route. */
   function walkHint(p: Place): string {
     if (!fix || stale || fix.accuracy > config.weakGpsM || distanceToBounds(fix.pos, doc.bounds) > 0) return '';
-    const r = router.route(fix.pos, routeTarget(p), footprints);
+    const r = router?.route(fix.pos, routeTarget(p), footprints);
     return r ? `About ${r.minutes} min walk from you` : '';
   }
 
@@ -1206,14 +1228,22 @@ async function main() {
         <p class="small">Routes and direction from TfL, checked ${fmtDate(b.checked)}. Night buses start with N.</p>
       </div>`;
   }
+  /**
+   * The report form (or inbox) with the place filled in, its id included so the report can be matched
+   * to places.json. `what` says what the report is about ("entrance": where its door is).
+   */
+  function reportUrl(p: Place, what?: 'entrance'): string {
+    const placeLabel = (p.code ? `${p.name} (${p.code})` : p.name) + (currentRoom && !what ? `, room ${currentRoom}` : '');
+    const label = what === 'entrance' ? `${placeLabel}: entrance [${p.id}]` : placeLabel;
+    return config.reportForm.url
+      ? `${config.reportForm.url}?usp=pp_url&${config.reportForm.placeField}=${encodeURIComponent(label)}`
+      : config.reportEmail
+        ? `mailto:${config.reportEmail}?subject=${encodeURIComponent(`Roam ${what === 'entrance' ? 'entrance' : 'mistake'}: ${placeLabel}`)}&body=${encodeURIComponent(`${what === 'entrance' ? 'Where is the entrance?' : 'What\'s wrong?'}\n\n\n(place id: ${p.id})`)}`
+        : '';
+  }
   function renderCard(p: Place, expanded = false) {
     const g = groupOf(p);
-    const placeLabel = (p.code ? `${p.name} (${p.code})` : p.name) + (currentRoom ? `, room ${currentRoom}` : '');
-    const report = config.reportForm.url
-      ? `${config.reportForm.url}?usp=pp_url&${config.reportForm.placeField}=${encodeURIComponent(placeLabel)}`
-      : config.reportEmail
-        ? `mailto:${config.reportEmail}?subject=${encodeURIComponent(`Roam mistake: ${placeLabel}`)}&body=${encodeURIComponent(`What's wrong?\n\n\n(place id: ${p.id})`)}`
-        : '';
+    const report = reportUrl(p);
     const src = p.sources?.[0];
     const checked = src?.checked ?? p.lastVerified;
     const walk = walkHint(p);
@@ -1585,7 +1615,9 @@ async function main() {
   function endNote(r: Route, to: Place): string {
     if (r.endsAt === 'entrance-verified') return `Ends at the ${esc(r.door?.name ?? `${to.name} entrance`)}${r.door?.type === 'card-required' ? ' (needs a university card)' : r.door?.type === 'accessible' ? ' (step-free entrance)' : ''}.`;
     if (r.endsAt === 'entrance-unverified') return 'Ends at an entrance that hasn\'t been checked on site yet.';
-    return to.footprintId ? 'Ends on the path nearest the building. Its entrances haven\'t been verified yet, so look for the door from there.' : 'Ends on the path nearest this spot.';
+    const link = reportUrl(to, 'entrance');
+    return 'Entrance not mapped yet – the route ends on the nearest path. Look for the door from there.'
+      + (link ? ` <a class="btn ghost small-btn report-entrance" href="${esc(link)}"${link.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>Report the entrance</a>` : '');
   }
 
   /** a mapped place standing right by a point on the route (for "Turn left by the Library") */
@@ -1683,7 +1715,7 @@ async function main() {
         : `${esc(offPlace.name)} is off campus: the route starts at ${esc(theName(near.name))}, about ${formatDistance(gap)} from it in a straight line.`;
       if (offPlace === to) rTo = near; else { from = near; routeFrom = near; fromName = theName(near.name); }
     }
-    const r = router.route(Array.isArray(from) ? from : routeTarget(from), routeTarget(rTo), footprints);
+    const r = (router ?? (await routerReady())).route(Array.isArray(from) ? from : routeTarget(from), routeTarget(rTo), footprints);
     if (!r) {
       offerGate(out, 'We couldn\'t find a mapped walking route between these two places.');
       return;
@@ -1971,7 +2003,7 @@ async function main() {
     if (offCount >= 2 && fromValue === 'me' && Date.now() - lastReroute > 15000 && distanceToBounds(f.pos, doc.bounds) === 0) {
       lastReroute = Date.now();
       offCount = 0;
-      const r = router.route(f.pos, routeTarget(current), footprints);
+      const r = router?.route(f.pos, routeTarget(current), footprints);
       // only when it really is a different way (not the same path from the same first node)
       const same = r && lastRoute.coordinates.length === r.coordinates.length && distanceM(lastRoute.coordinates[0], r.coordinates[0]) < 1;
       if (r && !same) { drawRoute(r, f.pos, true); renderNav(); toast('New route from where you are', 2500); }
