@@ -21,8 +21,13 @@ import { existsSync } from 'node:fs';
 // ---------- the rule's settings ----------
 const CONTEXT_BUFFER_M = 50; // corridor half-width, each side of a road's centre line
 const FRONT_M = 25; // "first row": the building's nearest corner is this close to the centre line
-const LANE_Y = [-745, 560]; // Roehampton Lane, metres north of ORIGIN: past Little Waitrose (south-east of Whitelands) to Southlands' north wall
-const DANEBURY_X = [235, 360]; // Danebury Avenue, metres east of ORIGIN: from Roehampton Lane to just past the Co-op (the Alton estate's streets further west stay out)
+const LANE_Y = [-650, 560]; // Roehampton Lane, metres north of ORIGIN: the Danebury Avenue junction to Southlands' north wall
+const LANE_MAX_X = 365; // ...and no further east than the junction: its run south-east (Roehampton High Street, Little Waitrose) stays out
+// kept whole round Danebury Avenue: Allbrook House (Roehampton Library is on its ground floor), the
+// library's car park, and the block over the shops on the south side (Co-op, Premier, Cafe Joy...),
+// which is long enough that the Alton-slab rule below would drop it
+const LIBRARY_SITE = { buildings: ['way/461160977', 'way/932193691'], parking: 'way/1049455201' };
+const DANEBURY_X = [215, 360]; // Danebury Avenue, metres east of ORIGIN: from Roehampton Lane to just past the Co-op (the Alton estate's streets further west stay out)
 const WHITELANDS = 'way/269315444'; // Whitelands College's grounds (OSM amenity=university, part of relation/5904595)
 const WL_PAD_M = 14; // round Whitelands: the roads along its edge (Holybourne Avenue, Danebury Avenue)
 const TALL_LEVELS = 5; // south of Chadwick Hall, outside Whitelands, blocks this tall (the Alton estate's) stay out
@@ -150,7 +155,7 @@ const wallSegs = walls.features.filter((f) => f.properties?.part === 'wall' && f
 const EDGE = features.find((f) => f.properties.layer === 'mapedge').geometry.coordinates[0].map(toM);
 const highways = osm.elements.filter((e) => e.type === 'way' && e.tags?.highway && e.geometry).map((e) => ({ id: e.id, tags: e.tags, pts: e.geometry.map((p) => toM(ll(p))) }));
 const laneAll = highways.filter((h) => h.tags.name === 'Roehampton Lane').flatMap((h) => segsOf(h.pts));
-const laneSegs = clipSegs(laneAll, 1, LANE_Y);
+const laneSegs = clipSegs(clipSegs(laneAll, 1, LANE_Y), 0, [-1e4, LANE_MAX_X]);
 // Clarence Lane's through road (not its spurs into the estates south of it)
 const clarenceLine = highways.filter((h) => h.tags.name === 'Clarence Lane' && h.tags.highway === 'tertiary').flatMap((h) => segsOf(h.pts));
 const clarenceSegs = clipSegs(clarenceLine, 0, CLARENCE_X);
@@ -187,7 +192,7 @@ const northOfCampus = (p) => { const [a, b] = NORTH_LINE; return (b[0] - a[0]) *
 const inCampus = (p) => pointInRing(p, EDGE) && westOfLane(p) && !southOfClarence(p);
 const inPlot = (p) => PLOT.length > 0 && (pointInRing(p, PLOT) || distToSegs(p, plotSegs) <= PLOT_PAD_M);
 const inSite = (p) => SITE.length > 0 && p[0] <= HOSPITAL_MAX_X && pointInRing(p, SITE);
-const inCorridor = (p) => !northOfCampus(p) && (distToSegs(p, laneSegs) <= CONTEXT_BUFFER_M || distToSegs(p, clarenceSegs) <= CONTEXT_BUFFER_M || distToSegs(p, daneburySegs) <= CONTEXT_BUFFER_M);
+const inCorridor = (p) => !northOfCampus(p) && ((p[0] <= LANE_MAX_X && distToSegs(p, laneSegs) <= CONTEXT_BUFFER_M) || distToSegs(p, clarenceSegs) <= CONTEXT_BUFFER_M || distToSegs(p, daneburySegs) <= CONTEXT_BUFFER_M);
 // places on buildings outside all that (Eastwood Nursery School): their building and a little round it
 const outerOf = (e) => {
   if (e.type === 'way') return e.geometry?.length > 3 ? e.geometry.map(ll) : null;
@@ -210,7 +215,10 @@ const parcelRings = PARCELS.map((pc) => {
 const inParcel = (p, pad = 0) => parcelRings.some(({ ring }) => pointInRing(p, ring) || (pad > 0 && distToSegs(p, segsOf(ring)) <= pad));
 // nothing south of Clarence Lane west of Froebel's south-west corner (the Alton estate)
 const swCut = (p) => p[0] < CLARENCE_WEST_X && southOfClarence(p);
-const inZone = (p) => inCampus(p) || inPlot(p) || inSite(p) || inParcel(p) || inWL(p, WL_PAD_M) || (inCorridor(p) && !swCut(p)) || nearPlace(p);
+const keepRings = [...LIBRARY_SITE.buildings, LIBRARY_SITE.parking].map((k) => osm.elements.find((e) => `${e.type}/${e.id}` === k && e.geometry)).filter(Boolean).map((e) => e.geometry.map((p) => toM(ll(p))));
+if (keepRings.length < LIBRARY_SITE.buildings.length + 1) console.warn('Allbrook House or its car park is not in the download');
+const inKeep = (p) => keepRings.some((r) => pointInRing(p, r) || distToSegs(p, segsOf(r)) <= 4);
+const inZone = (p) => inKeep(p) || inCampus(p) || inPlot(p) || inSite(p) || inParcel(p) || inWL(p, WL_PAD_M) || (inCorridor(p) && !swCut(p)) || nearPlace(p);
 
 // ---------- what was there, outside the zone, goes ----------
 const removed = { building: 0, tree: 0, path: 0, other: 0 };
@@ -277,7 +285,7 @@ for (const e of osm.elements) {
   // the Alton estate's tall blocks and long slabs, south of Chadwick Hall (outside Whitelands)
   const tall = c[1] < -340 && !inWL(c) && ((parseFloat(e.tags['building:levels']) || 0) >= TALL_LEVELS || (parseFloat(e.tags.height) || 0) >= 15 || (e.tags.building === 'apartments' && long > LONG_BLOCK_M));
   if (inWL(c) && m.every((q) => inWL(q, 3))) why = 'whitelands'; // the college's own buildings: drawn like the campus's
-  else if (footprints.has(id)) why = 'place';
+  else if (footprints.has(id) || LIBRARY_SITE.buildings.includes(id)) why = 'place';
   else if (inSite(c)) {
     // the hospital's own buildings (not the houses along the site's edge)
     if (!PITCHED.has(e.tags.building) && e.tags.building !== 'apartments') why = 'hospital';
@@ -459,6 +467,15 @@ for (const e of osm.elements) {
     wlCounts.green++;
   } else continue;
   have.add(`way/${e.id}`);
+}
+
+// ---------- Roehampton Library's car park (Danebury Avenue Car Park) ----------
+{
+  const e = osm.elements.find((x) => `${x.type}/${x.id}` === LIBRARY_SITE.parking && x.geometry);
+  if (e && !have.has(LIBRARY_SITE.parking)) {
+    features.push({ type: 'Feature', id: LIBRARY_SITE.parking, properties: { layer: 'parking', context: true, osmId: LIBRARY_SITE.parking, name: e.tags?.name ?? null }, geometry: { type: 'Polygon', coordinates: [e.geometry.map((p) => fromM(toM(ll(p))))] } });
+    have.add(LIBRARY_SITE.parking);
+  }
 }
 
 // ---------- the plots' ground ----------

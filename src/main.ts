@@ -59,9 +59,12 @@ const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString(
 /** a few kinds keep their own look whatever their group: the hospital's red H sign */
 // key surroundings (the hospital, its car park, bus stops, shops) keep a clear pin; every other
 // off-campus place is background: a smaller, fainter pin (the shape changes too, not just colour)
-const KEY_KINDS = new Set(['hospital', 'bus-stop', 'shop']);
+const KEY_KINDS = new Set(['hospital', 'bus-stop', 'shop', 'library', 'cafe']);
 const kindClass = (p: Place) => (p.kind === 'hospital' ? ' k-hospital' : '')
   + (p.category === 'nearby' && !KEY_KINDS.has(p.kind ?? '') && p.id !== 'queen-marys-hospital-car-park' ? ' k-ctx' : '');
+/** a college's name with a dot in its roof colour, so the map's colours mean something on the card */
+const ROOF_VAR: Record<string, string> = { 'digby-stuart': 'digby', froebel: 'froebel', southlands: 'southlands', whitelands: 'whitelands' };
+const collegeBadge = (c: string) => `<span class="college-badge"><i class="roof-${ROOF_VAR[c] ?? 'other'}" aria-hidden="true"></i>${esc(COLLEGE[c] ?? c)}</span>`;
 const COLLEGE: Record<string, string> = { 'digby-stuart': 'Digby Stuart', froebel: 'Froebel', southlands: 'Southlands', whitelands: 'Whitelands' };
 /** icon for a whole category (chips, key, "show all" suggestions) */
 const groupIcon = (g: GroupId) =>
@@ -163,7 +166,7 @@ $('.hello-close').addEventListener('click', dismissWelcome);
 $('#welcome-find').addEventListener('click', () => { dismissWelcome(); $('#findme').click(); });
 
 const about = $('#about');
-$('#about-btn').addEventListener('click', () => openDialog(about, $('.about-close')));
+$$('#about-btn, .about-open').forEach((b) => b.addEventListener('click', () => openDialog(about, $('.about-close'))));
 $('.about-close').addEventListener('click', () => closeDialog(about));
 about.addEventListener('click', (e) => { if (e.target === about) closeDialog(about); });
 
@@ -294,7 +297,8 @@ async function main() {
   // in Apple or Google Maps): facing north, Southlands at the top, Froebel in the middle, Chadwick
   // Hall bottom right. The tilt also squeezes the far (northern) half, so the long campus fits a wide
   // screen closer than a flat view would.
-  const HOME = { get bearing() { return isDesktop() ? HOME_BEARING_WIDE : -10; }, get pitch() { return isDesktop() ? 57 : 56; } };
+  // (a phone tilts less: at 56° a narrow screen showed mostly empty ground above the campus)
+  const HOME = { get bearing() { return isDesktop() ? HOME_BEARING_WIDE : -10; }, get pitch() { return isDesktop() ? 55 : 45; } };
   map?.jumpTo({ center: campusCenter, zoom: homeZoom(), bearing: HOME.bearing, pitch: HOME.pitch });
   // Every deliberate camera move goes through here: live GPS following waits for it to finish
   // instead of cutting it short (MapLibre's easeTo stops whatever move is running).
@@ -309,6 +313,10 @@ async function main() {
   // the home view frames the campus itself: its places and every campus building (its footprint's
   // corners), plus the hospital and the plots across the road. The wall's far corners (by the park and
   // the golf course) are left out, so the view comes in closer.
+  // Two framings: the main campus (Southlands, Digby Stuart, Froebel and Chadwick Hall), which the
+  // app opens on, and the whole island (Whitelands, the shops on Danebury Avenue and the plots across
+  // the road too), a second press of ⛶ away.
+  const mainPoints: LngLat[] = places.filter((p) => onCampus(p) && p.college !== 'whitelands').map((p) => p.position);
   const campusPoints: LngLat[] = places.filter(onCampus).map((p) => p.position);
   for (const f of campus.features) {
     // the plots across the road (Roehampton House's estate, the schools south of Chadwick Hall) and
@@ -317,7 +325,9 @@ async function main() {
     if (f.properties?.layer !== 'building' || f.properties?.campus === false || f.geometry.type !== 'Polygon') continue;
     const ring = f.geometry.coordinates[0] as LngLat[];
     const xs = ring.map((c) => c[0]), ys = ring.map((c) => c[1]);
-    campusPoints.push([Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)], [Math.min(...xs), Math.max(...ys)], [Math.max(...xs), Math.min(...ys)]);
+    const corners: LngLat[] = [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)], [Math.min(...xs), Math.max(...ys)], [Math.max(...xs), Math.min(...ys)]];
+    campusPoints.push(...corners);
+    if (f.properties?.college !== 'whitelands') mainPoints.push(...corners);
   }
 
   // ---------- state ----------
@@ -368,7 +378,7 @@ async function main() {
   {
     const near = (a: Place, b: Place) => Math.abs(a.position[0] - b.position[0]) < 0.00018 && Math.abs(a.position[1] - b.position[1]) < 0.00011; // ~12 m
     const clusters: Place[][] = [];
-    for (const p of places.filter((x) => x.category !== 'entrance')) {
+    for (const p of places.filter((x) => x.category !== 'entrance' && !x.noPin)) {
       const c = clusters.find((c) => near(c[0], p));
       if (c) c.push(p); else clusters.push([p]);
     }
@@ -384,6 +394,9 @@ async function main() {
 
   // ---------- college areas: their names over the overview; tap one to zoom in ----------
   const AREA_Z = 16.65;
+  /** below this zoom (with no category chosen) only MID_GROUPS' pins show */
+  const MINOR_Z = 17;
+  const MID_GROUPS = new Set<GroupId>(['library', 'food', 'services', 'nearby', 'entrance']);
   // (Chadwick Hall, Froebel's halls down the road, gets its own: it is a walk from the rest of Froebel)
   const isChadwick = (p: Place) => p.id.startsWith('chadwick-hall') || p.id === 'downshire-house';
   const AREAS = [
@@ -435,6 +448,8 @@ async function main() {
     const areaBoxes: [number, number, number, number][] = [];
     // a name near the screen's edge slides in to stay whole, clear of the map controls
     const ctl = $('.controls').getBoundingClientRect();
+    document.body.classList.toggle('areas-small', z > 15.9);
+    document.body.classList.toggle('has-selection', !!current);
     for (const a of areas) {
       a.el.classList.toggle('hidden', !showAreas);
       a.el.tabIndex = showAreas ? 0 : -1;
@@ -465,7 +480,11 @@ async function main() {
       // gates and off-campus context (bus stops, a shop) wait until you zoom in, unless Nearby is chosen
       const tooFar = (m.group === 'entrance' || (m.group === 'nearby' && filter !== 'nearby')) && z < 16.3;
       // places outside the chosen category stay as faint context once you're zoomed in; matches always come first
-      let show = sel || (!tooFar && (!filtered || z >= 16.6));
+      // overview and middle zoom, nothing chosen: only what people look for most (the library,
+      // food, student services, nearby stops and shops); teaching buildings, halls, sport and the
+      // rest join from zoom 17, so pins and names don't pile up
+      const minor = !narrow && z < MINOR_Z && !MID_GROUPS.has(m.group);
+      let show = sel || (!m.p.noPin && !tooFar && !minor && (!filtered || z >= 16.6));
       m.el.classList.toggle('faded', filtered && !sel);
       const pt = map.project(m.at);
       const x = pt.x + m.offset[0], y = pt.y + m.offset[1];
@@ -502,6 +521,11 @@ async function main() {
   }
   map?.on('moveend', layoutMarkers);
   map?.once('load', () => { mapReady = true; layoutMarkers(); });
+  // the first time: the Key button pulses gently once, so the colours' meaning is easy to find
+  if (!store.get('roam.keyHinted')) {
+    store.set('roam.keyHinted', '1');
+    setTimeout(() => { keyBtn.classList.add('hint'); setTimeout(() => keyBtn.classList.remove('hint'), 2600); }, 1800);
+  }
   addEventListener('resize', () => layoutMarkers());
 
   // ---------- ambient: slow ripples on the larger ponds (CSS only; none in Reduced/Off or on low-end phones) ----------
@@ -746,25 +770,34 @@ async function main() {
   }
   // The home view is worked out once per screen size and then reused, so the ⛶ button brings back
   // exactly the opening view (closing the welcome card doesn't move the map either).
-  let home: { size: string; center: MLLngLat; zoom: number } | null = null;
+  type View = { size: string; center: MLLngLat; zoom: number };
+  const homes: Record<'main' | 'island', View | null> = { main: null, island: null };
   /** GPS says you're off the map: say so, don't follow you there, offer the whole map instead */
   function outsideToast(off: number) {
-    toast(`You're outside the campus map · ${formatDistance(off)} away.`, 8000, { label: 'Show campus', run: () => showWholeCampus() });
+    toast(`You're outside the campus map · ${formatDistance(off)} away.`, 8000, { label: 'Show campus', run: () => showWholeCampus(500, 'main') });
   }
-  function showWholeCampus(duration = 500) {
+  /** is the camera still where `v` put it? (then ⛶ goes one step further out) */
+  const at = (v: View | null) => !!map && !!v && Math.abs(map.getZoom() - v.zoom) < 0.05 && map.project(v.center).dist(map.project(map.getCenter())) < 12;
+  /**
+   * ⛶: the main campus; pressed again where that left you, the whole island (Whitelands too).
+   * `which` forces one (the opening view and "Show campus" in a toast use the main campus).
+   */
+  function showWholeCampus(duration = 500, which?: 'main' | 'island') {
     if (!map) return;
     pitchedByHand = false;
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
     const size = `${W}x${H}`;
-    if (home?.size === size) {
+    const kind = which ?? (at(homes.main) && homes.main?.size === size ? 'island' : 'main');
+    const v = homes[kind];
+    if (v?.size === size) {
       setFollowing(false);
-      camMove({ center: home.center, zoom: home.zoom, pitch: tilt(HOME.pitch), bearing: HOME.bearing, padding: { top: 0, bottom: 0, left: 0, right: 0 }, duration: ms(duration) });
+      camMove({ center: v.center, zoom: v.zoom, pitch: tilt(HOME.pitch), bearing: HOME.bearing, padding: { top: 0, bottom: 0, left: 0, right: 0 }, duration: ms(duration) });
       return;
     }
-    const end = fitPoints(campusPoints, { pitch: tilt(HOME.pitch), bearing: HOME.bearing, maxZoom: 17.5, box: homeBox(W, H), duration });
-    if (end && !flat) home = { size, center: end.center, zoom: end.zoom };
+    const end = fitPoints(kind === 'main' ? mainPoints : campusPoints, { pitch: tilt(HOME.pitch), bearing: HOME.bearing, maxZoom: 17.5, box: homeBox(W, H), duration });
+    if (end && !flat) homes[kind] = { size, center: end.center, zoom: end.zoom };
   }
-  if (!linkedId) map?.once('load', () => showWholeCampus(0));
+  if (!linkedId) map?.once('load', () => showWholeCampus(0, 'main'));
   const northIcon = $('#north svg');
   map?.on('rotate', () => { northIcon.style.transform = `rotate(${-map!.getBearing()}deg)`; drawHeading(); });
 
@@ -1190,7 +1223,7 @@ async function main() {
         <span class="cat-icon g-${g}${kindClass(p)}">${placeIcon(p.category, p.kind)}</span>
         <div class="titles">
           <h2 id="panel-name" tabindex="-1">${esc(p.name)}</h2>
-          <p class="meta">${[p.code && `<span class="code">${esc(p.code)}</span>`, esc(groupLabel(g)), p.college && COLLEGE[p.college], p.offCampus && '<span class="off-campus">Off campus</span>'].filter(Boolean).join(' · ')}</p>
+          <p class="meta">${[p.code && `<span class="code">${esc(p.code)}</span>`, esc(groupLabel(g)), p.college && collegeBadge(p.college), p.offCampus && '<span class="off-campus">Off campus</span>', p.outsideMap && '<span class="off-campus">Just outside the map</span>'].filter(Boolean).join(' · ')}</p>
         </div>
         <button class="icon-btn save" aria-pressed="${saved.has(p.id)}" aria-label="Save ${esc(p.name)}">${icons.bookmark}</button>
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
@@ -1655,6 +1688,10 @@ async function main() {
       offerGate(out, 'We couldn\'t find a mapped walking route between these two places.');
       return;
     }
+    if (to.outsideMap && !offNote) {
+      const end = r.coordinates[r.coordinates.length - 1] as LngLat;
+      offNote = `${esc(to.name)} is just outside the map: the route ends at its edge, about ${formatDistance(distanceM(end, to.position))} away in a straight line.`;
+    }
     rememberFrom(fromValue);
     if (!isDesktop()) { setExpanded(false); panel.classList.add('route-peek'); panel.scrollTop = 0; }
     drawRoute(r, from);
@@ -2012,7 +2049,7 @@ async function main() {
         : `<li><button role="option" data-i="${i}">
             <span class="cat-icon small g-${groupOf(o.place)}${kindClass(o.place)}">${placeIcon(o.place.category, o.place.kind)}</span>
             <span><b>${esc(o.place.name)}</b>${o.place.code ? ` <span class="code">${esc(o.place.code)}</span>` : ''}
-            <small>${esc([via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]].filter(Boolean).join(' · '))}</small></span></button></li>`)).join('');
+            <small>${esc([...new Set([groupOf(o.place) === 'nearby' ? 'Nearby' : via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]])].filter(Boolean).join(' · '))}</small></span></button></li>`)).join('');
     }
     results.hidden = false;
     input.setAttribute('aria-expanded', 'true');
@@ -2028,7 +2065,7 @@ async function main() {
     hideResults();
     if (o.kind === 'group') {
       setFilter(o.group);
-      showWholeCampus();
+      showWholeCampus(500, 'main');
       return;
     }
     track('search', { q, id: o.place.id });

@@ -34,6 +34,10 @@ export interface Place {
   entrance: LngLat | null;
   entrances?: Entrance[];
   footprintId: string | null;
+  /** a place that stands for a whole site (Whitelands College): found by search, no pin of its own unless chosen */
+  noPin?: boolean;
+  /** listed, but just past the map's edge (Little Waitrose): the card says so */
+  outsideMap?: boolean;
   photo: string | null;
   lastVerified: string | null;
   status: 'confirmed' | 'pending-legend';

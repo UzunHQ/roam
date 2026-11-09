@@ -156,7 +156,15 @@ export function search(raw: string, places: Place[], limit = 8): Hit[] {
     }
     // services and tags, then the description: lower, and every query word must start a word
     // there (or share its stem), so "shop" doesn't find "workshop"
-    const every = (text: string) => { const words = norm(text).split(' '); return q.split(' ').every((w) => words.some((x) => wordHit(w, x))); };
+    // (a query with a word under 3 letters, like "co op", must appear as a whole phrase: its
+    // pieces would otherwise start words all over a description, "college ... open")
+    const short = q.split(' ').some((w) => w.length < 3);
+    const every = (text: string) => {
+      const t = norm(text);
+      if (short) return (' ' + t + ' ').includes(' ' + q + ' ');
+      const words = t.split(' ');
+      return q.split(' ').every((w) => words.some((x) => wordHit(w, x)));
+    };
     if (q.length >= 3) {
       for (const sv of p.services ?? []) if (every(sv)) add({ place: p, score: 0.6, via: sv });
       for (const t of p.tags ?? []) if (every(t)) add({ place: p, score: 0.58, via: t[0].toUpperCase() + t.slice(1) });

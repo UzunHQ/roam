@@ -263,7 +263,7 @@ svg { display: block; flex: none; }
 .g-faith { --g: var(--g-faith); }
 .g-outdoors { --g: var(--g-outdoors); }
 .g-other { --g: #9a7b5f; } /* warm brown, like the 'other university building' roof */
-.g-nearby { --g: #5b7fa6; } /* a calm slate blue: off campus */
+.g-nearby { --g: #66788a; } /* grey-blue: off campus (clearly not the academic blue) */
 .g-entrance { --g: #8b8578; }
 
 /* ---------- map controls ---------- */
@@ -356,7 +356,9 @@ svg { display: block; flex: none; }
   display: flex; align-items: center; gap: 4px;
   white-space: nowrap; max-width: 232px;
   padding: 1px 7px; border-radius: 8px; font-size: 12px; font-weight: 700; line-height: 18px;
-  background: var(--surface); color: var(--text); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  background: var(--surface); color: var(--text);
+  /* a thin edge and soft shadow, so a light label stays readable on light ground */
+  box-shadow: 0 0 0 1px rgba(31, 45, 39, 0.14), 0 1px 3px rgba(31, 45, 39, 0.22);
   opacity: 0; transition: opacity 0.15s; pointer-events: none;
 }
 .pin.show-label .label { opacity: 1; }
@@ -702,6 +704,15 @@ svg { display: block; flex: none; }
 .footer-row { display: flex; align-items: center; height: 26px; font-size: 13px; font-weight: 700; color: var(--text); }
 .footer-row > span { margin-right: 2px; }
 .footer p { margin: 0; line-height: 1.25; }
+/* phones: one small line (the map's licence must stay visible); who made Roam is in About */
+.foot-narrow { display: none; }
+.foot-narrow .link-btn { font-size: inherit; min-height: 0; padding: 4px 2px; margin: -4px 0; color: inherit; }
+@media (max-width: 899px) {
+  :root { --footer-h: calc(22px + env(safe-area-inset-bottom)); }
+  .footer-row, .foot-wide { display: none; }
+  .foot-narrow { display: inline; }
+  .footer { font-size: 11px; }
+}
 .icon-link { width: 44px; height: 44px; margin: -9px -6px; display: grid; place-items: center; color: var(--text); border-radius: 12px; }
 .icon-link svg { width: 20px; height: 20px; }
 .icon-link:hover, .icon-link:focus-visible { color: var(--primary); }
@@ -918,3 +929,21 @@ body.navigating .top > :not(.toast), body.navigating .key-btn, body.navigating .
 .pin.k-ctx:not(.selected) .dot { transform: scale(0.78); filter: saturate(0.4); }
 .pin.k-ctx:not(.selected) .label { font-size: 11px; font-weight: 600; color: var(--muted, #6b6f73); }
 .pin.k-hospital .dot svg { width: 16px; height: 16px; stroke-width: 3; }
+
+/* the college on a place card: its name with a dot in the college's roof colour */
+.college-badge { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; }
+.college-badge i { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18); flex: none; }
+
+/* nearby places (bus stops, shops, the public library): a size smaller than the university's pins */
+.pin.g-nearby:not(.selected) .dot { transform: scale(0.86); }
+/* with a place chosen, the others step back a little */
+.has-selection .pin:not(.selected) { opacity: 0.66; }
+.has-selection .pin.k-ctx:not(.selected) { opacity: 0.5; }
+/* college names: smaller at middle zoom, gone close up (AREA_Z in main.ts) */
+.areas-small .area-label { min-height: 32px; font-size: 13px; padding: 0 11px 0 4px; gap: 6px; }
+.areas-small .area-icon { width: 24px; height: 24px; }
+/* the Key button's one-time nudge */
+.key-btn.hint { animation: key-hint 1.2s var(--ease) 2; }
+@keyframes key-hint { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 28%, transparent), var(--shadow); transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .key-btn.hint { animation: none; outline: 3px solid var(--primary); } }
+.pin.g-nearby.k-ctx:not(.selected) .dot { transform: scale(0.74); }

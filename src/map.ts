@@ -884,13 +884,19 @@ function wallParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
       const r = [pointAt(d0, -half), ...inner.map((i) => mitre(i, -half)), pointAt(d1, -half)];
       return [...l, ...r.reverse()];
     };
-    put(band(0, L, WALL.plinthHalf), 'plinth', 0, WALL.plinth);
     const nBlocks = Math.max(1, Math.round(L / WALL.block));
     for (let k = 0; k < nBlocks; k++) {
       const d0 = (L * k) / nBlocks, d1 = (L * (k + 1)) / nBlocks, mid = pointAt((d0 + d1) / 2, 0);
       put(band(d0, d1, WALL.half), 'stone', WALL.plinth, WALL.plinth + WALL.course, { tone: tone(mid[0] + lng0 * 1e4, mid[1]) });
     }
-    put(band(0, L, WALL.copeHalf), 'cope', WALL.plinth + WALL.course, WALL.cope);
+    // plinth and coping in runs of a few blocks: one band along a whole winding piece (Whitelands'
+    // wall, nearly a closed ring with sharp corners) crossed itself and filled a wedge of ground
+    const RUN = 4;
+    for (let k = 0; k < nBlocks; k += RUN) {
+      const d0 = (L * k) / nBlocks, d1 = (L * Math.min(nBlocks, k + RUN)) / nBlocks;
+      put(band(d0, d1, WALL.plinthHalf), 'plinth', 0, WALL.plinth);
+      put(band(d0, d1, WALL.copeHalf), 'cope', WALL.plinth + WALL.course, WALL.cope);
+    }
   }
   return { type: 'FeatureCollection', features: out };
 }
@@ -1168,7 +1174,7 @@ export function createMap(opts: {
     transformConstrain: islandConstrain(zonePolys, [w, s, e, n]),
     pitch: 55,
     maxPitch: 65,
-    minZoom: 14, // the whole campus, Chadwick Hall included, fits a phone held upright at about 14.3
+    minZoom: 13.5, // a full step below the opening view on a phone (about 14.9), so − always works there; the whole island fits at about 14.3
     maxZoom: 19.5,
     attributionControl: false,
     dragRotate: true,

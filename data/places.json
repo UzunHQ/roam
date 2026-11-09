@@ -4,7 +4,7 @@
   "bounds": [
     -0.25137,
     51.4474,
-    -0.2372,
+    -0.2402,
     51.46021
   ],
   "sources": [
@@ -5095,8 +5095,6 @@
       "id": "parkstead-house",
       "name": "Parkstead House",
       "aliases": [
-        "Whitelands College",
-        "Whitelands",
         "Whitelands main building",
         "School of Psychology",
         "School of Life and Health Sciences",
@@ -5475,13 +5473,12 @@
         "Supermarket",
         "Groceries",
         "Convenience shop",
-        "Shell",
         "Shop"
       ],
       "category": "nearby",
       "kind": "shop",
       "college": null,
-      "description": "A Little Waitrose shop with the Shell petrol station at 237–239 Roehampton Lane. Hours not listed: check with Waitrose.",
+      "description": "A Little Waitrose shop with the Shell petrol station at 237–239 Roehampton Lane, just outside the map: about 200 m south-east of the Danebury Avenue junction along Roehampton Lane. Hours not listed: check with Waitrose.",
       "position": [
         -0.2381,
         51.449433
@@ -5496,7 +5493,8 @@
           "title": "OpenStreetMap way 1001833335 (Little Waitrose, operator Shell): position and address",
           "checked": "2026-11-09"
         }
-      ]
+      ],
+      "outsideMap": true
     },
     {
       "code": "",
@@ -5529,8 +5527,7 @@
         "Bus N72",
         "Bus N74",
         "Danebury Avenue",
-        "Whitelands bus stop",
-        "Whitelands"
+        "Whitelands bus stop"
       ],
       "category": "nearby",
       "kind": "bus-stop",
@@ -5602,13 +5599,12 @@
         "Bus N72",
         "Danebury Avenue",
         "Whitelands bus stop",
-        "Whitelands",
         "Kingston Vale"
       ],
       "category": "nearby",
       "kind": "bus-stop",
       "college": null,
-      "description": "TfL bus stop M on Roehampton Lane, south-east of the Danebury Avenue junction near Little Waitrose. Buses towards Kingston Vale.",
+      "description": "TfL bus stop M on Roehampton Lane, just south-east of the Danebury Avenue junction. Buses towards Kingston Vale.",
       "position": [
         -0.238862,
         51.449317
@@ -5673,15 +5669,12 @@
         "Bus 670",
         "Bus N74",
         "Danebury Avenue",
-        "Roehampton Library",
-        "Whitelands bus stop",
-        "Whitelands",
-        "Co-op"
+        "Whitelands bus stop"
       ],
       "category": "nearby",
       "kind": "bus-stop",
       "college": null,
-      "description": "TfL bus stop B on Danebury Avenue by Roehampton Library, next to the Co-op and Whitelands College. Buses eastbound, towards Putney or Wandsworth.",
+      "description": "TfL bus stop B on Danebury Avenue by Roehampton Library (public), close to the shops and Whitelands College. Buses eastbound, towards Putney or Wandsworth.",
       "position": [
         -0.242388,
         51.44976
@@ -5745,9 +5738,7 @@
         "Bus 639",
         "Bus 670",
         "Bus N74",
-        "Danebury Avenue",
-        "Roehampton Library",
-        "Whitelands"
+        "Danebury Avenue"
       ],
       "category": "nearby",
       "kind": "bus-stop",
@@ -5787,6 +5778,260 @@
         ],
         "checked": "2026-11-09"
       }
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "footprintId": null,
+      "offCampus": false,
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+      "services": [
+        "School of Life and Health Sciences",
+        "School of Psychology",
+        "Holybourne Avenue, London SW15 4JD"
+      ],
+      "tags": [
+        "Life Sciences",
+        "Psychology",
+        "college"
+      ],
+      "id": "whitelands-college",
+      "name": "Whitelands College",
+      "aliases": [
+        "Whitelands",
+        "Whitelands campus",
+        "Holybourne Avenue",
+        "SW15 4JD"
+      ],
+      "category": "building",
+      "kind": "academic",
+      "college": "whitelands",
+      "noPin": true,
+      "description": "One of the University's four colleges, on its own site on Holybourne Avenue, London SW15 4JD, about 15 minutes' walk south of the main campus along Roehampton Lane. Home of the School of Life and Health Sciences and the School of Psychology; its main building is Parkstead House.",
+      "position": [
+        -0.243342,
+        51.448717
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 30,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+          "title": "University of Roehampton: Whitelands College (Parkstead House, Grade I; School of Life and Health Sciences and School of Psychology)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/colleges/whitelands/whitelands-college-handbook.pdf",
+          "title": "Whitelands College handbook (Holybourne Avenue; Reception 9am to 6pm on weekdays)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/269315444",
+          "title": "OpenStreetMap way 269315444: the college grounds (amenity=university)",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "footprintId": "way/461160977",
+      "offCampus": false,
+      "officialUrl": "https://www.wandsworth.gov.uk/leisure-and-culture/libraries/find-a-library/roehampton-library/",
+      "services": [
+        "2 Danebury Avenue, London SW15 4HD",
+        "020 8246 6979"
+      ],
+      "tags": [
+        "public library"
+      ],
+      "id": "roehampton-library-public",
+      "name": "Roehampton Library (public)",
+      "aliases": [
+        "Library",
+        "Roehampton Library",
+        "Public library",
+        "Wandsworth library",
+        "Allbrook House",
+        "Danebury Avenue library"
+      ],
+      "category": "nearby",
+      "kind": "library",
+      "college": null,
+      "description": "Public library – not the university library. Wandsworth Council's library on the ground floor of Allbrook House, 2 Danebury Avenue, London SW15 4HD, run by Better (GLL); its car park is behind it, off Danebury Avenue.",
+      "position": [
+        -0.242069,
+        51.44982
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "sources": [
+        {
+          "url": "https://www.wandsworth.gov.uk/leisure-and-culture/libraries/find-a-library/roehampton-library/",
+          "title": "Wandsworth Council: Roehampton Library (address, phone)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.better.org.uk/library/london/wandsworth/roehampton-library",
+          "title": "Better (GLL): Roehampton Library (opening hours)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/1558636946",
+          "title": "OpenStreetMap way 1558636946: library position",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/1049455201",
+          "title": "OpenStreetMap way 1049455201: Danebury Avenue Car Park",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "footprintId": null,
+      "offCampus": false,
+      "officialUrl": null,
+      "services": [
+        "53–57 Danebury Avenue, London SW15 4DQ"
+      ],
+      "tags": [
+        "supermarket",
+        "groceries"
+      ],
+      "id": "premier-danebury-avenue",
+      "name": "Premier (Danebury Avenue)",
+      "aliases": [
+        "Premier",
+        "Supermarket",
+        "Groceries",
+        "Convenience shop",
+        "Shop",
+        "Post Office",
+        "Cash machine"
+      ],
+      "category": "nearby",
+      "kind": "shop",
+      "college": null,
+      "description": "A Premier convenience shop at 53–57 Danebury Avenue, with a Post Office counter and a cash machine (from OpenStreetMap). Hours not listed.",
+      "position": [
+        -0.242624,
+        51.449581
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/932193707",
+          "title": "OpenStreetMap way 932193707: name, address, cash machine",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/node/11277822504",
+          "title": "OpenStreetMap node 11277822504: Post Office counter at 53–57 Danebury Avenue",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "footprintId": null,
+      "offCampus": false,
+      "officialUrl": null,
+      "services": [
+        "51 Danebury Avenue, London SW15 4DQ"
+      ],
+      "tags": [
+        "laundry"
+      ],
+      "id": "super-clean-launderette",
+      "name": "Super Clean Launderette",
+      "aliases": [
+        "Launderette",
+        "Laundrette",
+        "Super Clean",
+        "Self-service laundry"
+      ],
+      "category": "nearby",
+      "kind": "shop",
+      "college": null,
+      "description": "A self-service launderette at 51 Danebury Avenue (from OpenStreetMap). Hours not listed. For students in halls, the campus laundries come first.",
+      "position": [
+        -0.242448,
+        51.449551
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/932193706",
+          "title": "OpenStreetMap way 932193706: name, address, self-service laundry",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "footprintId": null,
+      "offCampus": false,
+      "officialUrl": null,
+      "services": [
+        "49 Danebury Avenue, London SW15 4DQ"
+      ],
+      "tags": [],
+      "id": "cafe-joy",
+      "name": "Cafe Joy",
+      "aliases": [
+        "Cafe",
+        "Café Joy",
+        "Coffee"
+      ],
+      "category": "nearby",
+      "kind": "cafe",
+      "college": null,
+      "description": "A café at 49 Danebury Avenue, with seats inside and out (from OpenStreetMap). Hours not listed.",
+      "position": [
+        -0.242309,
+        51.449527
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/932193705",
+          "title": "OpenStreetMap way 932193705: name, address, seating",
+          "checked": "2026-11-09"
+        }
+      ]
     }
   ]
 }

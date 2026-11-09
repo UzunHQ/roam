@@ -143,6 +143,17 @@ export const HOURS: HoursEntry[] = [
     source: { name: 'Co-op store finder', url: 'https://www.coop.co.uk/store-finder/SW15-4DU/39-41-danebury-avenue' },
     checked: '2026-11-09',
   },
+  {
+    place: 'roehampton-library-public',
+    period: 'All year',
+    from: '2026-11-09',
+    weekly: {
+      mon: [['09:00', '19:00']], tue: [['09:00', '17:00']], wed: [['09:00', '19:00']], thu: [['09:00', '17:00']],
+      fri: [['09:00', '17:00']], sat: [['09:30', '14:30']], sun: [],
+    },
+    source: { name: 'Better (GLL), Roehampton Library', url: 'https://www.better.org.uk/library/london/wandsworth/roehampton-library' },
+    checked: '2026-11-09',
+  },
   // no verified hours: the card sends people to Nest
   ...['digby-den-diner'].map((place): HoursEntry => ({
     place, period: 'All year', from: '2026-10-21', weekly: {}, checked: '2026-10-21', unknown: 'Hours: check on Nest',
