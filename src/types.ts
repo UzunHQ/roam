@@ -36,7 +36,7 @@ export interface Place {
   footprintId: string | null;
   /** a place that stands for a whole site (Whitelands College): found by search, no pin of its own unless chosen */
   noPin?: boolean;
-  /** listed, but just past the map's edge (Little Waitrose): the card says so */
+  /** listed, but just past the map's edge: the card says so (none at the moment) */
   outsideMap?: boolean;
   photo: string | null;
   lastVerified: string | null;

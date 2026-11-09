@@ -63,7 +63,7 @@ const light = {
   stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
   cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
   fencePost: '#3d5a49', fenceMesh: '#4a6656',
-  golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', benchWood: '#b98559', coopWood: '#9a6b45', coopRoof: '#b5523b', hen: '#fbfaf4', comb: '#e0412e', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
+  golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', benchWood: '#b98559', busGlass: '#bcd6de', busRoof: '#4d5b64', busPole: '#68767e', busFlag: '#dc3b34', coopWood: '#9a6b45', coopRoof: '#b5523b', hen: '#fbfaf4', comb: '#e0412e', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
   ctx: { ...CTX.light, leaf: blend(CTX.light.tree, CTX.light.ground, CTX.light.treeOpacity), stem: blend(CTX.light.trunk, CTX.light.ground, CTX.light.treeOpacity) },
 };
 
@@ -83,7 +83,7 @@ const dark: typeof light = {
   stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
   cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
   fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
-  golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', benchWood: '#8a6446', coopWood: '#6e4c33', coopRoof: '#7d3a2c', hen: '#d9d8d0', comb: '#b8402f', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
+  golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', benchWood: '#8a6446', busGlass: '#56707a', busRoof: '#232c31', busPole: '#8a979d', busFlag: '#c94640', coopWood: '#6e4c33', coopRoof: '#7d3a2c', hen: '#d9d8d0', comb: '#b8402f', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
   ctx: { ...CTX.dark, leaf: blend(CTX.dark.tree, CTX.dark.ground, CTX.dark.treeOpacity), stem: blend(CTX.dark.trunk, CTX.dark.ground, CTX.dark.treeOpacity) },
 };
 

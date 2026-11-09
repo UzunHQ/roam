@@ -4503,47 +4503,6 @@
       }
     },
     {
-      "id": "londis-aubyn-square",
-      "code": "",
-      "name": "Londis (Aubyn Square)",
-      "aliases": [
-        "Londis",
-        "Supermarket",
-        "Corner shop",
-        "Convenience shop",
-        "Groceries",
-        "Supermarket"
-      ],
-      "roomCodePrefixes": [],
-      "category": "nearby",
-      "kind": "shop",
-      "college": null,
-      "description": "A convenience shop in Aubyn Square, across Roehampton Lane from the campus. Opening hours not verified.",
-      "lastVerified": null,
-      "status": "confirmed",
-      "position": [
-        -0.241149,
-        51.459894
-      ],
-      "positionSource": "osm-node",
-      "positionAccuracyM": 5,
-      "entrance": null,
-      "footprintId": null,
-      "photo": null,
-      "services": [],
-      "tags": [],
-      "offCampus": true,
-      "officialUrl": null,
-      "accessibility": null,
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/node/10016046094",
-          "title": "OpenStreetMap node 10016046094",
-          "checked": "2026-11-08"
-        }
-      ]
-    },
-    {
       "id": "chadwick-hall-south",
       "code": "L",
       "name": "Chadwick Hall South",
@@ -5451,54 +5410,6 @@
     {
       "code": "",
       "roomCodePrefixes": [],
-      "lastVerified": "2026-11-09",
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "services": [
-        "237–239 Roehampton Lane, London SW15 4LB"
-      ],
-      "tags": [
-        "supermarket",
-        "groceries"
-      ],
-      "officialUrl": "https://www.waitrose.com/find-a-store/roehampton",
-      "id": "little-waitrose-roehampton",
-      "name": "Little Waitrose (Roehampton Lane)",
-      "aliases": [
-        "Waitrose",
-        "little Waitrose",
-        "Little Waitrose Roehampton",
-        "Supermarket",
-        "Groceries",
-        "Convenience shop",
-        "Shop"
-      ],
-      "category": "nearby",
-      "kind": "shop",
-      "college": null,
-      "description": "A Little Waitrose shop with the Shell petrol station at 237–239 Roehampton Lane, just outside the map: about 200 m south-east of the Danebury Avenue junction along Roehampton Lane. Hours not listed: check with Waitrose.",
-      "position": [
-        -0.2381,
-        51.449433
-      ],
-      "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 10,
-      "footprintId": null,
-      "offCampus": false,
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/way/1001833335",
-          "title": "OpenStreetMap way 1001833335 (Little Waitrose, operator Shell): position and address",
-          "checked": "2026-11-09"
-        }
-      ],
-      "outsideMap": true
-    },
-    {
-      "code": "",
-      "roomCodePrefixes": [],
       "lastVerified": null,
       "status": "confirmed",
       "entrance": null,
@@ -5565,77 +5476,6 @@
           "969",
           "N72",
           "N74"
-        ],
-        "checked": "2026-11-09"
-      }
-    },
-    {
-      "code": "",
-      "roomCodePrefixes": [],
-      "lastVerified": null,
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "services": [],
-      "tags": [],
-      "officialUrl": null,
-      "id": "bus-danebury-avenue-m",
-      "name": "Bus stop M: Roehampton Lane / Danebury Avenue",
-      "aliases": [
-        "Bus stop M",
-        "Roehampton Lane / Danebury Avenue bus stop",
-        "Bus stop",
-        "Bus",
-        "265",
-        "419",
-        "85",
-        "969",
-        "N72",
-        "Bus 265",
-        "Bus 419",
-        "Bus 85",
-        "Bus 969",
-        "Bus N72",
-        "Danebury Avenue",
-        "Whitelands bus stop",
-        "Kingston Vale"
-      ],
-      "category": "nearby",
-      "kind": "bus-stop",
-      "college": null,
-      "description": "TfL bus stop M on Roehampton Lane, just south-east of the Danebury Avenue junction. Buses towards Kingston Vale.",
-      "position": [
-        -0.238862,
-        51.449317
-      ],
-      "positionSource": "osm-node",
-      "positionAccuracyM": 5,
-      "footprintId": null,
-      "offCampus": false,
-      "sources": [
-        {
-          "url": "https://api.tfl.gov.uk/StopPoint/490003134M",
-          "title": "TfL StopPoint: routes and direction",
-          "checked": "2026-11-09"
-        },
-        {
-          "url": "https://www.openstreetmap.org/node/469779454",
-          "title": "OpenStreetMap node 469779454: position",
-          "checked": "2026-11-09"
-        }
-      ],
-      "bus": {
-        "atco": "490003134M",
-        "letter": "M",
-        "direction": "south",
-        "towards": "Kingston Vale",
-        "routes": [
-          "265",
-          "419",
-          "85",
-          "969",
-          "N72"
         ],
         "checked": "2026-11-09"
       }
