@@ -33,9 +33,9 @@
       <div class="brand"><span class="mark" data-icon="mark"></span><span><b>Roam</b><span>Explore Roehampton</span></span></div>
       <form class="search" role="search" autocomplete="off">
         <span class="mark search-mark" data-icon="mark" title="Roam · Explore Roehampton"></span>
-        <input id="q" type="search" inputmode="search" enterkeyhint="search"
+        <input id="q" type="search" role="combobox" inputmode="search" enterkeyhint="search"
           placeholder="Where would you like to go?" aria-label="Search for a building, café, service or room"
-          aria-controls="results" aria-autocomplete="list" />
+          aria-controls="results" aria-autocomplete="list" aria-expanded="false" />
         <button type="button" class="icon-btn clear" aria-label="Clear search" hidden data-icon="close"></button>
         <button type="button" id="settings-btn" class="icon-btn" aria-label="Settings" aria-haspopup="dialog" data-icon="settings"></button>
         <button type="button" id="list-btn" class="icon-btn list-btn" aria-label="Show list of places" aria-pressed="false" data-icon="list"></button>
@@ -54,13 +54,13 @@
       <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     </header>
 
-    <div class="controls" aria-label="Map controls">
+    <div class="controls" role="region" aria-label="Map controls">
       <button id="zoom-in" class="ctl" aria-label="Zoom in" data-icon="plus"></button>
       <button id="zoom-out" class="ctl" aria-label="Zoom out" data-icon="minus"></button>
       <button id="north" class="ctl" aria-label="Reset rotation to north" data-icon="compass"></button>
       <button id="whole" class="ctl" aria-label="Show campus" title="Show campus" data-icon="expand"></button>
-      <button id="dim" class="ctl dim" aria-label="Switch to a flat 2D map" aria-pressed="true">3D</button>
-      <button id="findme" class="ctl locate" aria-label="Show my location" title="Find me" data-icon="locate"></button>
+      <button id="dim" class="ctl dim" aria-label="3D map: switch to a flat 2D map">3D</button>
+      <button id="findme" class="ctl locate" aria-label="Find me: show my location" title="Find me" data-icon="locate"></button>
     </div>
 
     <button id="key-btn" class="key-btn" aria-expanded="false" aria-controls="key">Key</button>

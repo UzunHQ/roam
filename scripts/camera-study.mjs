@@ -5,7 +5,7 @@
 // usage: node scripts/camera-study.mjs http://localhost:5173 OUTDIR [375x812,390x844,768x1024,1440x900] [light|dark]
 import fs from 'node:fs';
 import { chromium } from 'playwright-core';
-const browser = () => chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const browser = () => chromium.launch({ ...(process.env.CHROME ? { executablePath: process.env.CHROME } : {}), args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 async function page(b, w, h, opts = {}) {
   const c = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, ...(w < 600 ? { isMobile: true, hasTouch: true } : {}), ...opts });
   return c.newPage();

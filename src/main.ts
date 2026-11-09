@@ -314,7 +314,7 @@ async function main() {
   // `side` metres to the right.
   type Cam = { pitch: number; bearing: number; dz: number; fwd: number; side: number };
   const HOME_CAMS: Record<'phone' | 'tablet' | 'wide', Cam> = {
-    phone: { pitch: 40, bearing: -10, dz: 0, fwd: -60, side: 0 }, // best at 375x812 and 390x844 together
+    phone: { pitch: 40, bearing: -20, dz: 0.2, fwd: -150, side: 0 }, // best at 375x812 and 390x844 (second study: the hospital's H whole, Chadwick Hall's name clear of the controls)
     tablet: { pitch: 40, bearing: 25, dz: 0, fwd: -60, side: 0 }, // 768x1024: the campus's long axis upright
     wide: { pitch: 50, bearing: 10, dz: 0.25, fwd: 0, side: 50 }, // 1440x900
   };
@@ -375,7 +375,11 @@ async function main() {
   const passes = (p: Place) => inFilter(p) && (!openOnly || !openApplies() || isOpenNow(p.id));
 
   // ---------- markers ----------
-  type M = { p: Place; group: GroupId; marker: MLMarker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; lift: number; ctx: boolean };
+  /** `nudge`: where layoutMarkers last stepped the pin aside (kept while it's still free, so pins
+   * don't hop back and forth as the camera moves); `lab`: which side its name sat on (below,
+   * right, left, top) */
+  type LabelSide = 'b' | 'r' | 'l' | 't';
+  type M = { p: Place; group: GroupId; marker: MLMarker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; lift: number; ctx: boolean; nudge: [number, number]; lab: LabelSide; named: boolean };
   const markers = new Map<string, M>();
   // a named entrance's pin stands over its garden gate in the wall (data/walls.geojson)
   const gateAt = new Map<string, LngLat>();
@@ -389,15 +393,15 @@ async function main() {
     const el = document.createElement('button');
     el.className = `pin g-${group}${kindClass(p)} hidden`; // shown by layoutMarkers once the map has loaded, never at made-up spots before
     el.tabIndex = -1;
-    el.setAttribute('aria-label', `${p.name}, ${groupLabel(group)}`);
+    el.setAttribute('aria-label', `${p.name}${p.code ? ` ${p.code}` : ''}, ${groupLabel(group)}`); // (the name as shown, code included, then what it is)
     el.innerHTML = group === 'entrance'
       ? `<span class="gate">${icons.entrance}</span><span class="label">${esc(p.name)}</span>`
-      : `<span class="dot">${placeIcon(p.category, p.kind)}</span><span class="label"><span class="lname">${esc(p.name)}</span>${p.code ? `<span class="lcode">${esc(p.code)}</span>` : ''}</span>`;
+      : `<span class="dot">${placeIcon(p.category, p.kind)}</span><span class="label"><span class="lname">${esc(p.name)}</span>${p.code ? ` <span class="lcode">${esc(p.code)}</span>` : ''}</span>`; // (the space: read as "Name D1", not "NameD1")
     el.addEventListener('click', (e) => { e.stopPropagation(); select(p, { source: 'marker' }); });
     const at = gateAt.get(p.id) ?? stopAt.get(p.id)?.at ?? p.position;
     const marker = new Marker({ element: el, anchor: 'center' }).setLngLat(at);
     if (map) marker.addTo(map);
-    markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0, at, lift: gateAt.has(p.id) ? 5.4 : stopAt.has(p.id) ? 4.2 : 0, ctx: el.classList.contains('k-ctx') });
+    markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0, at, lift: gateAt.has(p.id) ? 5.4 : stopAt.has(p.id) ? 4.2 : 0, ctx: el.classList.contains('k-ctx'), nudge: [0, 0], lab: 'b', named: false });
   }
   // places sharing a spot (e.g. a café inside its building) sit side by side instead of stacking
   {
@@ -468,9 +472,13 @@ async function main() {
   /** where a pin may step to when its own spot is taken: rings around it, nearest first */
   const NUDGES: [number, number][] = [[0, 0]];
   [1, 1.6, 2.3, 3.1, 4].forEach((r, n) => { const k = 8 + 4 * n; for (let i = 0; i < k; i++) { const a = (i / k) * 2 * Math.PI + (n % 2 ? Math.PI / k : 0); NUDGES.push([Math.cos(a) * r, Math.sin(a) * r]); } });
+  let lastLayoutZ = 0;
   function layoutMarkers() {
     if (!map || !mapReady) return; // before the map's first load, pins would sit against an unsettled camera
     const z = map.getZoom();
+    // a pan keeps each name on its last side (no jumping); a zoom starts over from "below"
+    const zoomed = Math.abs(z - lastLayoutZ) > 0.25;
+    lastLayoutZ = z;
     const near = z >= nearZ();
     document.body.classList.toggle('compact-pins', z < 16.6);
     document.body.classList.toggle('show-courts', z >= 18);
@@ -484,8 +492,9 @@ async function main() {
     const isSel = (m: M) => m.p.id === current?.id || m.p.id === routeFrom?.id;
     const narrow = narrowed();
     // the areas' names: the far level's only names (not while a category is chosen: then the
-    // places matter); close up, small and faint, and only where no pin is
-    const showAreas = (!near && !narrow) || (near && z < nearZ() + 1.2);
+    // places matter). Close up they give way entirely: there the places' own names matter, and an
+    // area's big name would cover them (on a phone most names had no room)
+    const showAreas = !near && !narrow;
     const routePinBoxes = [...document.querySelectorAll<HTMLElement>('.route-pin')].map((e) => e.getBoundingClientRect()).filter((r) => r.width)
       .map((r) => ({ left: r.left - 70, right: r.right + 70, top: r.top - 4, bottom: r.bottom + 26 })); // and the name under it
     // a name near the screen's edge slides in to stay whole, clear of the map controls
@@ -515,24 +524,33 @@ async function main() {
       areaBoxes.push(box);
       areaOf.push(a.el);
     }
-    // outside the chosen category (entrances have no chip and always show)
+    // outside the chosen category (entrances have no chip: see `gateShows`)
     const off = (m: M) => m.group !== 'entrance' && !passes(m.p);
-    const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || Number(a.ctx) - Number(b.ctx) || PRIORITY[b.group] - PRIORITY[a.group]);
+    // entrances: hidden while a category is chosen (they'd crowd the places asked for), and
+    // otherwise only a step closer than the near level, where there's room for them
+    const gateShows = !narrow && z >= nearZ() + 1;
+    // (the id last: the same view always lays out the same way)
+    const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || Number(a.ctx) - Number(b.ctx) || PRIORITY[b.group] - PRIORITY[a.group] || (a.p.id < b.p.id ? -1 : a.p.id > b.p.id ? 1 : 0));
     const shown: { m: M; x: number; y: number; sel: boolean }[] = [];
     // gate pins float just above the pillars' lanterns (about 5.4 m up), bus stops' above the
     // shelter's roof and the stop's sign (4.2 m, drawn a third larger than life), as seen at this zoom and tilt
     const pxPerM = (512 * 2 ** z) / (40075017 * Math.cos((map.getCenter().lat * Math.PI) / 180));
     const lift = (m: M) => -Math.round(Math.min(90, m.lift * pxPerM * Math.sin((map!.getPitch() * Math.PI) / 180) + 16));
-    // floating buttons and the search count as taken space: a pin doesn't step under them
-    const taken = ['.controls', '#key-btn', '.top', '#chips'].map((sel) => document.querySelector(sel)?.getBoundingClientRect()).filter((r): r is DOMRect => !!r?.width)
+    // floating buttons and the search count as taken space: a pin doesn't step under them (nor
+    // under "Find me", which hangs out to the left of its button)
+    const taken = ['.controls', '#key-btn', '.top', '#chips', '.find-label'].map((sel) => document.querySelector(sel)?.getBoundingClientRect()).filter((r): r is DOMRect => !!r?.width)
       .map((r) => [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4] as Box);
+    // pins a little way off the screen still take part, so one sliding in or out as you pan
+    // doesn't shift its neighbours
+    const M_OUT = 160;
     for (const m of list) {
       if (m.lift) m.offset = [m.offset[0], lift(m)];
       const sel = isSel(m);
       const filtered = off(m);
+      const gate = m.group === 'entrance';
       // near: everything (outside the chosen category, faint); far: the hospital's H, plus the
-      // chosen category's own pins
-      const show = sel || (!m.p.noPin && (near || isHospital(m) || (narrow && !filtered)));
+      // chosen category's own pins; entrances by their own rule
+      const show = sel || (!m.p.noPin && (gate ? gateShows : (near || isHospital(m) || (narrow && !filtered))));
       const farH = !near && !sel && isHospital(m);
       m.el.classList.toggle('faded', near && filtered && !sel);
       m.el.classList.toggle('mini', farH);
@@ -544,39 +562,78 @@ async function main() {
         const pt = map.project(m.at);
         const x0 = pt.x + m.offset[0], y0 = pt.y + m.offset[1];
         const onScreen = x0 > -40 && x0 < W + 40 && y0 > -40 && y0 < H + 40;
-        if (onScreen && !sel) {
+        const inPlay = x0 > -M_OUT && x0 < W + M_OUT && y0 > -M_OUT && y0 < H + M_OUT;
+        if (!inPlay) nudge = m.nudge; // too far off to matter: keeps its last step aside
+        else if (!sel) {
           // the nearest free spot: clear of other pins and of the areas' names (far); a pin with
-          // nowhere to go stays where it is
+          // nowhere to go stays where it is. Hysteresis, so a pin on the edge of a crowd doesn't hop
+          // back and forth as the camera moves: one that stepped aside goes home only with room to
+          // spare, and otherwise keeps its last spot while that's free.
           const g = farH ? 20 : gap;
-          const free = NUDGES.find(([i, j]) => {
-            const x = x0 + i * g, y = y0 + j * g;
-            if (dots.some(([a, b]) => Math.max(Math.abs(a - x), Math.abs(b - y)) < g)) return false; // (dots are round, but their shadows square-ish: keep the boxes apart)
+          const fits = (i: number, j: number, room = g) => {
+            const x = x0 + i, y = y0 + j;
+            if (dots.some(([a, b]) => Math.hypot(a - x, b - y) < room)) return false; // (dots and their shadows are round: two diagonal neighbours have room)
             if (!near && areaBoxes.some(over([x - 10, y - 10, x + 10, y + 10]))) return false;
-            return i === 0 && j === 0 || !taken.some(over([x - 12, y - 12, x + 12, y + 12]));
-          });
-          if (free) nudge = [Math.round(free[0] * g), Math.round(free[1] * g)];
+            return (i === 0 && j === 0) || !taken.some(over([x - 12, y - 12, x + 12, y + 12]));
+          };
+          const [pi, pj] = m.nudge;
+          const wasAside = pi !== 0 || pj !== 0;
+          if (fits(0, 0, wasAside ? g + 8 : g)) nudge = [0, 0];
+          // (the last spot only while it's still near: after a big zoom it's a different spot)
+          // (its last spot may go down to touching, so tilt's small changes in spacing as you pan don't move it)
+          else if (wasAside && Math.hypot(pi, pj) <= 4.5 * g && fits(pi, pj, g - 3)) nudge = [pi, pj];
+          else {
+            const free = NUDGES.find(([i, j]) => fits(i * g, j * g));
+            if (free) nudge = [Math.round(free[0] * g), Math.round(free[1] * g)];
+          }
         }
         const x = x0 + nudge[0], y = y0 + nudge[1];
-        if (onScreen) { dots.push([x, y]); if ((!filtered || sel) && !farH) { shown.push({ m, x, y, sel }); if (!m.ctx || sel) keyDots.push([x, y]); } }
+        dots.push([x, y]);
+        if (onScreen && (!filtered || sel) && !farH) { shown.push({ m, x, y, sel }); if (!m.ctx || sel) keyDots.push([x, y]); }
       }
-      m.marker.setOffset([m.offset[0] + nudge[0], m.offset[1] + nudge[1]]);
+      m.nudge = nudge;
+      // the step aside goes on `translate` (MapLibre owns `transform`), so it can ease instead of jump
+      m.marker.setOffset([m.offset[0], m.offset[1]]);
+      m.el.style.translate = nudge[0] || nudge[1] ? `${nudge[0]}px ${nudge[1]}px` : '';
     }
-    // close up, an area's name gives way to any pin under it
-    if (near) areaBoxes.forEach((q, i) => { if (dots.some(([x, y]) => over([x - 14, y - 14, x + 14, y + 14])(q))) { areaOf[i].classList.add('hidden'); q[2] = q[0]; } });
     // second pass: names where they cover neither another name, a pin nor an area's name (most
-    // important first: the list is sorted by priority)
+    // important first: the list is sorted by priority). Each tries below its pin, then right, left
+    // and above (its last side first), so a crowded spot still shows most names.
+    const LH = innerWidth < 600 ? 19 : 22; // a name's height with its edge (11 px type on a phone, 12 px otherwise)
+    // a name already showing keeps its place as you pan: one coming onto the screen waits for room
+    // rather than pushing it off (a zoom starts over, most important first)
+    const wasNamed = new Set(shown.filter(({ m }) => m.named).map(({ m }) => m));
+    for (const m of markers.values()) m.named = false;
+    if (!zoomed) shown.sort((a, b) => Number(b.sel) - Number(a.sel) || Number(wasNamed.has(b.m)) - Number(wasNamed.has(a.m)));
+    // the names' widths, read all at once before anything below changes the page (one layout, not one per pin)
+    for (const { m } of shown) if (!m.labelW) m.labelW = m.el.querySelector<HTMLElement>('.label')!.offsetWidth || 120;
     for (const { m, x, y, sel } of shown) {
-      if (!m.labelW) m.labelW = m.el.querySelector<HTMLElement>('.label')!.offsetWidth || 120;
-      const box: Box = [x - m.labelW / 2, y + 14, x + m.labelW / 2, y + 36];
-      const clipped = box[0] < 4 || box[2] > W - 4 || box[3] > H - 4 || taken.some(over(box));
-      if (!sel && clipped) continue;
-      const hitsDot = keyDots.some(([dx, dy]) => (dx !== x || dy !== y) && dx + 12 > box[0] && dx - 12 < box[2] && dy + 12 > box[1] && dy - 12 < box[3]);
-      const hitsLabel = labels.some((q) => over(box)(q));
-      // an area's name and a place's name never overlap: the place's waits, unless it's the chosen
-      // place, in which case the area's name steps aside (pin and name both)
-      const hitsArea = areaBoxes.some(over(box));
-      if (sel) areaBoxes.forEach((q, i) => { if (over(box)(q) || over([x - 16, y - 16, x + 16, y + 16])(q)) areaOf[i].classList.add('hidden'); });
-      if (sel || (!hitsDot && !hitsLabel && !hitsArea)) { labels.push(box); m.el.classList.add('show-label'); }
+      const w = m.labelW;
+      const boxes: Record<LabelSide, Box> = {
+        b: [x - w / 2, y + 13, x + w / 2, y + 13 + LH],
+        r: [x + 17, y - LH / 2, x + 17 + w, y + LH / 2],
+        l: [x - 17 - w, y - LH / 2, x - 17, y + LH / 2],
+        t: [x - w / 2, y - 13 - LH, x + w / 2, y - 13],
+      };
+      const first: LabelSide = zoomed ? 'b' : m.lab;
+      const sides: LabelSide[] = sel ? ['b'] : [first, ...(['b', 'r', 'l', 't'] as LabelSide[]).filter((s) => s !== first)];
+      const freeSide = sides.find((s) => {
+        const box = boxes[s];
+        if (box[0] < 4 || box[2] > W - 4 || box[1] < 4 || box[3] > H - 4 || taken.some(over(box))) return false;
+        if (keyDots.some(([dx, dy]) => (dx !== x || dy !== y) && dx + 12 > box[0] && dx - 12 < box[2] && dy + 12 > box[1] && dy - 12 < box[3])) return false;
+        // an area's name and a place's name never overlap (the place's waits)
+        return !labels.some((q) => over(box)(q)) && !areaBoxes.some(over(box));
+      });
+      const side = sel ? 'b' : freeSide;
+      // the chosen place's name always shows: an area's name under it steps aside (pin and name both)
+      if (sel) areaBoxes.forEach((q, i) => { if (over(boxes.b)(q) || over([x - 16, y - 16, x + 16, y + 16])(q)) areaOf[i].classList.add('hidden'); });
+      m.el.classList.remove('lab-r', 'lab-l', 'lab-t');
+      if (!side) continue;
+      m.lab = side;
+      if (side !== 'b') m.el.classList.add(`lab-${side}`);
+      labels.push(boxes[side]);
+      m.el.classList.add('show-label');
+      m.named = true;
     }
   }
   map?.on('moveend', layoutMarkers);
@@ -586,7 +643,12 @@ async function main() {
     store.set('roam.keyHinted', '1');
     setTimeout(() => { keyBtn.classList.add('hint'); setTimeout(() => keyBtn.classList.remove('hint'), 2600); }, 1800);
   }
-  addEventListener('resize', () => layoutMarkers());
+  // names are a size smaller on a phone: across that line, measure them again
+  let phoneType = innerWidth < 600;
+  addEventListener('resize', () => {
+    if ((innerWidth < 600) !== phoneType) { phoneType = !phoneType; for (const m of markers.values()) m.labelW = 0; }
+    layoutMarkers();
+  });
 
   // ---------- ambient: slow ripples on the larger ponds (CSS only; none in Reduced/Off or on low-end phones) ----------
   if (map) {
@@ -806,8 +868,7 @@ async function main() {
     pitchedByHand = false;
     camMove({ pitch: tilt(autoPitch(map?.getZoom() ?? 16)), duration: ms(450) });
     dimBtn.textContent = flat ? '2D' : '3D';
-    dimBtn.setAttribute('aria-pressed', String(!flat));
-    dimBtn.setAttribute('aria-label', flat ? 'Switch to a 3D map' : 'Switch to a flat 2D map');
+    dimBtn.setAttribute('aria-label', flat ? '2D map: switch to 3D' : '3D map: switch to a flat 2D map'); // (what it shows, then what it does)
   });
   /**
    * Where the home view may draw: clear of everything floating over the map. Desktop: the search
@@ -927,12 +988,14 @@ async function main() {
   const findBtn = $('#findme');
   // until we have a real fix, the button says what it does (no character at a made-up spot)
   findBtn.insertAdjacentHTML('beforeend', '<span class="find-label" aria-hidden="true">Find me</span>');
+  // once used, the icon is enough: the label would only cover names
+  if (store.get('roam.findUsed') === '1') document.body.classList.add('findme-used');
 
   function setFollowing(on: boolean) {
     following = on;
     findBtn.classList.toggle('following', on);
     findBtn.setAttribute('aria-pressed', String(on));
-    findBtn.setAttribute('aria-label', on ? 'Following your location. Move the map to stop.' : 'Show my location');
+    findBtn.setAttribute('aria-label', on ? 'Find me: following your location. Move the map to stop.' : 'Find me: show my location');
   }
   // moving the map by hand pauses following; the locate button brings it back
   map?.on('dragstart', () => { if (following) setFollowing(false); });
@@ -1092,6 +1155,7 @@ async function main() {
     }
   }
   findBtn.addEventListener('click', async () => {
+    if (!document.body.classList.contains('findme-used')) { document.body.classList.add('findme-used'); store.set('roam.findUsed', '1'); }
     if (map && tracking && fix && !stale) {
       // already live: bring the map back to you and keep following
       const off = distanceToBounds(fix.pos, doc.bounds);
@@ -2133,19 +2197,21 @@ async function main() {
     const via = new Map(hits.map((h) => [h.place.id, h.via]));
     const firstOutside = inside.length + groups.length;
     if (!options.length) {
+      results.removeAttribute('role'); // a message, not a list of choices
       results.innerHTML = `<li class="empty"><p>No places match “${esc(q)}”.</p>
         <p class="hint">Try a building name, a code such as D1, a room such as Ma101, or what you need, like printing or coffee.</p>
         <div class="empty-actions"><button class="btn ghost browse">Browse all places</button>${narrowed() ? '<button class="btn ghost reset">Clear filters</button>' : ''}</div></li>`;
       results.querySelector('.browse')!.addEventListener('click', () => { clearFilters(); input.value = ''; clearBtn.hidden = true; hideResults(); showList(); });
       results.querySelector('.reset')?.addEventListener('click', () => { clearFilters(); input.focus(); });
     } else {
+      results.setAttribute('role', 'listbox');
       const head = (text: string) => `<li class="res-head" role="presentation">${esc(text)}</li>`;
       results.innerHTML = options.map((o, i) => (narrowed() && i === groups.length && inside.length ? head(`In ${filterLabel(filter)}${openOnly && openApplies() ? ', open now' : ''}`) : '')
         + (narrowed() && outside.length && i === firstOutside ? head(inside.length ? 'Other categories' : `Nothing in ${filterLabel(filter)}${openOnly && openApplies() ? ' open now' : ''}. Other categories:`) : '')
         + (o.kind === 'group'
-        ? `<li><button role="option" data-i="${i}"><span class="cat-icon small g-${o.group}">${groupIcon(o.group)}</span>
+        ? `<li role="presentation"><button role="option" data-i="${i}"><span class="cat-icon small g-${o.group}">${groupIcon(o.group)}</span>
             <span><b>Show all: ${esc(groupLabel(o.group))}</b><small>${plural(groupCount.get(o.group) ?? 0, 'place')}</small></span></button></li>`
-        : `<li><button role="option" data-i="${i}">
+        : `<li role="presentation"><button role="option" data-i="${i}">
             <span class="cat-icon small g-${groupOf(o.place)}${kindClass(o.place)}">${placeIcon(o.place.category, o.place.kind)}</span>
             <span><b>${esc(o.place.name)}</b>${o.place.code ? ` <span class="code">${esc(o.place.code)}</span>` : ''}
             <small>${esc([...new Set([groupOf(o.place) === 'nearby' ? 'Nearby' : via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]])].filter(Boolean).join(' · '))}</small></span></button></li>`)).join('');
@@ -2154,7 +2220,16 @@ async function main() {
     input.setAttribute('aria-expanded', 'true');
     const n = options.filter((o) => o.kind === 'place').length;
     announce(n ? plural(n, 'result') : 'No results');
+    // a search that finds nothing tells us what's missing: counted (anonymously, like every search)
+    // once the person stops typing, once per query
+    clearTimeout(missTimer);
+    if (!options.length && q.length >= 3) {
+      const key = q.toLowerCase().slice(0, 40);
+      missTimer = window.setTimeout(() => { if (input.value.trim().toLowerCase().slice(0, 40) === key && key !== lastMiss) { lastMiss = key; track('search-miss', { q: key }); } }, 1500);
+    }
   }
+  let missTimer = 0;
+  let lastMiss = '';
   function pick(i: number) {
     const o = options[i];
     if (!o) return;
@@ -2352,7 +2427,18 @@ async function main() {
 
   // ---------- offline (installable PWA, from the original brief) ----------
   if ('serviceWorker' in navigator && import.meta.env.PROD) {
-    const register = () => navigator.serviceWorker.register('/sw.js');
+    // a new version took over while Roam was open (sw.js skips waiting): say so, and offer to load it
+    const updating = !!navigator.serviceWorker.controller; // (no controller yet: the first install, not an update)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (updating) toast('A new version of Roam is ready.', 0, { label: 'Reload', run: () => location.reload() });
+    });
+    const register = () => navigator.serviceWorker.register('/sw.js').then((reg) => {
+      // an app left open on a phone's home screen looks for a new version when it comes back to the front
+      let checked = Date.now();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && Date.now() - checked > 30 * 60_000) { checked = Date.now(); reg.update().catch(() => {}); }
+      });
+    }).catch(() => { /* no offline copy: the app still works online */ });
     if (document.readyState === 'complete') register();
     else addEventListener('load', register);
   }

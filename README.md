@@ -37,9 +37,9 @@ New students at Roehampton get lost, and the tools they have don't help much:
 
 | | |
 |---|---|
-| Places on the map | 77 (47 buildings, 10 food and drink, 5 sport, 4 car parks, 6 outdoor places, 5 entrances) |
+| Places on the map | 105 (69 buildings, car parks and outdoor places, 10 food and drink, 6 sport, 7 entrances, and 13 nearby: the hospital and its car park, 9 bus stops, a Co-op and Roehampton Library) |
 | Timetable room-code prefixes | 15 |
-| Code | about 4,100 lines of TypeScript and CSS |
+| Code | about 6,200 lines of TypeScript and CSS |
 
 ## How it's built
 
@@ -63,7 +63,7 @@ New students at Roehampton get lost, and the tools they have don't help much:
 
 I study Business Analytics, so I wanted to measure whether Roam actually helps, not just ship a demo.
 
-- **Umami** counts visits and four events: `place-tap`, `search`, `nav-start` and `install`.
+- **Umami** counts visits and five events: `place-tap`, `search`, `search-miss` (a search that found nothing, so I can see what's missing), `nav-start` and `install`.
 - **A four-question feedback form**, opened from a QR code and fully anonymous.
 
 The questions I want to answer:
@@ -86,6 +86,16 @@ npm run dev
 ```
 
 Editing places, opening hours, photos and deploying: see the [developer notes](docs/DEVELOPMENT.md).
+
+### Checks
+
+Every push and pull request runs [CI](.github/workflows/ci.yml): types, the build, `npm run check:hours`, `npm run check:data` (only places chosen on purpose, all on the map) and `npm run test:smoke` (search, links, categories, directions, and pins whose names never overlap and don't hop about as you pan, in a real browser). **If CI is red, don't merge.**
+
+```bash
+npx playwright-core install chromium   # once
+npm run dev                            # in one terminal
+npm run test:smoke                     # in another
+```
 
 ---
 

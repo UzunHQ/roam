@@ -2428,7 +2428,6 @@
       "aliases": [
         "Car park",
         "Parking",
-        "Froebel car park",
         "Froebel parking"
       ],
       "roomCodePrefixes": [],
@@ -4848,191 +4847,6 @@
       ]
     },
     {
-      "id": "eastwood-nursery",
-      "code": "",
-      "roomCodePrefixes": [],
-      "lastVerified": null,
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "name": "Eastwood Nursery School",
-      "aliases": [
-        "Eastwood Nursery School and Centre for Children and Families",
-        "Eastwood Nursery",
-        "Nursery",
-        "166 Roehampton Lane"
-      ],
-      "category": "nearby",
-      "kind": "school",
-      "college": null,
-      "description": "A nursery school and centre for children and families at 166–168 Roehampton Lane, just south of Chadwick Hall. Not part of the university.",
-      "position": [
-        -0.244674,
-        51.452374
-      ],
-      "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 10,
-      "footprintId": "relation/13124867",
-      "services": [],
-      "tags": [
-        "nursery",
-        "school"
-      ],
-      "offCampus": true,
-      "officialUrl": "https://www.eastwood.wandsworth.sch.uk/",
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/way/393563929",
-          "title": "OpenStreetMap: Eastwood Nursery School and Centre for Children and Families (amenity=kindergarten, 166-168 Roehampton Lane)",
-          "checked": "2026-11-09"
-        },
-        {
-          "url": "https://www.openstreetmap.org/relation/13124867",
-          "title": "OpenStreetMap: the building at 166 Roehampton Lane, on the nursery site",
-          "checked": "2026-11-09"
-        }
-      ]
-    },
-    {
-      "id": "ibstock-place-school",
-      "code": "",
-      "roomCodePrefixes": [],
-      "lastVerified": null,
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "name": "Ibstock Place School",
-      "aliases": [
-        "Ibstock",
-        "Ibstock Sports Hall"
-      ],
-      "category": "nearby",
-      "kind": "school",
-      "college": null,
-      "description": "An independent school next to the Froebel playing field, with its own sports hall. Not part of the university, and its grounds are private.",
-      "position": [
-        -0.250974,
-        51.45515
-      ],
-      "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 10,
-      "footprintId": "way/653483623",
-      "services": [],
-      "tags": [
-        "school"
-      ],
-      "offCampus": true,
-      "officialUrl": "https://www.ibstockplaceschool.co.uk/",
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/relation/8657820",
-          "title": "OpenStreetMap: Ibstock Place School (amenity=school)",
-          "checked": "2026-11-09"
-        },
-        {
-          "url": "https://www.openstreetmap.org/way/653483623",
-          "title": "OpenStreetMap: Ibstock Sports Hall (access=private)",
-          "checked": "2026-11-09"
-        }
-      ]
-    },
-    {
-      "code": "",
-      "roomCodePrefixes": [],
-      "lastVerified": "2026-11-09",
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "college": null,
-      "category": "nearby",
-      "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 10,
-      "services": [],
-      "offCampus": true,
-      "officialUrl": null,
-      "id": "roehampton-house",
-      "name": "Roehampton House",
-      "aliases": [
-        "Roehampton House Grade I",
-        "Vitali Close"
-      ],
-      "kind": "landmark",
-      "description": "A Grade I listed house on Roehampton Lane, across the road from Chadwick Hall. Today it is private flats (Vitali Close). Not part of the university.",
-      "position": [
-        -0.242515,
-        51.45402
-      ],
-      "footprintId": "way/259543098",
-      "tags": [
-        "listed building",
-        "history"
-      ],
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/way/259543098",
-          "title": "OpenStreetMap way 259543098 (Roehampton House, building=apartments, Vitali Close)",
-          "checked": "2026-11-09"
-        },
-        {
-          "url": "https://historicengland.org.uk/listing/the-list/list-entry/1357694",
-          "title": "Historic England list entry 1357694 (Grade I), via Wikidata Q16707759",
-          "checked": "2026-11-09"
-        },
-        {
-          "url": "https://en.wikipedia.org/wiki/Roehampton_House",
-          "title": "Wikipedia: Roehampton House (Grade I listed house at Roehampton Lane)",
-          "checked": "2026-11-09"
-        }
-      ]
-    },
-    {
-      "code": "",
-      "roomCodePrefixes": [],
-      "lastVerified": "2026-11-09",
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "college": null,
-      "category": "nearby",
-      "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 10,
-      "services": [],
-      "offCampus": true,
-      "officialUrl": null,
-      "id": "mosaic-jewish-primary-school",
-      "name": "Mosaic Jewish Primary School",
-      "aliases": [
-        "Mosaic school",
-        "Hartfield House"
-      ],
-      "kind": "school",
-      "description": "A primary school (ages 4 to 11) in Hartfield House, just south of Chadwick Hall on Roehampton Lane. Not part of the university; its grounds are private.",
-      "position": [
-        -0.245272,
-        51.451855
-      ],
-      "footprintId": "way/393563932",
-      "tags": [
-        "school"
-      ],
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/way/393563927",
-          "title": "OpenStreetMap way 393563927 (amenity=school, Mosaic Jewish Primary School, ages 4 to 11)",
-          "checked": "2026-11-09"
-        },
-        {
-          "url": "https://www.openstreetmap.org/way/393563932",
-          "title": "OpenStreetMap way 393563932 (building=school, Hartfield House)",
-          "checked": "2026-11-09"
-        }
-      ]
-    },
-    {
       "code": "",
       "roomCodePrefixes": [],
       "lastVerified": "2026-11-09",
@@ -5326,8 +5140,7 @@
       "name": "Whitelands playing field",
       "aliases": [
         "Whitelands sports field",
-        "Whiteland Sports field",
-        "Playing field"
+        "Whiteland Sports field"
       ],
       "category": "sport",
       "kind": "field",
@@ -5698,7 +5511,6 @@
       "id": "roehampton-library-public",
       "name": "Roehampton Library (public)",
       "aliases": [
-        "Library",
         "Roehampton Library",
         "Public library",
         "Wandsworth library",
@@ -5734,141 +5546,6 @@
         {
           "url": "https://www.openstreetmap.org/way/1049455201",
           "title": "OpenStreetMap way 1049455201: Danebury Avenue Car Park",
-          "checked": "2026-11-09"
-        }
-      ]
-    },
-    {
-      "code": "",
-      "roomCodePrefixes": [],
-      "lastVerified": "2026-11-09",
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "footprintId": null,
-      "offCampus": false,
-      "officialUrl": null,
-      "services": [
-        "53–57 Danebury Avenue, London SW15 4DQ"
-      ],
-      "tags": [
-        "supermarket",
-        "groceries"
-      ],
-      "id": "premier-danebury-avenue",
-      "name": "Premier (Danebury Avenue)",
-      "aliases": [
-        "Premier",
-        "Supermarket",
-        "Groceries",
-        "Convenience shop",
-        "Shop",
-        "Post Office",
-        "Cash machine"
-      ],
-      "category": "nearby",
-      "kind": "shop",
-      "college": null,
-      "description": "A Premier convenience shop at 53–57 Danebury Avenue, with a Post Office counter and a cash machine (from OpenStreetMap). Hours not listed.",
-      "position": [
-        -0.242624,
-        51.449581
-      ],
-      "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 10,
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/way/932193707",
-          "title": "OpenStreetMap way 932193707: name, address, cash machine",
-          "checked": "2026-11-09"
-        },
-        {
-          "url": "https://www.openstreetmap.org/node/11277822504",
-          "title": "OpenStreetMap node 11277822504: Post Office counter at 53–57 Danebury Avenue",
-          "checked": "2026-11-09"
-        }
-      ]
-    },
-    {
-      "code": "",
-      "roomCodePrefixes": [],
-      "lastVerified": "2026-11-09",
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "footprintId": null,
-      "offCampus": false,
-      "officialUrl": null,
-      "services": [
-        "51 Danebury Avenue, London SW15 4DQ"
-      ],
-      "tags": [
-        "laundry"
-      ],
-      "id": "super-clean-launderette",
-      "name": "Super Clean Launderette",
-      "aliases": [
-        "Launderette",
-        "Laundrette",
-        "Super Clean",
-        "Self-service laundry"
-      ],
-      "category": "nearby",
-      "kind": "shop",
-      "college": null,
-      "description": "A self-service launderette at 51 Danebury Avenue (from OpenStreetMap). Hours not listed. For students in halls, the campus laundries come first.",
-      "position": [
-        -0.242448,
-        51.449551
-      ],
-      "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 10,
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/way/932193706",
-          "title": "OpenStreetMap way 932193706: name, address, self-service laundry",
-          "checked": "2026-11-09"
-        }
-      ]
-    },
-    {
-      "code": "",
-      "roomCodePrefixes": [],
-      "lastVerified": "2026-11-09",
-      "status": "confirmed",
-      "entrance": null,
-      "photo": null,
-      "accessibility": null,
-      "footprintId": null,
-      "offCampus": false,
-      "officialUrl": null,
-      "services": [
-        "49 Danebury Avenue, London SW15 4DQ"
-      ],
-      "tags": [],
-      "id": "cafe-joy",
-      "name": "Cafe Joy",
-      "aliases": [
-        "Cafe",
-        "Café Joy",
-        "Coffee"
-      ],
-      "category": "nearby",
-      "kind": "cafe",
-      "college": null,
-      "description": "A café at 49 Danebury Avenue, with seats inside and out (from OpenStreetMap). Hours not listed.",
-      "position": [
-        -0.242309,
-        51.449527
-      ],
-      "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 10,
-      "sources": [
-        {
-          "url": "https://www.openstreetmap.org/way/932193705",
-          "title": "OpenStreetMap way 932193705: name, address, seating",
           "checked": "2026-11-09"
         }
       ]

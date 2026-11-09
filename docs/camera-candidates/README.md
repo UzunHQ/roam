@@ -79,3 +79,19 @@ Southlands always shows. Requirement (a) was put first.
 | 3 | 1440-133 | 60° | -25° | +0.25 | 50 right | 97 | ✓ 100% | 33% ✗ | 23% | 7% ✓ | 10% ✓ | 0 ✓ | ✓ |
 
 180 candidates; 92 keep all four areas whole; the best main-campus share among those: 38%.
+
+## Second phone study (November 2026)
+
+On a phone the first choice cut the hospital's H at the right edge, put Chadwick Hall's name against the
+zoom buttons and showed a wide band of empty ground at the top. A second study (same script, as a
+returning visitor: no welcome card) tried 192 more cameras at 375×812 and 390×844: tilt 40°, turned −25°,
+−20°, −15° or −10°, 0.1, 0.2 or 0.3 steps closer, moved 60–150 m up the screen and 0–45 m right. Three
+checks were added to the score: the H's whole pin on screen and clear of every button (+10, or −10), the
+golf course at most 15% (+5, less above), and Chadwick Hall's name at least 12 px from the controls (+5).
+
+**Chosen** (`HOME_CAMS.phone`): tilt 40°, turned −20°, 0.2 steps closer, 150 m up the screen. It came
+first at both sizes. At 375×812, against the first choice measured the same way: 105.5 points (was
+67.7), the H whole (was cut), Chadwick Hall's name 47 px from the controls (was 12), the campus 25% of the
+map you can see (was 21%), empty ground at the top 16% (was 22%), the golf course 10% (was 9%), no names
+overlapping.
+Pictures: `phone-2-375x812-375-006.jpg`, `phone-2-390x844-390-006.jpg`.

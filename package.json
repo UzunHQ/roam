@@ -15,13 +15,16 @@
     "build:walls": "node scripts/build-walls.mjs",
     "icons": "node scripts/make-icons.mjs",
     "photos": "node scripts/make-photos.mjs",
-    "check:hours": "node scripts/check-hours.mjs"
+    "check:hours": "node scripts/check-hours.mjs",
+    "check:data": "node scripts/check-data.mjs",
+    "test:smoke": "node scripts/smoke.mjs http://localhost:5173"
   },
   "dependencies": {
     "maplibre-gl": "^6.15.0"
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.16",
+    "playwright-core": "^1.65.0",
     "sharp": "^0.35.5",
     "typescript": "^5.9.3",
     "vite": "^7.3.7"

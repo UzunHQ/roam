@@ -1,0 +1,30 @@
+# Every push and pull request: types, the build, the data and hours checks, and the smoke tests in a
+# real browser (scripts/smoke.mjs). Red means don't merge.
+name: CI
+on:
+  push:
+    branches: [main, roam-v2]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run build
+      - run: npm run check:hours
+      - run: npm run check:data
+      - run: npx playwright-core install --with-deps chromium
+      - name: Smoke tests
+        run: |
+          npm run dev -- --port 5173 --strictPort > dev.log 2>&1 &
+          for i in $(seq 60); do curl -sf http://localhost:5173/ > /dev/null && break; sleep 1; done
+          npm run test:smoke
+      - if: failure()
+        run: cat dev.log || true

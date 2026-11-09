@@ -11,3 +11,9 @@
 
 - Canlı siteyi (tarayıcı, Playwright, curl) test için açarken URL'ye her zaman `?notrack` ekle, örn. `https://roam-roehampton.vercel.app/?notrack` veya `/?place=library&notrack`. Böylece Umami istatistikleri test ziyaretleriyle kirlenmez.
 - Her yeni tarayıcı oturumu boş localStorage ile başlar; bu yüzden `?notrack`'i sadece ilk sayfada değil, her yeni oturumda/bağlamda açılan ilk URL'de kullan.
+
+## Yerler (places.json)
+
+- Sahibin açıkça istemediği hiçbir yeni yer kaydı, pin ya da isim ekleme. Kampüs dışında (college'ı olmayan, giriş olmayan) sadece `data/allowed-offcampus.json`'daki kayıtlar olabilir; yenisi ancak sahip adıyla isterse, aynı değişiklikte listeye eklenerek gelir.
+- Kampüs dışındaki binalar haritada isimsiz gri arka plan olarak kalabilir; onlara kayıt/pin/kart ekleme.
+- Her değişiklikten sonra `npm run check:data` geçmeli.
