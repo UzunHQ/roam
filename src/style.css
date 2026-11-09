@@ -329,7 +329,8 @@ svg { display: block; flex: none; }
   /* 44px touch target around a small visual */
   width: 44px; height: 44px; padding: 0; border: 0; background: none;
   display: grid; place-items: center; /* position comes from .maplibregl-marker (absolute) */
-  transition: opacity 0.15s;
+  /* translate = a step aside from a crowded spot (main.ts layoutMarkers): eased, not a jump */
+  transition: opacity 0.15s, translate 0.18s var(--ease);
 }
 /* visibility, not opacity: MapLibre writes an inline opacity on markers */
 .pin.hidden { visibility: hidden !important; pointer-events: none; }
@@ -378,6 +379,14 @@ svg { display: block; flex: none; }
 }
 .pin .gate svg { width: 14px; height: 14px; }
 .pin.g-entrance .label { top: 32px; }
+/* a name that doesn't fit below its pin goes to the right, left or above it */
+.pin.lab-r .label { top: 13px; left: 39px; transform: none; }
+.pin.lab-l .label { top: 13px; left: auto; right: 39px; transform: none; }
+.pin.lab-t .label { top: auto; bottom: 34px; }
+@media (max-width: 599px) {
+  .pin .label { font-size: 11px; line-height: 16px; max-width: 200px; }
+  .pin.lab-r .label, .pin.lab-l .label { top: 12px; }
+}
 
 /* route ends */
 .route-pin {
@@ -762,6 +771,7 @@ html[data-motion="reduced"] .avatar .halo, html[data-motion="reduced"] .ripple,
 html[data-motion="reduced"] .avatar.walking .leg, html[data-motion="reduced"] .avatar.walking .arm,
 html[data-motion="reduced"] .avatar.walking .bob { animation: none !important; }
 html[data-motion="reduced"] .ripple { display: none; }
+html[data-motion="reduced"] .pin { transition: opacity 0.15s; }
 html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after {
   animation: none !important; transition: none !important; scroll-behavior: auto !important;
 }
@@ -829,6 +839,8 @@ html[data-motion="off"] .ripple, html[data-motion="off"] .avatar .halo { display
   background: var(--primary); transform: rotate(45deg); border-radius: 2px;
 }
 body.has-fix .find-label, body.panel-open .find-label { display: none; }
+/* only on the overview, and only until it's been used once: after that the icon says it */
+body:not(.far-view) .find-label, body.findme-used .find-label { display: none; }
 @media (min-width: 900px) { .find-label { display: none; } } /* desktop: the Key button sits there; the button has a tooltip */
 
 /* ---------- tennis court numbers, painted on the court ---------- */
@@ -850,6 +862,11 @@ body.has-fix .find-label, body.panel-open .find-label { display: none; }
 .area-label.hidden { visibility: hidden; opacity: 0; pointer-events: none; }
 .area-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #24323a; }
 .area-icon svg { width: 16px; height: 16px; }
+@media (max-width: 599px) { /* a phone: the colleges' names a size down, so the overview isn't all labels */
+  .area-label { min-height: 36px; padding: 0 12px 0 5px; gap: 7px; font-size: 13.5px; }
+  .area-icon { width: 25px; height: 25px; }
+  .area-icon svg { width: 14px; height: 14px; }
+}
 .area-digby-stuart .area-icon { background: var(--roof-digby); }
 .area-froebel .area-icon { background: var(--roof-froebel); }
 .area-southlands .area-icon { background: var(--roof-southlands); }
