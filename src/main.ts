@@ -1080,6 +1080,17 @@ async function main() {
     return `<ul class="entrances small">${doors.map((d) => `<li>${TYPE[d.type]}${d.name ? `: ${esc(d.name)}` : ''} · ${d.verified ? `checked${d.checked ? ` ${fmtDate(d.checked)}` : ''}` : 'not verified'}</li>`).join('')}</ul>`;
   }
 
+  /** a bus stop: which way its buses go, which routes stop there, and TfL's page for live times */
+  function busBlock(p: Place): string {
+    const b = p.bus;
+    if (!b) return '';
+    return `<div class="bus-info">
+        <p class="bus-dir"><b>${esc(b.direction[0].toUpperCase() + b.direction.slice(1))}bound</b> · towards ${esc(b.towards)}</p>
+        <ul class="bus-routes" aria-label="Bus routes">${b.routes.map((r) => `<li${/^N/.test(r) ? ' class="night" title="Night bus"' : ''}>${esc(r)}</li>`).join('')}</ul>
+        <a class="btn ghost tfl" href="https://tfl.gov.uk/bus/stop/${encodeURIComponent(b.atco)}/" target="_blank" rel="noopener">${icons.bus}<span>Live times on TfL</span>${icons.external}</a>
+        <p class="small">Routes and direction from TfL, checked ${fmtDate(b.checked)}. Night buses start with N.</p>
+      </div>`;
+  }
   function renderCard(p: Place, expanded = false) {
     const g = groupOf(p);
     const placeLabel = (p.code ? `${p.name} (${p.code})` : p.name) + (currentRoom ? `, room ${currentRoom}` : '');
@@ -1105,6 +1116,7 @@ async function main() {
       ${roomBlock(p)}
       ${p.description ? `<p class="desc${expanded ? '' : ' clamp'}">${esc(p.description)}</p>` : ''}
       ${hoursBlock(p) || '<div class="hours-wrap" hidden></div>'}
+      ${busBlock(p)}
       ${walk ? `<p class="walk-hint">${icons.walk}<span>${walk}</span></p>` : ''}
       <div class="actions">
         <button class="btn primary dir">${icons.directions}<span>Take me there</span></button>

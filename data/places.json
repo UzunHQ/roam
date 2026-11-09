@@ -3958,19 +3958,32 @@
     {
       "id": "bus-main-entrance-x",
       "code": "",
-      "name": "Bus stop X: Roehampton University / Main Entrance",
+      "name": "Bus stop X: Roehampton University Main Entrance",
       "aliases": [
         "Bus stop X",
-        "Main Entrance bus stop",
-        "Roehampton University bus stop",
+        "Roehampton University Main Entrance bus stop",
         "Bus stop",
-        "Bus"
+        "Bus",
+        "265",
+        "419",
+        "493",
+        "969",
+        "N72",
+        "N74",
+        "Bus 265",
+        "Bus 419",
+        "Bus 493",
+        "Bus 969",
+        "Bus N72",
+        "Bus N74",
+        "Main Entrance bus stop",
+        "Roehampton University bus stop"
       ],
       "roomCodePrefixes": [],
       "category": "nearby",
       "kind": "bus-stop",
       "college": null,
-      "description": "TfL bus stop X on Roehampton Lane by the Main entrance; stop U is about 35 m north. Check live times and routes with TfL.",
+      "description": "TfL bus stop X on Roehampton Lane by the Main entrance, on the campus side. Buses northbound, towards Putney, Sheen or Hammersmith Bridge.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -3984,33 +3997,65 @@
       "photo": null,
       "services": [],
       "tags": [],
-      "offCampus": true,
       "officialUrl": null,
       "accessibility": null,
       "sources": [
         {
+          "url": "https://api.tfl.gov.uk/StopPoint/490006083N",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
           "url": "https://www.openstreetmap.org/node/469768220",
-          "title": "OpenStreetMap node 469768220",
-          "checked": "2026-11-08"
+          "title": "OpenStreetMap node 469768220: position",
+          "checked": "2026-11-09"
         }
-      ]
+      ],
+      "bus": {
+        "atco": "490006083N",
+        "letter": "X",
+        "direction": "north",
+        "towards": "Putney, Sheen or Hammersmith Bridge",
+        "routes": [
+          "265",
+          "419",
+          "493",
+          "969",
+          "N72",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
     },
     {
       "id": "bus-main-entrance-u",
       "code": "",
-      "name": "Bus stop U: Roehampton University / Main Entrance",
+      "name": "Bus stop U: Roehampton University Main Entrance",
       "aliases": [
         "Bus stop U",
-        "Main Entrance bus stop",
-        "Roehampton University bus stop",
+        "Roehampton University Main Entrance bus stop",
         "Bus stop",
-        "Bus"
+        "Bus",
+        "265",
+        "419",
+        "493",
+        "969",
+        "N72",
+        "N74",
+        "Bus 265",
+        "Bus 419",
+        "Bus 493",
+        "Bus 969",
+        "Bus N72",
+        "Bus N74",
+        "Main Entrance bus stop",
+        "Roehampton University bus stop"
       ],
       "roomCodePrefixes": [],
       "category": "nearby",
       "kind": "bus-stop",
       "college": null,
-      "description": "TfL bus stop U on Roehampton Lane by the Main entrance; stop X is about 35 m south. Check live times and routes with TfL.",
+      "description": "TfL bus stop U on Roehampton Lane by the Main entrance, across the road from stop X. Buses southbound, towards Kingston Vale or Putney Heath.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -4024,16 +4069,35 @@
       "photo": null,
       "services": [],
       "tags": [],
-      "offCampus": true,
       "officialUrl": null,
       "accessibility": null,
       "sources": [
         {
+          "url": "https://api.tfl.gov.uk/StopPoint/490006083S",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
           "url": "https://www.openstreetmap.org/node/469768221",
-          "title": "OpenStreetMap node 469768221",
-          "checked": "2026-11-08"
+          "title": "OpenStreetMap node 469768221: position",
+          "checked": "2026-11-09"
         }
-      ]
+      ],
+      "bus": {
+        "atco": "490006083S",
+        "letter": "U",
+        "direction": "south",
+        "towards": "Kingston Vale or Putney Heath",
+        "routes": [
+          "265",
+          "419",
+          "493",
+          "969",
+          "N72",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
     },
     {
       "id": "bus-clarence-lane-s",
@@ -4043,13 +4107,25 @@
         "Bus stop S",
         "Clarence Lane bus stop",
         "Bus stop",
-        "Bus"
+        "Bus",
+        "265",
+        "419",
+        "493",
+        "969",
+        "N72",
+        "N74",
+        "Bus 265",
+        "Bus 419",
+        "Bus 493",
+        "Bus 969",
+        "Bus N72",
+        "Bus N74"
       ],
       "roomCodePrefixes": [],
       "category": "nearby",
       "kind": "bus-stop",
       "college": null,
-      "description": "TfL bus stop S (Clarence Lane) on Roehampton Lane, south of the campus. Check live times and routes with TfL.",
+      "description": "TfL bus stop S on Roehampton Lane south of the campus, by Chadwick Hall. Buses northbound, towards Barnes or Sheen.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -4063,16 +4139,35 @@
       "photo": null,
       "services": [],
       "tags": [],
-      "offCampus": true,
       "officialUrl": null,
       "accessibility": null,
       "sources": [
         {
+          "url": "https://api.tfl.gov.uk/StopPoint/490011322S",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
           "url": "https://www.openstreetmap.org/node/469778036",
-          "title": "OpenStreetMap node 469778036",
-          "checked": "2026-11-08"
+          "title": "OpenStreetMap node 469778036: position",
+          "checked": "2026-11-09"
         }
-      ]
+      ],
+      "bus": {
+        "atco": "490011322S",
+        "letter": "S",
+        "direction": "north",
+        "towards": "Barnes or Sheen",
+        "routes": [
+          "265",
+          "419",
+          "493",
+          "969",
+          "N72",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
     },
     {
       "id": "bus-clarence-lane-t",
@@ -4082,13 +4177,25 @@
         "Bus stop T",
         "Clarence Lane bus stop",
         "Bus stop",
-        "Bus"
+        "Bus",
+        "265",
+        "419",
+        "493",
+        "969",
+        "N72",
+        "N74",
+        "Bus 265",
+        "Bus 419",
+        "Bus 493",
+        "Bus 969",
+        "Bus N72",
+        "Bus N74"
       ],
       "roomCodePrefixes": [],
       "category": "nearby",
       "kind": "bus-stop",
       "college": null,
-      "description": "TfL bus stop T (Clarence Lane) on Roehampton Lane, south of the campus. Check live times and routes with TfL.",
+      "description": "TfL bus stop T on Roehampton Lane south of the campus, across the road from stop S. Buses southbound, towards Kingston Vale or Putney Heath.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -4102,16 +4209,181 @@
       "photo": null,
       "services": [],
       "tags": [],
-      "offCampus": true,
       "officialUrl": null,
       "accessibility": null,
       "sources": [
         {
+          "url": "https://api.tfl.gov.uk/StopPoint/490011322T",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
           "url": "https://www.openstreetmap.org/node/469778037",
-          "title": "OpenStreetMap node 469778037",
-          "checked": "2026-11-08"
+          "title": "OpenStreetMap node 469778037: position",
+          "checked": "2026-11-09"
         }
-      ]
+      ],
+      "bus": {
+        "atco": "490011322T",
+        "letter": "T",
+        "direction": "south",
+        "towards": "Kingston Vale or Putney Heath",
+        "routes": [
+          "265",
+          "419",
+          "493",
+          "969",
+          "N72",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
+    },
+    {
+      "id": "bus-queen-marys-hospital-w",
+      "code": "",
+      "name": "Bus stop W: Queen Mary's Hospital",
+      "aliases": [
+        "Bus stop W",
+        "Queen Mary's Hospital bus stop",
+        "Bus stop",
+        "Bus",
+        "265",
+        "419",
+        "493",
+        "969",
+        "N72",
+        "N74",
+        "Bus 265",
+        "Bus 419",
+        "Bus 493",
+        "Bus 969",
+        "Bus N72",
+        "Bus N74",
+        "Queen Mary's",
+        "Queen Marys",
+        "Hospital bus stop"
+      ],
+      "roomCodePrefixes": [],
+      "category": "nearby",
+      "kind": "bus-stop",
+      "college": null,
+      "description": "TfL bus stop W on Roehampton Lane opposite Queen Mary's Hospital, on the campus side. Buses northbound, towards Putney, Sheen or Hammersmith Bridge.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243088,
+        51.455798
+      ],
+      "positionSource": "osm-node",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://api.tfl.gov.uk/StopPoint/490015037N",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/node/469786503",
+          "title": "OpenStreetMap node 469786503: position",
+          "checked": "2026-11-09"
+        }
+      ],
+      "bus": {
+        "atco": "490015037N",
+        "letter": "W",
+        "direction": "north",
+        "towards": "Putney, Sheen or Hammersmith Bridge",
+        "routes": [
+          "265",
+          "419",
+          "493",
+          "969",
+          "N72",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
+    },
+    {
+      "id": "bus-queen-marys-hospital-v",
+      "code": "",
+      "name": "Bus stop V: Queen Mary's Hospital",
+      "aliases": [
+        "Bus stop V",
+        "Queen Mary's Hospital bus stop",
+        "Bus stop",
+        "Bus",
+        "265",
+        "419",
+        "493",
+        "969",
+        "N72",
+        "N74",
+        "Bus 265",
+        "Bus 419",
+        "Bus 493",
+        "Bus 969",
+        "Bus N72",
+        "Bus N74",
+        "Queen Mary's",
+        "Queen Marys",
+        "Hospital bus stop"
+      ],
+      "roomCodePrefixes": [],
+      "category": "nearby",
+      "kind": "bus-stop",
+      "college": null,
+      "description": "TfL bus stop V on Roehampton Lane outside Queen Mary's Hospital, across the road from stop W. Buses southbound, towards Kingston Vale or Putney Heath.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.243015,
+        51.455554
+      ],
+      "positionSource": "osm-node",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://api.tfl.gov.uk/StopPoint/490015037S",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/node/469786504",
+          "title": "OpenStreetMap node 469786504: position",
+          "checked": "2026-11-09"
+        }
+      ],
+      "bus": {
+        "atco": "490015037S",
+        "letter": "V",
+        "direction": "south",
+        "towards": "Kingston Vale or Putney Heath",
+        "routes": [
+          "265",
+          "419",
+          "493",
+          "969",
+          "N72",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
     },
     {
       "id": "londis-aubyn-square",

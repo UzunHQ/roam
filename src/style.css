@@ -170,6 +170,13 @@ svg { display: block; flex: none; }
 .results .empty p { margin: 0 0 8px; }
 .facilities { margin: 8px 0; font-size: 14px; }
 .off-campus { padding: 1px 7px; border-radius: 8px; background: var(--unknown-bg); font-weight: 750; }
+.bus-info { margin: 10px 0 4px; }
+.bus-dir { margin: 0 0 8px; }
+.bus-routes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 0; list-style: none; }
+.bus-routes li { min-width: 40px; padding: 3px 8px; border-radius: 8px; background: #c8312b; color: #fff; font-weight: 800; text-align: center; }
+.bus-routes li.night { background: #1d3557; }
+.bus-info .tfl { width: 100%; }
+.bus-info .tfl svg:last-child { width: 16px; height: 16px; }
 .room-line { display: flex; flex-direction: column; gap: 2px; margin: 0 0 10px; padding: 10px 12px; border-radius: 14px; background: var(--unknown-bg); font-size: 14px; }
 .room-line b { font-size: 15px; }
 .room-line small { color: var(--muted); }

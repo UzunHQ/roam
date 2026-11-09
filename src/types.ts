@@ -44,6 +44,8 @@ export interface Place {
   tags?: string[];
   /** not on the Roehampton Lane campus (a hall down the road, a bus stop): walking routes don't cover it */
   offCampus?: boolean;
+  /** a TfL bus stop: its routes and direction, from TfL's StopPoint data (no live times in Roam) */
+  bus?: { atco: string; letter: string; direction: 'north' | 'south' | 'east' | 'west'; towards: string; routes: string[]; checked: string };
   /** rooms whose spot inside has been checked (floor, which door). Only filled from a verified source. */
   rooms?: Record<string, { floor?: string; entrance?: string; note?: string; source: string; checked: string }>;
   accessibility?: { url: string; summary: string } | null;

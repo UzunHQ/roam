@@ -57,7 +57,8 @@ Each place keeps the shape below. Only change what you've checked.
 | `officialUrl` | the official page shown as "Official page" on the card |
 | `services` | short list of what's there, from official sources (searchable; first four shown, then "+n more") |
 | `tags` | facilities found on official pages ("printers (ground and first floor)", "gender-neutral toilets"): searchable and shown as "Also here"; add the page to `sources` |
-| `offCampus` | `true` for places outside the campus (bus stops, a shop): category `nearby`, no walking route beyond the nearest gate |
+| `offCampus` | `true` for places outside the map's walking network (a shop across the road): no walking route beyond the nearest gate. Bus stops on Roehampton Lane are inside the map and don't set it |
+| `bus` | TfL bus stops: `{ atco, letter, direction, towards, routes, checked }` from TfL's StopPoint API (`https://api.tfl.gov.uk/StopPoint/<atco>`); the card links to `https://tfl.gov.uk/bus/stop/<atco>/` for live times. Re-check routes when TfL changes them |
 | `entrances`, `rooms` | checked doors and room details, see Directions; empty until verified |
 | `accessibility` | `{ "url", "summary" }`, a link to an access guide (currently AccessAble) |
 | `sources` | `[{ "url", "title", "checked": "2026-10-20" }]`. The first one is shown on the card. Keep these up to date. |
