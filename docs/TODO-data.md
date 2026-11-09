@@ -76,3 +76,24 @@ LibCal shows no hours from 20 Dec 2026 yet, and no 2026 festive notice was found
 - [ ] Positions taken from the official map (±20 m) or estimates: Dorothy Buchanan, Chapman Hall, Elm Grove, The Base, MUGA, the car parks, Convent Parlour, the prayer rooms, The Reef, Digby Square, the cafés and the gates. Re-pick on site.
 - [ ] No source at all: Fountain, Garden, Froebel car park, Froebel Gate car park.
 - [ ] Fountain (Froebel garden): to verify on campus whether it is a drinking fountain. Until then the "Water fountain" name was removed, so a search for water doesn't send anyone to it.
+
+## Walking paths and alignment (checked 9 Nov 2026)
+
+`npm run check:paths` (scripts/check-paths.mjs) now checks the walking graph:
+- it is one piece;
+- no path runs through a building;
+- dead ends on the campus lead somewhere;
+- every entrance and door is on the graph;
+- the main spots are linked by routes no longer than 2.2 times the straight line (the worst is 1.52).
+
+Findings checked and accepted are in `data/paths-known.json`, each with its reason.
+
+- [x] Today's OSM vs the map's download (`node scripts/osm-path-diff.mjs`, `docs/osm-path-diff.md`): no walking way moved more than 3 m, none added, no route tags changed. One service road (Fairacres, way/8137869) is gone from OSM; routes don't use it. **No change to `data/paths.json` was needed.**
+- [x] Alignment against Esri World Imagery (visual reference only, at Digby Stuart, Froebel, Southlands, Chadwick Hall and Whitelands): buildings and paths sit on the imagery. No systematic shift over about 3 m; finer than that, the imagery's lean on tall buildings hides it. Nothing changed.
+- [ ] **Elm Grove courtyards (ask the owner):** OSM maps Elm Grove (relation/8673531) and Elm Grove Hall (relation/8673532) with two open courtyards (inner ways 624420817, 624420818). `scripts/build-campus.mjs` keeps only outer rings, so the block is drawn solid and its courtyard footways (OSM ways 624679289–624679292) look as if they run through the building.
+  - Routes are right as they are.
+  - The GPS filter treats the courtyards as indoors: no snapping onto those footways, and "Inside Elm Grove" on a weak reading there.
+  - Fixing it means building holes into the 3D block, its roof and the north/south split. That changes how Elm Grove looks, so it is left for the owner to decide.
+- [ ] Dead ends to check on site: three short spurs (by Aldersgate Court, Epworth Court and South Car Park), and the 129 m Whitelands footway ending near Parkstead House (way/921118306). They may lead to doors not mapped. Listed in `data/paths-known.json`.
+- [ ] Gate positions: Southlands, Stuart Lodge and Clarence Lane gates in `places.json` (from the University's map) are 11–21 m from OSM's gate nodes. Which is right is unknown: check on site (`docs/osm-fixes.md`).
+

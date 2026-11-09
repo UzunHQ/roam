@@ -1,0 +1,33 @@
+{
+  "note": "Findings of scripts/check-paths.mjs that were checked (9 Nov 2026) and are not errors in data/paths.json, or can't be fixed without a site visit. Each one says why. npm run check:paths fails on anything not listed here.",
+  "throughBuildings": {
+    "way/653472806": "Laundry: OSM way/703483426 is a service road tagged tunnel=yes, layer=-1 (under the building).",
+    "way/629613445": "Newman House: OSM footway way/703483440 is tunnel=yes, layer=-1.",
+    "way/821830635": "Students' Union: OSM footway way/821830638 is tunnel=yes, layer=-1.",
+    "way/629207323": "Epworth Court: OSM footway way/944888340 is tunnel=yes, layer=-1.",
+    "way/623548451": "Student Medical Centre: OSM ways 986473960 (tunnel=yes, layer=-1) and 1535831956 (tunnel=building_passage), both service with foot=yes.",
+    "way/1105842117": "building=roof (a canopy): OSM path way/1093595732 runs under it.",
+    "way/1007571578": "Woodmill Close (OSM way/1007571576) is tunnel=building_passage.",
+    "way/1007571581": "A parking aisle (OSM way/1476808463) tagged tunnel=building_passage.",
+    "relation/8673531": "Elm Grove: the footways (OSM ways 624679289-624679292) cross its two open courtyards. OSM has the courtyards (inner ways 624420817, 624420818); build-campus.mjs keeps only outer rings, so the footprint looks solid. Not changed: see docs/TODO-data.md.",
+    "relation/8673532": "Elm Grove Hall: the same block and courtyards as Elm Grove (relation/8673531).",
+    "way/653472791": "Richardson Building: OSM footway way/704464405 ends at the building, its last 2.6 m drawn inside the outline (at a door).",
+    "way/1339072173": "Aldersgate Court: the service road (OSM way/29500257) clips the outline's south-west corner by about 2 m along 5.7 m. A small OSM drawing overlap, listed in docs/osm-fixes.md; routes unaffected."
+  },
+  "deadEnds": {
+    "-0.24487,51.45909": "OSM way/29500257 (service road) ends by The Reef: a service road to a building.",
+    "-0.24801,51.45560": "OSM way/293959905 (service) ends in South Car Park.",
+    "-0.24528,51.45750": "OSM way/624430549 (service, 33 m) ends behind Fincham: a service yard.",
+    "-0.24521,51.46008": "Parking aisle (OSM way/662927333) by Wesley Court: an aisle's end.",
+    "-0.24442,51.46013": "Parking aisle (OSM way/662927333) by Wesley Court: its other end.",
+    "-0.24495,51.45677": "OSM way/704464404 (service, 46 m) ends by Dorothy Buchanan: a service road to the building.",
+    "-0.24498,51.45917": "OSM footway way/944888333 (8 m) by Aldersgate Court: a short spur, probably to a door not mapped. Check on site.",
+    "-0.24519,51.45966": "OSM footway way/944888338 (3 m) by Epworth Court: a short spur, probably to a door not mapped. Check on site.",
+    "-0.24756,51.45544": "OSM path way/986473964 (8 m) by South Car Park: a short spur. Check on site.",
+    "-0.24367,51.45976": "Parking aisle (OSM way/1216692136) in Southlands Car Park: an aisle's end.",
+    "-0.24419,51.44808": "OSM way/711594982 (service, 174 m) at Whitelands: a service road's end.",
+    "-0.24234,51.44862": "Parking aisle (OSM way/921118304) at Whitelands: an aisle's end.",
+    "-0.24376,51.44900": "OSM footway way/921118306 (129 m) at Whitelands ends near Parkstead House. Check on site whether it reaches a door."
+  },
+  "offGraph": {}
+}

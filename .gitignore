@@ -7,3 +7,4 @@ photos-src
 .vercel
 .env*
 scripts/.overpass-context-cache.json
+scripts/.overpass-paths-now.json
