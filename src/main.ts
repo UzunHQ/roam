@@ -53,7 +53,7 @@ document.documentElement.classList.toggle('lite', lite);
 const ms = (d: number) => (motion() === 'full' ? d : 0);
 const isDesktop = () => innerWidth >= 900;
 /** a place's name inside a sentence: "the Library", "the Main entrance", but "Shaw House", "Froebel Gate" */
-const PROPER = /(House|Building|Hall|Court|Centre|Auditorium|Mausoleum|Chapel|Gate|Grove|Square|Diner|Costa|Londis.*)( (North|South|East|West))?$/;
+const PROPER = /(House|Building|Hall|Court|Centre|Auditorium|Mausoleum|Chapel|Gate|Grove|Square|Diner|Costa)( (North|South|East|West))?$/;
 const theName = (name: string) => (/^The /.test(name) ? name.replace(/^The /, 'the ') : PROPER.test(name) ? name : `the ${name}`);
 const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 /** a few kinds keep their own look whatever their group: the hospital's red H sign */
@@ -222,7 +222,7 @@ main().catch((err) => {
 
 async function main() {
   const [{ doc, places, campus, walls }, mapMod] = await Promise.all([loadData(), mapModule]);
-  const { applyTheme, bounceBuilding, clearTreesAlong, createMap, lineFeature, pickHalf, selectBuilding, setGeoJSON, setXray } = mapMod ?? ({} as NonNullable<typeof mapMod>);
+  const { applyTheme, bounceBuilding, clearTreesAlong, createMap, stopFrames, lineFeature, pickHalf, selectBuilding, setGeoJSON, setXray } = mapMod ?? ({} as NonNullable<typeof mapMod>);
   const Marker = (mapMod?.maplibregl.Marker ?? NoMarker) as unknown as new (o?: MarkerOptions) => MLMarker;
   const byId = new Map(places.map((p) => [p.id, p]));
   const groupCount = new Map<GroupId, number>();
@@ -268,12 +268,16 @@ async function main() {
   const routeTarget = (p: Place): Place =>
     p.footprintId && footprintToPlace.get(p.footprintId) !== p ? { ...p, footprintId: null } : p;
 
+  // bus stops get a shelter on the pavement (map.ts busStopParts); their pins stand on it
+  const busStops = places.filter((p) => p.kind === 'bus-stop');
+  const stopAt = new Map(mapMod ? stopFrames(busStops.map((p) => p.position), campus).map((f, i) => [busStops[i].id, f]) : []);
+
   // ---------- map (falls back to the list if WebGL is unavailable) ----------
   const theme = (): Theme => themeChoice();
   let map: MLMap | null = null;
   if (mapMod) {
     try {
-      map = createMap({ container: 'map', campus, walls, bounds: doc.bounds, theme: theme() });
+      map = createMap({ container: 'map', campus, walls, bounds: doc.bounds, theme: theme(), stops: busStops.map((p) => stopAt.get(p.id)!) });
       // the walking graph: once the map has drawn and the page is idle
       map.once('idle', () => idle(() => { routerReady(); }));
     } catch (err) {
@@ -287,7 +291,9 @@ async function main() {
     const slow = setTimeout(() => { loading.textContent = 'The map is taking a while. You can use the list view in the meantime.'; }, 10000);
     map.once('load', () => { clearTimeout(slow); doneLoading(); });
     document.addEventListener('roam-theme', () => applyTheme(map!, theme()));
-    if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute, home: () => ({ box: homeBox(map!.getCanvas().clientWidth, map!.getCanvas().clientHeight), points: campusPoints }) } });
+    if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute, home: () => ({ box: homeBox(map!.getCanvas().clientWidth, map!.getCanvas().clientHeight), points: campusPoints }),
+      // the camera study: open on candidate `c` (null: the chosen one)
+      cam: (c: Cam | null) => { camOverride = c; homes.main = homes.island = null; showWholeCampus(0, 'main'); } } });
   }
 
   // places off campus (the golf course next door) don't count towards the campus's own extent
@@ -296,14 +302,28 @@ async function main() {
     const pts = places.filter(onCampus).map((p) => p.position);
     return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
   })();
-  const HOME_BEARING_WIDE = -15;
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
   // The home view: the four parts of campus filling the screen, clearly tilted (like a 3D city view
   // in Apple or Google Maps): facing north, Southlands at the top, Froebel in the middle, Chadwick
   // Hall bottom right. The tilt also squeezes the far (northern) half, so the long campus fits a wide
   // screen closer than a flat view would.
   // (a phone tilts less: at 56° a narrow screen showed mostly empty ground above the campus)
-  const HOME = { get bearing() { return isDesktop() ? HOME_BEARING_WIDE : -10; }, get pitch() { return isDesktop() ? 55 : 45; } };
+  // The opening view's camera for each kind of screen, chosen by a scored study of 180 candidates
+  // per screen size (docs/camera-candidates): the main campus framed whole (fitPoints), then tilted
+  // `pitch`°, turned `bearing`°, `dz` zoom steps closer and moved `fwd` metres up the screen and
+  // `side` metres to the right.
+  type Cam = { pitch: number; bearing: number; dz: number; fwd: number; side: number };
+  const HOME_CAMS: Record<'phone' | 'tablet' | 'wide', Cam> = {
+    phone: { pitch: 40, bearing: -10, dz: 0, fwd: -60, side: 0 }, // best at 375x812 and 390x844 together
+    tablet: { pitch: 40, bearing: 25, dz: 0, fwd: -60, side: 0 }, // 768x1024: the campus's long axis upright
+    wide: { pitch: 50, bearing: 10, dz: 0.25, fwd: 0, side: 50 }, // 1440x900
+  };
+  let camOverride: Cam | null = null; // the camera study (dev builds only) tries its own
+  const HOME = {
+    get cam(): Cam { return camOverride ?? HOME_CAMS[innerWidth < 600 ? 'phone' : innerWidth < 900 ? 'tablet' : 'wide']; },
+    get bearing() { return this.cam.bearing; },
+    get pitch() { return this.cam.pitch; },
+  };
   map?.jumpTo({ center: campusCenter, zoom: homeZoom(), bearing: HOME.bearing, pitch: HOME.pitch });
   // Every deliberate camera move goes through here: live GPS following waits for it to finish
   // instead of cutting it short (MapLibre's easeTo stops whatever move is running).
@@ -355,7 +375,7 @@ async function main() {
   const passes = (p: Place) => inFilter(p) && (!openOnly || !openApplies() || isOpenNow(p.id));
 
   // ---------- markers ----------
-  type M = { p: Place; group: GroupId; marker: MLMarker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; gate: boolean; ctx: boolean };
+  type M = { p: Place; group: GroupId; marker: MLMarker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; lift: number; ctx: boolean };
   const markers = new Map<string, M>();
   // a named entrance's pin stands over its garden gate in the wall (data/walls.geojson)
   const gateAt = new Map<string, LngLat>();
@@ -374,10 +394,10 @@ async function main() {
       ? `<span class="gate">${icons.entrance}</span><span class="label">${esc(p.name)}</span>`
       : `<span class="dot">${placeIcon(p.category, p.kind)}</span><span class="label"><span class="lname">${esc(p.name)}</span>${p.code ? `<span class="lcode">${esc(p.code)}</span>` : ''}</span>`;
     el.addEventListener('click', (e) => { e.stopPropagation(); select(p, { source: 'marker' }); });
-    const at = gateAt.get(p.id) ?? p.position;
+    const at = gateAt.get(p.id) ?? stopAt.get(p.id)?.at ?? p.position;
     const marker = new Marker({ element: el, anchor: 'center' }).setLngLat(at);
     if (map) marker.addTo(map);
-    markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0, at, gate: gateAt.has(p.id), ctx: el.classList.contains('k-ctx') });
+    markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0, at, lift: gateAt.has(p.id) ? 5.4 : stopAt.has(p.id) ? 4.2 : 0, ctx: el.classList.contains('k-ctx') });
   }
   // places sharing a spot (e.g. a café inside its building) sit side by side instead of stacking
   {
@@ -397,11 +417,20 @@ async function main() {
     }
   }
 
-  // ---------- college areas: their names over the overview; tap one to zoom in ----------
-  const AREA_Z = 16.65;
-  /** below this zoom (with no category chosen) only MID_GROUPS' pins show */
-  const MINOR_Z = 17;
-  const MID_GROUPS = new Set<GroupId>(['library', 'food', 'services', 'nearby', 'entrance']);
+  // ---------- two levels of detail ----------
+  // FAR (the opening view and anything farther out): only the five areas' names (the four colleges
+  // and Chadwick Hall) and the hospital's small H, no other pins; with a category chosen, that
+  // category's pins too. NEAR (from half a step closer than the opening view, so one press of +, or
+  // after tapping an area's name): every pin at once. Pins never drop out to make room: one that
+  // would cover another steps aside a little; names show where they fit. The areas' names shrink and
+  // fade there, and give way to the pins.
+  /** how much closer than the opening view the near level starts */
+  const NEAR_DZ = 0.5;
+  let openZoom: number | null = null; // the opening view's zoom for this screen size (showWholeCampus)
+  // (and never below 15.9: there a phone shows about a third of the campus, and every pin fits
+  // beside its neighbours; one press of + from a phone's opening view gets there)
+  const nearZ = () => Math.max(15.9, (openZoom ?? homeZoom()) + NEAR_DZ);
+  const isHospital = (m: M) => m.p.kind === 'hospital';
   // (Chadwick Hall, Froebel's halls down the road, gets its own: it is a walk from the rest of Froebel)
   const isChadwick = (p: Place) => p.id.startsWith('chadwick-hall') || p.id === 'downshire-house';
   const AREAS = [
@@ -416,8 +445,8 @@ async function main() {
     el.tabIndex = -1;
     el.innerHTML = `<span class="area-icon">${icons.campus}</span><span>${name}</span>`;
     el.setAttribute('aria-label', `${name} ${what}: zoom in`);
-    // straight to the college at street level (where building names take over)
-    el.addEventListener('click', (e) => { e.stopPropagation(); setFollowing(false); camMove({ center: c, zoom: 16.9, pitch: tilt(50), duration: ms(600) }); });
+    // into the near level over the area, where all its places show
+    el.addEventListener('click', (e) => { e.stopPropagation(); setFollowing(false); camMove({ center: c, zoom: Math.max(16.9, nearZ() + 0.6), pitch: tilt(50), duration: ms(600) }); });
     const marker = new Marker({ element: el, anchor: 'center' }).setLngLat(c);
     if (map) marker.addTo(map);
     return { el, c, marker };
@@ -433,104 +462,118 @@ async function main() {
     new Marker({ element: el, anchor: 'center', pitchAlignment: 'map', rotationAlignment: 'map' }).setLngLat(f.geometry.coordinates as LngLat).addTo(map);
   }
 
-  // Fewer markers when zoomed out, more detail when zoomed in. Runs on moveend only (not every
-  // frame): greedy by category priority, the selected place and route start always show.
+  // Runs on moveend only (not every frame), greedy by category priority; the selected place and a
+  // route's start always show.
   let mapReady = false;
+  /** where a pin may step to when its own spot is taken: rings around it, nearest first */
+  const NUDGES: [number, number][] = [[0, 0]];
+  [1, 1.6, 2.3, 3.1, 4].forEach((r, n) => { const k = 8 + 4 * n; for (let i = 0; i < k; i++) { const a = (i / k) * 2 * Math.PI + (n % 2 ? Math.PI / k : 0); NUDGES.push([Math.cos(a) * r, Math.sin(a) * r]); } });
   function layoutMarkers() {
     if (!map || !mapReady) return; // before the map's first load, pins would sit against an unsettled camera
     const z = map.getZoom();
+    const near = z >= nearZ();
     document.body.classList.toggle('compact-pins', z < 16.6);
     document.body.classList.toggle('show-courts', z >= 18);
-    const gap = z < 16 ? 30 : z < 17 ? 26 : 22;
+    document.body.classList.toggle('far-view', !near);
     const W = innerWidth, H = innerHeight;
+    // a pin's dot is 20 px across in compact mode, 28 px otherwise: two dots closer than this touch
+    const gap = z < 16.6 ? 23 : 31;
     const dots: [number, number][] = [];
     const keyDots: [number, number][] = []; // dots that labels must avoid (faded context pins don't count)
     const labels: [number, number, number, number][] = [];
     const isSel = (m: M) => m.p.id === current?.id || m.p.id === routeFrom?.id;
-    // college names take the space they need on the overview; pins underneath step aside
-    // (not while a category is chosen: then the places matter, not the college names)
-    const showAreas = z < AREA_Z && !narrowed();
-    const areaBoxes: [number, number, number, number][] = [];
-    const areaOf: HTMLElement[] = []; // the label each box belongs to
+    const narrow = narrowed();
+    // the areas' names: the far level's only names (not while a category is chosen: then the
+    // places matter); close up, small and faint, and only where no pin is
+    const showAreas = (!near && !narrow) || (near && z < nearZ() + 1.2);
     const routePinBoxes = [...document.querySelectorAll<HTMLElement>('.route-pin')].map((e) => e.getBoundingClientRect()).filter((r) => r.width)
       .map((r) => ({ left: r.left - 70, right: r.right + 70, top: r.top - 4, bottom: r.bottom + 26 })); // and the name under it
     // a name near the screen's edge slides in to stay whole, clear of the map controls
     const ctl = $('.controls').getBoundingClientRect();
-    document.body.classList.toggle('areas-small', z > 15.9);
+    document.body.classList.toggle('areas-small', near);
     document.body.classList.toggle('has-selection', !!current);
+    type Box = [number, number, number, number];
+    const over = (r: number[]) => (q: Box) => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1];
+    const areaBoxes: Box[] = [];
+    const areaOf: HTMLElement[] = []; // the label each box belongs to
     for (const a of areas) {
       a.el.classList.toggle('hidden', !showAreas);
       a.el.tabIndex = showAreas ? 0 : -1;
       if (!showAreas) continue;
       const pt = map.project(a.c), w = a.el.offsetWidth / 2 + 8;
-      // a college that's off the screen gets no name pinned to the edge (it would float over nothing)
+      // an area that's off the screen gets no name pinned to the edge (it would float over nothing)
       const away = pt.x < -w || pt.x > W + w || pt.y < 0 || pt.y > H;
       a.el.classList.toggle('hidden', away);
       if (away) continue;
       const right = ctl.width && pt.y > ctl.top - 24 && pt.y < ctl.bottom + 24 ? ctl.left - 4 : W - 8;
       const dx = Math.round(pt.x + w > right ? right - (pt.x + w) : pt.x - w < 8 ? 8 - (pt.x - w) : 0);
       a.marker.setOffset([dx, 0]);
-      // a route's start and end pins (and their names) come first
-      const box: [number, number, number, number] = [pt.x + dx - w, pt.y - 24, pt.x + dx + w, pt.y + 24];
-      if (routePinBoxes.some((r) => box[0] < r.right && box[2] > r.left && box[1] < r.bottom && box[3] > r.top)) { a.el.classList.add('hidden'); continue; }
+      const hh = near ? 16 : 20;
+      const box: Box = [pt.x + dx - w, pt.y - hh, pt.x + dx + w, pt.y + hh];
+      // a route's start and end pins (and their names) come first; and two names never overlap
+      if (routePinBoxes.some((r) => box[0] < r.right && box[2] > r.left && box[1] < r.bottom && box[3] > r.top) || areaBoxes.some(over(box))) { a.el.classList.add('hidden'); continue; }
       areaBoxes.push(box);
       areaOf.push(a.el);
     }
-    // outside the chosen category (entrances, car parks and open-air spots have no chip and always show)
-    // (entrances always stay, as small gates; open-air spots and car parks used to as well, now only under All)
+    // outside the chosen category (entrances have no chip and always show)
     const off = (m: M) => m.group !== 'entrance' && !passes(m.p);
-    const narrow = narrowed();
-    const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || PRIORITY[b.group] - PRIORITY[a.group]);
+    const list = [...markers.values()].sort((a, b) => Number(isSel(b)) - Number(isSel(a)) || Number(off(a)) - Number(off(b)) || Number(a.ctx) - Number(b.ctx) || PRIORITY[b.group] - PRIORITY[a.group]);
     const shown: { m: M; x: number; y: number; sel: boolean }[] = [];
-    // gate pins float just above the pillars' lanterns (about 5.4 m up, as seen at this zoom and tilt)
+    // gate pins float just above the pillars' lanterns (about 5.4 m up), bus stops' above the
+    // shelter's roof and the stop's sign (4.2 m, drawn a third larger than life), as seen at this zoom and tilt
     const pxPerM = (512 * 2 ** z) / (40075017 * Math.cos((map.getCenter().lat * Math.PI) / 180));
-    const lift = -Math.min(90, 5.4 * pxPerM * Math.sin((map.getPitch() * Math.PI) / 180) + 16);
+    const lift = (m: M) => -Math.round(Math.min(90, m.lift * pxPerM * Math.sin((map!.getPitch() * Math.PI) / 180) + 16));
+    // floating buttons and the search count as taken space: a pin doesn't step under them
+    const taken = ['.controls', '#key-btn', '.top', '#chips'].map((sel) => document.querySelector(sel)?.getBoundingClientRect()).filter((r): r is DOMRect => !!r?.width)
+      .map((r) => [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4] as Box);
     for (const m of list) {
-      if (m.gate && m.offset[1] !== Math.round(lift)) { m.offset = [0, Math.round(lift)]; m.marker.setOffset(m.offset); }
+      if (m.lift) m.offset = [m.offset[0], lift(m)];
       const sel = isSel(m);
       const filtered = off(m);
-      // gates and off-campus context (bus stops, a shop) wait until you zoom in, unless Nearby is chosen
-      const tooFar = (m.group === 'entrance' || (m.group === 'nearby' && filter !== 'nearby')) && z < 16.3;
-      // places outside the chosen category stay as faint context once you're zoomed in; matches always come first
-      // overview and middle zoom, nothing chosen: only what people look for most (the library,
-      // food, student services, nearby stops and shops); teaching buildings, halls, sport and the
-      // rest join from zoom 17, so pins and names don't pile up
-      const minor = !narrow && z < MINOR_Z && !MID_GROUPS.has(m.group);
-      let show = sel || (!m.p.noPin && !tooFar && !minor && (!filtered || z >= 16.6));
-      m.el.classList.toggle('faded', filtered && !sel);
-      const pt = map.project(m.at);
-      const x = pt.x + m.offset[0], y = pt.y + m.offset[1];
-      const onScreen = x > -40 && x < W + 40 && y > -40 && y < H + 40;
-      // with a category chosen, a match that collides shrinks instead of disappearing
-      let mini = false;
-      const squeezed = (show && onScreen && !sel && dots.some(([a, b]) => Math.hypot(a - x, b - y) < gap))
-        || (show && !sel && areaBoxes.some(([a, b, c, d]) => x > a && x < c && y > b && y < d));
-      if (squeezed) { if (narrow && !filtered && m.group !== 'entrance') mini = true; else show = false; }
-      m.el.classList.toggle('mini', mini);
+      // near: everything (outside the chosen category, faint); far: the hospital's H, plus the
+      // chosen category's own pins
+      const show = sel || (!m.p.noPin && (near || isHospital(m) || (narrow && !filtered)));
+      const farH = !near && !sel && isHospital(m);
+      m.el.classList.toggle('faded', near && filtered && !sel);
+      m.el.classList.toggle('mini', farH);
       m.el.classList.toggle('hidden', !show);
       m.el.tabIndex = show ? 0 : -1;
       m.el.classList.remove('show-label');
-      if (show && onScreen) { dots.push([x, y]); if ((!filtered || sel) && !mini) { shown.push({ m, x, y, sel }); if (!m.ctx || sel) keyDots.push([x, y]); } }
+      let nudge: [number, number] = [0, 0];
+      if (show) {
+        const pt = map.project(m.at);
+        const x0 = pt.x + m.offset[0], y0 = pt.y + m.offset[1];
+        const onScreen = x0 > -40 && x0 < W + 40 && y0 > -40 && y0 < H + 40;
+        if (onScreen && !sel) {
+          // the nearest free spot: clear of other pins and of the areas' names (far); a pin with
+          // nowhere to go stays where it is
+          const g = farH ? 20 : gap;
+          const free = NUDGES.find(([i, j]) => {
+            const x = x0 + i * g, y = y0 + j * g;
+            if (dots.some(([a, b]) => Math.max(Math.abs(a - x), Math.abs(b - y)) < g)) return false; // (dots are round, but their shadows square-ish: keep the boxes apart)
+            if (!near && areaBoxes.some(over([x - 10, y - 10, x + 10, y + 10]))) return false;
+            return i === 0 && j === 0 || !taken.some(over([x - 12, y - 12, x + 12, y + 12]));
+          });
+          if (free) nudge = [Math.round(free[0] * g), Math.round(free[1] * g)];
+        }
+        const x = x0 + nudge[0], y = y0 + nudge[1];
+        if (onScreen) { dots.push([x, y]); if ((!filtered || sel) && !farH) { shown.push({ m, x, y, sel }); if (!m.ctx || sel) keyDots.push([x, y]); } }
+      }
+      m.marker.setOffset([m.offset[0] + nudge[0], m.offset[1] + nudge[1]]);
     }
-    // second pass: names where they cover neither another label nor a dot. The main buildings and
-    // the library get theirs from zoom 16.3, food and sport from 16.8, everything else from 17.
-    const minPriority = z >= 17 ? 0 : z >= 16.8 ? 7 : z >= 16.3 ? 8 : Infinity;
-    // floating buttons count as taken space, so names never hide half under them
-    const taken = ['.controls', '#key-btn'].map((sel) => $(sel).getBoundingClientRect()).filter((r) => r.width)
-      .map((r) => [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4] as [number, number, number, number]);
+    // close up, an area's name gives way to any pin under it
+    if (near) areaBoxes.forEach((q, i) => { if (dots.some(([x, y]) => over([x - 14, y - 14, x + 14, y + 14])(q))) { areaOf[i].classList.add('hidden'); q[2] = q[0]; } });
+    // second pass: names where they cover neither another name, a pin nor an area's name (most
+    // important first: the list is sorted by priority)
     for (const { m, x, y, sel } of shown) {
-      if (!sel && PRIORITY[m.group] < minPriority) continue;
-      // background surroundings: their small grey name only close up
-      if (!sel && m.ctx && z < 17.5) continue;
       if (!m.labelW) m.labelW = m.el.querySelector<HTMLElement>('.label')!.offsetWidth || 120;
-      const box: [number, number, number, number] = [x - m.labelW / 2, y + 14, x + m.labelW / 2, y + 36];
-      const clipped = box[0] < 4 || box[2] > W - 4 || taken.some(([a, b, c, d]) => box[0] < c && box[2] > a && box[1] < d && box[3] > b);
+      const box: Box = [x - m.labelW / 2, y + 14, x + m.labelW / 2, y + 36];
+      const clipped = box[0] < 4 || box[2] > W - 4 || box[3] > H - 4 || taken.some(over(box));
       if (!sel && clipped) continue;
       const hitsDot = keyDots.some(([dx, dy]) => (dx !== x || dy !== y) && dx + 12 > box[0] && dx - 12 < box[2] && dy + 12 > box[1] && dy - 12 < box[3]);
-      const hitsLabel = labels.some(([a, b, c, d]) => box[0] < c && box[2] > a && box[1] < d && box[3] > b);
-      // a college's name and a building's name never overlap: the building's waits, unless it's the
-      // chosen place, in which case the college's name steps aside (pin and name both)
-      const over = (r: number[]) => (q: [number, number, number, number]) => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1];
+      const hitsLabel = labels.some((q) => over(box)(q));
+      // an area's name and a place's name never overlap: the place's waits, unless it's the chosen
+      // place, in which case the area's name steps aside (pin and name both)
       const hitsArea = areaBoxes.some(over(box));
       if (sel) areaBoxes.forEach((q, i) => { if (over(box)(q) || over([x - 16, y - 16, x + 16, y + 16])(q)) areaOf[i].classList.add('hidden'); });
       if (sel || (!hitsDot && !hitsLabel && !hitsArea)) { labels.push(box); m.el.classList.add('show-label'); }
@@ -804,6 +847,24 @@ async function main() {
    * ⛶: the main campus; pressed again where that left you, the whole island (Whitelands too).
    * `which` forces one (the opening view and "Show campus" in a toast use the main campus).
    */
+  /** where ⛶ goes (worked out, the camera doesn't move); the main campus's also sets openZoom */
+  function homeView(kind: 'main' | 'island') {
+    if (!map) return null;
+    const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
+    const fit = fitPoints(kind === 'main' ? mainPoints : campusPoints, { pitch: tilt(HOME.pitch), bearing: HOME.bearing, maxZoom: 17.5, box: homeBox(W, H), move: false });
+    if (!fit) return null;
+    let center = fit.center, zoom = fit.zoom;
+    if (kind === 'main') {
+      // the opening view: from the framing, a little closer and moved as the study chose
+      const c = HOME.cam, b = (HOME.bearing * Math.PI) / 180;
+      const kx = 111320 * Math.cos((center.lat * Math.PI) / 180), ky = 111320;
+      const dE = c.fwd * Math.sin(b) + c.side * Math.cos(b), dN = c.fwd * Math.cos(b) - c.side * Math.sin(b);
+      center = new mapMod!.maplibregl.LngLat(center.lng + dE / kx, center.lat + dN / ky);
+      zoom = Math.min(map.getMaxZoom(), zoom + c.dz);
+      openZoom = zoom;
+    }
+    return { center, zoom };
+  }
   function showWholeCampus(duration = 500, which?: 'main' | 'island') {
     if (!map) return;
     pitchedByHand = false;
@@ -816,10 +877,15 @@ async function main() {
       camMove({ center: v.center, zoom: v.zoom, pitch: tilt(HOME.pitch), bearing: HOME.bearing, padding: { top: 0, bottom: 0, left: 0, right: 0 }, duration: ms(duration) });
       return;
     }
-    const end = fitPoints(kind === 'main' ? mainPoints : campusPoints, { pitch: tilt(HOME.pitch), bearing: HOME.bearing, maxZoom: 17.5, box: homeBox(W, H), duration });
-    if (end && !flat) homes[kind] = { size, center: end.center, zoom: end.zoom };
+    const v2 = homeView(kind);
+    if (!v2) return;
+    const { center, zoom } = v2;
+    setFollowing(false);
+    camMove({ center, zoom, pitch: tilt(HOME.pitch), bearing: HOME.bearing, padding: { top: 0, bottom: 0, left: 0, right: 0 }, duration: ms(duration) });
+    if (!flat) homes[kind] = { size, center, zoom };
   }
-  if (!linkedId) map?.once('load', () => showWholeCampus(0, 'main'));
+  // (opened on a shared place instead: the opening view is still worked out, for the near level's zoom)
+  map?.once('load', () => { if (!linkedId) showWholeCampus(0, 'main'); else homeView('main'); });
   const northIcon = $('#north svg');
   map?.on('rotate', () => { northIcon.style.transform = `rotate(${-map!.getBearing()}deg)`; drawHeading(); });
 
@@ -1088,7 +1154,7 @@ async function main() {
    * Fit points into the free part of the screen. Projects them at the target tilt, so tilted 3D
    * views fit too (fitBounds ignores the tilt, which pushed routes behind the panel on phones).
    */
-  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number; notch?: { top: number; right: number } }; duration?: number; side?: number } = {}) {
+  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number; notch?: { top: number; right: number } }; duration?: number; side?: number; move?: boolean } = {}) {
     if (!map || !points.length) return null;
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
     const a = freeArea();
@@ -1136,6 +1202,7 @@ async function main() {
     }
     const after = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing() };
     map.jumpTo(before);
+    if (opts.move === false) return after; // only worked out
     setFollowing(false); // the view goes somewhere else; the locate button follows you again
     camMove({ ...after, padding: zero, duration: ms(opts.duration ?? 600) });
     return after;
@@ -2277,7 +2344,7 @@ async function main() {
       // a room code only counts if it really belongs to that building
       const room = linkedRoom && p ? parseRoom(linkedRoom, [p]) : null;
       if (p) select(p, { source: 'link', room: room?.code });
-      else { history.replaceState(null, '', location.pathname); toast("Sorry, we couldn't find that place. Here's the whole campus.", 6000); }
+      else { history.replaceState(null, '', location.pathname); showWholeCampus(0, 'main'); toast("Sorry, we couldn't find that place. Here's the whole campus.", 6000); }
     };
     if (map && !map.loaded()) map.once('load', open);
     else open();

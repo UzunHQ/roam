@@ -116,7 +116,7 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     props: {
       'fill-extrusion-color': ['match', ['get', 'part'],
         'cabin', p.carGlass, 'basin', p.basin, 'water', p.water, 'jet', p.jet, 'post', p.fencePost,
-        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil, 'goal', p.goalPost, 'flag', p.flag, 'bench', p.benchWood, 'coopwall', p.coopWood, 'ramp', p.coopWood, 'cooproof', p.coopRoof, 'hen', p.hen, 'comb', p.comb,
+        'plinth', p.plinthStone, 'figure', p.bronze, 'iron', p.iron, 'soil', p.soil, 'goal', p.goalPost, 'flag', p.flag, 'bench', p.benchWood, 'busglass', p.busGlass, 'busroof', p.busRoof, 'buspole', p.busPole, 'busflag', p.busFlag, 'coopwall', p.coopWood, 'ramp', p.coopWood, 'cooproof', p.coopRoof, 'hen', p.hen, 'comb', p.comb,
         'bloom', ['match', ['get', 'c'], 0, p.blooms[0], 1, p.blooms[1], 2, p.blooms[2], p.blooms[3]],
         ['match', ['get', 'c'], 0, p.cars[0], 1, p.cars[1], 2, p.cars[2], 3, p.cars[3], 4, p.cars[4], p.cars[5]]],
     },
@@ -597,6 +597,74 @@ function flagParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
   return out;
 }
 
+/** a bus stop on the pavement: where its shelter stands, which way the road runs and which side it is */
+export type StopFrame = { at: LngLat; along: [number, number]; out: [number, number] };
+/**
+ * Where each bus stop's shelter goes: the stop's point (OpenStreetMap's, at the kerb or on the road),
+ * moved out to the pavement on its side of the nearest road (layer "path", kind "road") and turned
+ * to run along it. The pin stands on the shelter (main.ts).
+ */
+export function stopFrames(stops: LngLat[], campus: GeoJSON.FeatureCollection): StopFrame[] {
+  // a bus runs on the main roads: those count first (a side street's corner can be nearer)
+  const MAIN = new Set(['trunk', 'primary', 'secondary', 'tertiary']);
+  const all = campus.features.filter((f) => f.properties?.layer === 'path' && f.properties?.kind === 'road' && f.geometry.type === 'LineString');
+  const lines = (main: boolean) => all.filter((f) => MAIN.has(f.properties?.highway) === main).map((f) => (f.geometry as GeoJSON.LineString).coordinates as LngLat[]);
+  const mainRoads = lines(true), sideRoads = lines(false);
+  return stops.map((at) => {
+    const kx = 111320 * Math.cos((at[1] * Math.PI) / 180), ky = 111320;
+    let best = { d: Infinity, along: [1, 0] as [number, number], out: [0, 1] as [number, number] };
+    const near = (roads: LngLat[][]) => { for (const line of roads) for (let i = 0; i + 1 < line.length; i++) {
+      const ax = (line[i][0] - at[0]) * kx, ay = (line[i][1] - at[1]) * ky;
+      const bx = (line[i + 1][0] - at[0]) * kx, by = (line[i + 1][1] - at[1]) * ky;
+      const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy;
+      if (!L2) continue;
+      const t = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L2));
+      const px = ax + t * dx, py = ay + t * dy, d = Math.hypot(px, py);
+      if (d >= best.d) continue;
+      const L = Math.sqrt(L2), along: [number, number] = [dx / L, dy / L];
+      // away from the road: from the nearest point on it towards the stop (or, on the road's line,
+      // the left side, so it's at least consistent)
+      const out: [number, number] = d > 0.3 ? [-px / d, -py / d] : [-along[1], along[0]];
+      best = { d, along, out };
+    } };
+    near(mainRoads);
+    if (best.d > 15) near(sideRoads);
+    // the shelter's middle: about 6.5 m from the road's centre line (a lane, the kerb, then the
+    // shelter on the pavement), or where the stop already is if it's farther out
+    const push = best.d === Infinity ? 0 : Math.max(0, 6.5 - best.d);
+    return { at: [at[0] + (best.out[0] * push) / kx, at[1] + (best.out[1] * push) / ky], along: best.along, out: best.out };
+  });
+}
+
+/**
+ * Bus stops: a shelter (glass back and ends, a thin roof, a bench inside) and, at its kerb-side
+ * corner, the stop's pole with its red sign, low-poly like the benches.
+ */
+function busStopParts(frames: StopFrame[]): GeoJSON.Feature[] {
+  const out: GeoJSON.Feature[] = [];
+  for (const { at, along, out: o } of frames) {
+    const kx = 111320 * Math.cos((at[1] * Math.PI) / 180), ky = 111320;
+    // a box centred `a` metres along the road and `b` out from it, with half sizes ha and hb
+    // (drawn a third larger than life, so it reads as a bus stop from the usual zoom)
+    const S = 1.35;
+    const box = (part: string, a: number, b: number, ha: number, hb: number, base: number, top: number) => out.push({
+      type: 'Feature', properties: { part, base: base * S, top: top * S },
+      geometry: { type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([i, j]) => {
+        const x = S * (along[0] * (a + ha * i) + o[0] * (b + hb * j)), y = S * (along[1] * (a + ha * i) + o[1] * (b + hb * j));
+        return [at[0] + x / kx, at[1] + y / ky];
+      })] },
+    });
+    box('busglass', 0, 0.62, 1.6, 0.05, 0.12, 2.2); // back, away from the road
+    for (const s of [-1.58, 1.58]) box('busglass', s, 0.05, 0.04, 0.6, 0.12, 2.2); // ends
+    for (const s of [-1.6, 1.6]) for (const t of [-0.6, 0.62]) box('buspole', s, t, 0.05, 0.05, 0, 2.25); // frame
+    box('busroof', 0, 0, 1.78, 0.8, 2.22, 2.4);
+    box('bench', 0, 0.36, 0.9, 0.16, 0.44, 0.5);
+    box('buspole', 2.5, -0.55, 0.06, 0.06, 0, 3.1); // the stop's pole by the kerb
+    box('busflag', 2.5, -0.55, 0.03, 0.26, 2.45, 2.95); // its sign, facing the traffic
+  }
+  return out;
+}
+
 /**
  * Park benches (layer "bench"): a wooden seat and backrest on two iron frames, 1.8 m long, facing `a`.
  */
@@ -954,6 +1022,8 @@ export function createMap(opts: {
   bounds: [number, number, number, number];
   theme: Theme;
   interactive?: boolean;
+  /** bus stops: a shelter and a stop pole on the pavement at each (stopFrames) */
+  stops?: StopFrame[];
 }): MLMap {
   const { campus, bounds, theme } = opts;
   const walls = opts.walls ?? { type: 'FeatureCollection', features: [] };
@@ -996,7 +1066,7 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features), ...picnicParts(byLayer('picnic').features)] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features), ...picnicParts(byLayer('picnic').features), ...busStopParts(opts.stops ?? [])] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
       fence: { type: 'geojson', data: fences.mesh, tolerance: 0 },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
       flags: { type: 'geojson', data: { type: 'FeatureCollection', features: flagParts(byLayer('golfflag').features) }, tolerance: 0 },
