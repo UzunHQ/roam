@@ -1,4 +1,4 @@
-# Every push and pull request: types, the build, the data, hours, and GPS-filter checks, and the smoke tests in a
+# Every push and pull request: types, the build, the data, hours, GPS-filter and footpath checks, and the smoke tests in a
 # real browser (scripts/smoke.mjs). Red means don't merge.
 name: CI
 on:
