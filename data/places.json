@@ -3,7 +3,7 @@
   "generated": "2026-10-20",
   "bounds": [
     -0.25137,
-    51.4525,
+    51.4522,
     -0.24174,
     51.46021
   ],
@@ -4155,35 +4155,89 @@
       ]
     },
     {
-      "id": "chadwick-hall",
+      "id": "chadwick-hall-south",
       "code": "L",
-      "name": "Chadwick Hall",
+      "name": "Chadwick Hall South",
       "aliases": [
+        "Chadwick Hall",
         "Chadwick",
-        "Halls",
-        "En-suite"
+        "Chadwick South"
       ],
       "roomCodePrefixes": [],
       "category": "building",
       "kind": "accommodation",
       "college": "froebel",
-      "description": "Froebel College halls with 146 en-suite rooms in three buildings (North, South and West), some with a balcony or a small double bed.",
+      "description": "One of Chadwick Hall's three buildings (North, South and West), Froebel College halls with 146 en-suite rooms in all, some with a balcony or a small double bed.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
-        -0.244447,
-        51.453119
+        -0.244436,
+        51.452684
       ],
       "positionSource": "osm-footprint-centroid",
-      "positionAccuracyM": 15,
+      "positionAccuracyM": 5,
       "entrance": null,
-      "footprintId": null,
+      "footprintId": "way/451250765",
       "photo": null,
       "services": [
-        "146 en-suite rooms",
         "Single en-suite, with or without a balcony",
         "Small double en-suite",
-        "Laundry in the basement of the South building"
+        "Laundry in the basement"
+      ],
+      "tags": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/chadwick-hall/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/chadwick-hall/",
+          "title": "Chadwick Hall (Find a room)",
+          "checked": "2026-11-08"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/accommodation/accommodation-guide-2025.pdf/",
+          "title": "Accommodation guide 2025",
+          "checked": "2026-11-08"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/study/september-induction/moving-into-halls/",
+          "title": "Moving into halls",
+          "checked": "2026-11-08"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/451250765",
+          "title": "OpenStreetMap: building outline (name corrected on site)",
+          "checked": "2026-11-08"
+        }
+      ]
+    },
+    {
+      "id": "chadwick-hall-west",
+      "code": "L",
+      "name": "Chadwick Hall West",
+      "aliases": [
+        "Chadwick Hall",
+        "Chadwick",
+        "Chadwick West"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "froebel",
+      "description": "One of Chadwick Hall's three buildings (North, South and West), Froebel College halls with 146 en-suite rooms in all, some with a balcony or a small double bed.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244698,
+        51.453353
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": "way/451250764",
+      "photo": null,
+      "services": [
+        "Single en-suite, with or without a balcony",
+        "Small double en-suite"
       ],
       "tags": [],
       "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/chadwick-hall/",
@@ -4206,7 +4260,62 @@
         },
         {
           "url": "https://www.openstreetmap.org/way/451250764",
-          "title": "OpenStreetMap: Chadwick Hall North, South and West",
+          "title": "OpenStreetMap: building outline (name corrected on site)",
+          "checked": "2026-11-08"
+        }
+      ]
+    },
+    {
+      "id": "chadwick-hall-north",
+      "code": "L",
+      "name": "Chadwick Hall North",
+      "aliases": [
+        "Chadwick Hall",
+        "Chadwick",
+        "Chadwick North"
+      ],
+      "roomCodePrefixes": [],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "froebel",
+      "description": "One of Chadwick Hall's three buildings (North, South and West), Froebel College halls with 146 en-suite rooms in all, some with a balcony or a small double bed.",
+      "lastVerified": null,
+      "status": "confirmed",
+      "position": [
+        -0.244107,
+        51.453313
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 5,
+      "entrance": null,
+      "footprintId": "way/451250763",
+      "photo": null,
+      "services": [
+        "Single en-suite, with or without a balcony",
+        "Small double en-suite"
+      ],
+      "tags": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/chadwick-hall/",
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/accommodation/find-a-room/chadwick-hall/",
+          "title": "Chadwick Hall (Find a room)",
+          "checked": "2026-11-08"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/accommodation/accommodation-guide-2025.pdf/",
+          "title": "Accommodation guide 2025",
+          "checked": "2026-11-08"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/study/september-induction/moving-into-halls/",
+          "title": "Moving into halls",
+          "checked": "2026-11-08"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/451250763",
+          "title": "OpenStreetMap: building outline (name corrected on site)",
           "checked": "2026-11-08"
         }
       ]

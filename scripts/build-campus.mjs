@@ -125,6 +125,14 @@ function heightOf(tags) {
   return null;
 }
 
+// OpenStreetMap has Chadwick Hall's three buildings named the wrong way round. Named on site by a
+// resident (8 Nov 2026): the block by Roehampton Lane is North, the cross-shaped one West and the
+// south one, by the plot's south edge, South. TODO: correct the names on OpenStreetMap too.
+const NAME_FIX = {
+  'way/451250763': 'Chadwick Hall North', // OSM: "Chadwick Hall South"
+  'way/451250764': 'Chadwick Hall West', // OSM: "Chadwick Hall North"
+  'way/451250765': 'Chadwick Hall South', // OSM: "Chadwick Hall West"
+};
 for (const el of osm.elements) {
   const t = el.tags || {};
   if (el.type === 'node' && t.natural === 'tree') {
@@ -144,11 +152,12 @@ for (const el of osm.elements) {
     continue;
   }
   if (t.building) {
+    const name = NAME_FIX[id] ?? t.name ?? null;
     for (const r of rings) {
       if (!closed(r)) continue;
       const f = {
         type: 'Feature', id,
-        properties: { layer: 'building', osmId: id, name: t.name || null, building: t.building, height: heightOf(t) },
+        properties: { layer: 'building', osmId: id, name, building: t.building, height: heightOf(t) },
         geometry: { type: 'Polygon', coordinates: [r] },
       };
       features.push(f);
@@ -685,7 +694,8 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   const treesM = features.filter((f) => f.properties.layer === 'tree').map((f) => toM(f.geometry.coordinates));
   // campus: OSM's university outlines leave out many lawns, so use the hull of the campus wall and
   // every place on campus instead (the wall is the edge on the Roehampton Lane and Clarence Lane sides)
-  const hullPts = [...wallLines.flat(), ...placesDoc.places.filter((p) => p.category !== 'entrance' && p.college).map((p) => toM(p.position))]; // campus places only (not the golf course next door)
+  // (Chadwick Hall, south of Clarence Lane, is left out: the hull would take in the houses between; its plot is a university outline of its own)
+  const hullPts = [...wallLines.flat(), ...placesDoc.places.filter((p) => p.category !== 'entrance' && p.college && toM(p.position)[1] > -181).map((p) => toM(p.position))]; // campus places only (not the golf course next door)
   const hull = (() => {
     const q = [...hullPts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
     const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
@@ -1033,6 +1043,35 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
   features.unshift({ type: 'Feature', properties: { layer: 'green', wooded: false, campus: true }, geometry: { type: 'Polygon', coordinates: [ringLL(lawn)] } });
 }
 
+// ---------- Chadwick Hall's plot (OSM way/393563937), south of Clarence Lane ----------
+// Grass under the whole plot, and trees where the aerial view shows its wooded west and south side:
+// a jittered grid with its own seed, kept clear of the buildings and paths.
+{
+  const plot = osm.elements.find((x) => x.type === 'way' && x.id === 393563937);
+  if (plot) {
+    const r = ring(plot.geometry);
+    features.unshift({ type: 'Feature', properties: { layer: 'green', wooded: false, campus: true }, geometry: { type: 'Polygon', coordinates: [r] } });
+    let seed4 = 23, added = 0;
+    const rand4 = () => ((seed4 = (seed4 * 1664525 + 1013904223) % 4294967296) / 4294967296);
+    const pathsHere = features.filter((f) => f.properties.layer === 'path');
+    const nearAnyPath = (ll) => pathsHere.some((f) => { const c = f.geometry.coordinates; for (let i = 0; i < c.length - 1; i++) if (distToRing(ll, [c[i], c[i + 1]]) < 3.5) return true; return false; });
+    const pm = r.map(toM), xs = pm.map((p) => p[0]), ys = pm.map((p) => p[1]);
+    for (let x = Math.min(...xs) + 4; x < Math.max(...xs); x += 8) {
+      for (let y = Math.min(...ys) + 4; y < Math.max(...ys); y += 8) {
+        const m = [x + (rand4() - 0.5) * 6, y + (rand4() - 0.5) * 6], ll = fromM(m), sz = 0.9 + rand4() * 0.5;
+        // the wooded part: west of the West block's east side, and the south strip below the blocks
+        if (!(m[0] < 100 || m[1] < -268)) continue;
+        if (!pointInRing(ll, r)) continue;
+        if (buildings.some((b) => distToRing(ll, b.ring) < 4.5) || nearAnyPath(ll)) continue;
+        if (rand4() < 0.2) continue; // a few gaps
+        features.push({ type: 'Feature', properties: { layer: 'tree', generated: true, s: Math.round(sz * 100) / 100 }, geometry: { type: 'Point', coordinates: ll } });
+        added++;
+      }
+    }
+    console.log(`Chadwick plot: lawn and ${added} trees`);
+  }
+}
+
 // ---------- keep trees off the campus wall ----------
 // Trees standing on the wall along Roehampton Lane and Clarence Lane, leaning over it, or just
 // outside it, move straight in until their canopy clears the wall by a metre and they stand at
@@ -1082,17 +1121,59 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
 // the golf course just west of Southlands up to the wall's north-east corner (Southlands' buildings
 // reach 532 m north, the wall 556 m) and back down east of Roehampton Lane.
 const MAP_EDGE = [[-177, 497], [-244, 378], [-304, 244], [-360, 98], [-386, -67], [-386, -181], [296, -181], [296, 532], [166, 559]];
+// South of that, the map also takes in Chadwick Hall (Froebel College halls): Roehampton Lane, kerb
+// to kerb plus both pavements (the Clarence Lane bus stops), down to the south end of the halls' plot,
+// and the plot itself (OSM way/393563937, amenity=university). The houses between Clarence Lane and
+// the plot stay outside. Each piece is convex, so clipping works piece by piece.
+const LANE_TOP = [165.4, -181], LANE_BOTTOM = [143.3, -337], LANE_HALF = 15; // centreline of OSM way/763392451
+const lane = (() => {
+  const [dx, dy] = [LANE_BOTTOM[0] - LANE_TOP[0], LANE_BOTTOM[1] - LANE_TOP[1]], L = Math.hypot(dx, dy);
+  const [nx, ny] = [(-dy / L) * LANE_HALF, (dx / L) * LANE_HALF]; // to the west of the centreline (walking south)
+  const wTop = [LANE_TOP[0] - Math.abs(nx), LANE_TOP[1]], eTop = [LANE_TOP[0] + Math.abs(nx), LANE_TOP[1]];
+  const wBot = [LANE_BOTTOM[0] - Math.abs(nx), LANE_BOTTOM[1]], eBot = [LANE_BOTTOM[0] + Math.abs(nx), LANE_BOTTOM[1]];
+  return { wTop, eTop, wBot, eBot, ny };
+})();
+const LANE_PIECE = [lane.wTop, lane.wBot, lane.eBot, lane.eTop];
+const plotEl = osm.elements.find((x) => x.type === 'way' && x.id === 393563937);
+const plotRing = plotEl ? plotEl.geometry.map((p) => toM([p.lon, p.lat])) : null;
+// convex hull (monotone chain): the plot has a small notch at its north-east corner
+const hull = (pts) => {
+  const q = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const p of q) { while (lo.length >= 2 && cross(lo.at(-2), lo.at(-1), p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of q.reverse()) { while (up.length >= 2 && cross(up.at(-2), up.at(-1), p) <= 0) up.pop(); up.push(p); }
+  return [...lo.slice(0, -1), ...up.slice(0, -1)];
+};
+const CHADWICK = plotRing ? hull(plotRing) : null;
+const EDGE_PIECES = [MAP_EDGE, LANE_PIECE, ...(CHADWICK ? [CHADWICK] : [])];
+// the outline of all three, for the dimmed frame: the main ring, with its south side detoured down
+// the lane's west side, round the plot (west, south) and back up the lane's east side
+const EDGE_OUTLINE = (() => {
+  if (!CHADWICK) return MAP_EDGE;
+  const i = MAP_EDGE.findIndex((p) => p[0] === -386 && p[1] === -181);
+  // the plot's outline from its north side round by the west to its south-east corner
+  const westKerbX = (y) => lane.wTop[0] + ((y - lane.wTop[1]) / (lane.wBot[1] - lane.wTop[1])) * (lane.wBot[0] - lane.wTop[0]);
+  const outside = CHADWICK.filter((p) => p[0] < westKerbX(p[1]) - 0.5);
+  // walk west along the north side, down the west side, east along the south side
+  const north = outside.filter((p) => p[1] > -240).sort((a, b) => b[0] - a[0]);
+  const rest = outside.filter((p) => p[1] <= -240).sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+  const plotTop = Math.max(...CHADWICK.map((p) => p[1]));
+  return [...MAP_EDGE.slice(0, i + 1), lane.wTop, [westKerbX(plotTop), plotTop], ...north, ...rest, lane.wBot, lane.eBot, lane.eTop, ...MAP_EDGE.slice(i + 1)];
+})();
 {
-  const orient = Math.sign(MAP_EDGE.reduce((a, p, i) => { const q = MAP_EDGE[(i + 1) % MAP_EDGE.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0));
-  const keepSide = (a, b, p) => orient * ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) >= 0;
-  const inEdge = (m) => MAP_EDGE.every((a, i) => keepSide(a, MAP_EDGE[(i + 1) % MAP_EDGE.length], m));
-  // Sutherland-Hodgman against each side of the (convex) edge ring
-  const clip = (ringLLIn) => {
+  const orientOf = (R) => Math.sign(R.reduce((a, p, i) => { const q = R[(i + 1) % R.length]; return a + p[0] * q[1] - q[0] * p[1]; }, 0));
+  const keepSide = (o, a, b, p) => o * ((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) >= 0;
+  const inPiece = (R, m) => { const o = orientOf(R); return R.every((a, i) => keepSide(o, a, R[(i + 1) % R.length], m)); };
+  const inEdge = (m) => EDGE_PIECES.some((R) => inPiece(R, m));
+  // Sutherland-Hodgman against each side of one (convex) piece
+  const clipTo = (R, ringLLIn) => {
+    const o = orientOf(R);
     let pts = ringLLIn.slice(0, -1).map(toM);
-    for (let i = 0; i < MAP_EDGE.length && pts.length; i++) {
-      const a = MAP_EDGE[i], b = MAP_EDGE[(i + 1) % MAP_EDGE.length], out = [];
+    for (let i = 0; i < R.length && pts.length; i++) {
+      const a = R[i], b = R[(i + 1) % R.length], out = [];
       pts.forEach((p, k) => {
-        const q = pts[(k + 1) % pts.length], pin = keepSide(a, b, p), qin = keepSide(a, b, q);
+        const q = pts[(k + 1) % pts.length], pin = keepSide(o, a, b, p), qin = keepSide(o, a, b, q);
         if (pin) out.push(p);
         if (pin !== qin) {
           const d1 = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]), d2 = (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]);
@@ -1111,12 +1192,15 @@ const MAP_EDGE = [[-177, 497], [-244, 378], [-304, 244], [-360, 98], [-386, -67]
       if (!inEdge(toM(f.geometry.coordinates))) { features.splice(i, 1); dropped++; }
     } else if (['green', 'golf'].includes(layer) && f.geometry.type === 'Polygon') {
       const r = f.geometry.coordinates[0];
-      if (r.every((p) => inEdge(toM(p)))) continue;
-      const c = clip(r);
-      if (c) { f.geometry.coordinates = [c]; cut++; } else { features.splice(i, 1); dropped++; }
+      if (EDGE_PIECES.some((R) => r.every((p) => inPiece(R, toM(p))))) continue; // wholly inside one piece
+      // one part per piece it reaches (the lane and the plot pieces overlap a little; green drawn twice there is harmless)
+      const parts = EDGE_PIECES.map((R) => clipTo(R, r)).filter(Boolean);
+      if (!parts.length) { features.splice(i, 1); dropped++; continue; }
+      f.geometry.coordinates = [parts[0]]; cut++;
+      parts.slice(1).forEach((c, k) => features.splice(i + 1, 0, { ...f, id: f.id ? `${f.id}#${k + 2}` : undefined, properties: { ...f.properties }, geometry: { type: 'Polygon', coordinates: [c] } }));
     }
   }
-  features.push({ type: 'Feature', properties: { layer: 'mapedge' }, geometry: { type: 'Polygon', coordinates: [ringLL(MAP_EDGE)] } });
+  features.push({ type: 'Feature', properties: { layer: 'mapedge' }, geometry: { type: 'Polygon', coordinates: [ringLL(EDGE_OUTLINE)] } });
   // the golf course's pin: the middle of what is left of the course (area-weighted)
   const course = features.find((f) => f.id === 'way/4268543');
   const golfPlace = placesDoc.places.find((p) => p.id === 'roehampton-club-golf-course');

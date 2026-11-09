@@ -39,13 +39,14 @@ LibCal shows no hours from 20 Dec 2026 yet, and no 2026 festive notice was found
 - [ ] Water refill points: only Queen's Building (each floor). Library and others not found.
 - [ ] Microwaves: The Reef (Southlands college kitchen), and the Digby Den kitchen. Other college kitchens: "college kitchens have microwaves" without naming buildings.
 - [ ] Lost property: the Library FAQ seems to send people to the Library Welcome Desk, but the page wasn't read directly. Not added.
-- [ ] Gender-neutral toilets also listed for "Jubilee" and "Downshire House": Jubilee may be the Dorothy Buchanan Building (OSM name, unconfirmed); Downshire House isn't in Roam yet.
+- [ ] Gender-neutral toilets also listed for "Jubilee" and "Downshire House": Jubilee may be the Dorothy Buchanan Building (OSM name, unconfirmed); Downshire House is on the map (Chadwick plot) but not a place yet.
 - [ ] Lecture theatres: only Queen's Building ("lecture halls") and Jebb Auditorium are stated. Mandela, Lawrence and others not found.
 - [ ] Printing for posters/binding (AV Resources, Sir David Bell): seen in search results only.
 
 ## Places
 
-- [ ] Chadwick Hall: the university says it is part of Froebel College, so it is shown as a hall, not "off campus". Its position is the middle of its three OpenStreetMap blocks (±15 m); its footprints aren't in campus.geojson yet (rebuild with `npm run build:campus` after widening the area to the south). The campus map PDF shows it only as an inset.
+- [ ] Chadwick Hall (Froebel College, shown as a hall on campus): the map now reaches its plot (OSM way/393563937) along Roehampton Lane, with its three buildings as separate places. Building names were given on site by a resident (8 Nov 2026) and are the reverse of OpenStreetMap's: by Roehampton Lane = North (OSM says South), cross-shaped = West (OSM says North), south = South (OSM says West). Correct the names on OpenStreetMap; build-campus.mjs overrides them until then (NAME_FIX). Doors still unverified.
+- [ ] Downshire House (inside the Chadwick plot, between North and South): drawn as a campus building, no place yet. Listed on the gender-neutral toilets page; what else is in it isn't known.
 - [ ] Whitelands College (Holybourne Avenue, SW15 4JD) and its halls (Beverley, Cheltenham, Durham, Gilesgate, Kings, Melrose, Walpole, Sutherland): a separate site outside this map's area. Not added.
 - [ ] Bus stops come from OpenStreetMap (positions and stop letters). Check on site; live times would need the TfL API (see the feature plan).
 - [ ] Londis (Aubyn Square): from OpenStreetMap, no hours. Is there a closer supermarket on Roehampton Lane? Not in OSM.

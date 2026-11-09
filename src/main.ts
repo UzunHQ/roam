@@ -53,7 +53,7 @@ document.documentElement.classList.toggle('lite', lite);
 const ms = (d: number) => (motion() === 'full' ? d : 0);
 const isDesktop = () => innerWidth >= 900;
 /** a place's name inside a sentence: "the Library", "the Main entrance", but "Shaw House", "Froebel Gate" */
-const PROPER = /(House|Building|Hall|Court|Centre|Auditorium|Mausoleum|Chapel|Gate|Grove|Square|Diner|Costa|Londis.*)$/;
+const PROPER = /(House|Building|Hall|Court|Centre|Auditorium|Mausoleum|Chapel|Gate|Grove|Square|Diner|Costa|Londis.*)( (North|South|East|West))?$/;
 const theName = (name: string) => (/^The /.test(name) ? name.replace(/^The /, 'the ') : PROPER.test(name) ? name : `the ${name}`);
 const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const COLLEGE: Record<string, string> = { 'digby-stuart': 'Digby Stuart', froebel: 'Froebel', southlands: 'Southlands' };
@@ -105,7 +105,10 @@ document.addEventListener('keydown', (e) => {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 });
 
-const linkedId = new URLSearchParams(location.search).get('place');
+/** places that were split or renamed: old links and saved lists still find them */
+const MOVED: Record<string, string> = { 'chadwick-hall': 'chadwick-hall-south' };
+const movedId = (id: string) => MOVED[id] ?? id;
+const linkedId = ((id) => id && movedId(id))(new URLSearchParams(location.search).get('place'));
 const linkedRoom = new URLSearchParams(location.search).get('room');
 const welcome = $('#welcome');
 // The welcome card shows until you close it (X, Esc, Find me or Explore), then never again on this
@@ -306,7 +309,7 @@ async function main() {
   let routeLine: LngLat[] = []; // the whole route, start hop included (for see-through buildings)
   let filter: Filter = 'all';
   // saved places live on this phone only
-  const saved = new Set<string>((() => { try { return JSON.parse(store.get('roam.saved') ?? '[]') as string[]; } catch { return []; } })().filter((id) => byId.has(id)));
+  const saved = new Set<string>((() => { try { return JSON.parse(store.get('roam.saved') ?? '[]') as string[]; } catch { return []; } })().map(movedId).filter((id) => byId.has(id)));
   // "Open now" (Food and Study only): places without listed hours can't be shown as open, so they drop out
   let openOnly = false;
   const openApplies = () => chipOf(filter) === 'food' || chipOf(filter) === 'study';
