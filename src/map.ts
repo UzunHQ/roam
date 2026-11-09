@@ -12,49 +12,8 @@ export type Theme = 'light' | 'dark';
 /** main.ts loads this module on demand and takes MapLibre from here */
 export { maplibregl };
 
-// Pastel daytime miniature: sage grass, cream footpaths, grey roads, turquoise water.
-// Walls are warm cream; roofs carry a pastel colour per college (Digby Stuart blue,
-// Froebel yellow, Southlands lavender) so the three zones stay recognisable.
-const PALETTE = {
-  light: {
-    bg: '#cfe3be', green: '#c1dcab', wood: '#a6cd8f', pitch: '#b6d99b', pitchLine: '#eef8e4',
-    water: '#86d4cf', shore: '#c6efea', road: '#d4d8d8', roadEdge: '#b9bfbf', footpath: '#fcf3dc', footpathEdge: '#d8c08b',
-    wall: '#fcf6ea', wallOff: '#efe9de',
-    digbyRoof: '#a8cdee', froebelRoof: '#f6d77a', southlandsRoof: '#bba9e8', otherRoof: '#ecd3bb', offRoof: '#d8d3c9',
-    digbyRim: '#86b3dc', froebelRim: '#e2bd55', southlandsRim: '#9f8ad6', otherRim: '#d6b799', offRim: '#c3bdb2',
-    glass: '#b9d3e6', frame: '#e6dccb', glassOff: '#cfd6db',
-    hospWall: '#fbfaf7', hospGlass: '#a9cbe4', hospRoof: '#f1eee8', hospRim: '#d7372f',
-    slate1: '#7d8896', slate2: '#919cab', slate3: '#a8b2c0', tile1: '#c7876a', tile2: '#d49a7c', tile3: '#e0ad91',
-    greenRoof: '#9fcb7c', solar: '#6a86a8', metal: '#bfcdd8',
-    selected: '#ff7a59', selectedWall: '#ffe2d8', trunk: '#a27b5b', leaf: '#8fcb7d', leafDark: '#6fb465', accuracy: '#3b82f6',
-    tones: ['#7fc36d', '#6aae5f', '#94cf7c', '#5f9f58', '#a9d47f'], blossom: '#f4b8c8',
-    route: '#ff4f7b', routeCase: '#ffffff', routeFlow: '#ffffff', outside: '#c2d8b1', shadow: 'rgba(52,70,40,0.14)',
-    stones: ['#b5835b', '#a77852', '#c0906a'], pier: '#bc8b62', plinth: '#7a583e', coping: '#e0c8a2', iron: '#1f3a30', lamp: '#ffe39a',
-    cars: ['#f3f1ec', '#c3c9cf', '#5d6670', '#c7675a', '#6b8fb5', '#d9c58f'], carGlass: '#62788c', basin: '#e4dccb', jet: '#d6f3f1',
-    fencePost: '#3d5a49', fenceMesh: '#4a6656',
-    golf: { rough: '#9cc585', fairway: '#b8dc9b', tee: '#c2e3a6', green: '#cdeab3', bunker: '#ecdcae', water: '#86d4cf' }, stone: '#cfcbc2', stoneDark: '#a8a49b', stoneRoof: '#9ea2a6', flag: '#e5484d', benchWood: '#b98559', coopWood: '#9a6b45', coopRoof: '#b5523b', hen: '#fbfaf4', comb: '#e0412e', goalPost: '#ffffff', plinthStone: '#d9cfbd', bronze: '#7d6a4f', soil: '#8a6a4f', blooms: ['#f0729a', '#f6c445', '#a77ce0', '#ff8a5c'],
-  },
-  dark: {
-    bg: '#1f2e28', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
-    water: '#2a6466', shore: '#3f8384', road: '#4a5157', roadEdge: '#2c3237', footpath: '#6d6450', footpathEdge: '#4d4636',
-    wall: '#5a6168', wallOff: '#3d434a',
-    digbyRoof: '#5689b0', froebelRoof: '#b39545', southlandsRoof: '#7666a8', otherRoof: '#7a6a5a', offRoof: '#454a52',
-    digbyRim: '#456f90', froebelRim: '#917834', southlandsRim: '#5e5188', otherRim: '#625548', offRim: '#3a3f46',
-    glass: '#e9d8a0', frame: '#4b5157', glassOff: '#8a8466',
-    hospWall: '#6c727a', hospGlass: '#e9d8a0', hospRoof: '#7d838b', hospRim: '#a8443d',
-    slate1: '#3f4650', slate2: '#4b535e', slate3: '#58616d', tile1: '#7a4f3f', tile2: '#86594a', tile3: '#926556',
-    greenRoof: '#4f7a45', solar: '#2c4058', metal: '#66737d',
-    selected: '#ff8a6b', selectedWall: '#8a5d52', trunk: '#6e5340', leaf: '#3f7a4c', leafDark: '#2f6140', accuracy: '#6ea6ff',
-    tones: ['#3f7a4c', '#356b42', '#4a8655', '#2f6140', '#557f45'], blossom: '#9a6a7a',
-    route: '#ff7f9c', routeCase: '#1b2228', routeFlow: '#ffe3ea', outside: '#19261f', shadow: 'rgba(0,0,0,0.28)',
-    stones: ['#6a4c37', '#5e4331', '#745540'], pier: '#71523c', plinth: '#3a2a1f', coping: '#8a7660', iron: '#0d1a15', lamp: '#ffd36b',
-    cars: ['#b9b8b3', '#8b939b', '#3b4148', '#8a4a41', '#4b6683', '#9a8a5f'], carGlass: '#24303a', basin: '#6f6a60', jet: '#7fb9b8',
-    fencePost: '#9db2a5', fenceMesh: '#b7c9bd',
-    golf: { rough: '#284433', fairway: '#35583f', tee: '#3a5f44', green: '#416a4a', bunker: '#8a7d5a', water: '#2a6466' }, stone: '#77746e', stoneDark: '#5b5953', stoneRoof: '#5f646a', flag: '#ff6b6f', benchWood: '#8a6446', coopWood: '#6e4c33', coopRoof: '#7d3a2c', hen: '#d9d8d0', comb: '#b8402f', goalPost: '#d5ddd8', plinthStone: '#7a7468', bronze: '#9a8460', soil: '#4a3a2c', blooms: ['#a55571', '#a88a3a', '#7258a0', '#a8644a'],
-  },
-} as const;
+import { PALETTE, cssVars, type Pal } from './theme/mapColors';
 
-type Pal = (typeof PALETTE)[Theme];
 
 // Queen Mary's Hospital (scripts/build-context.mjs marks it): a light roof with a red edge, so it reads
 // as the hospital and never as a campus building
@@ -65,6 +24,7 @@ const roofColor = (p: Pal): Expr => [
     'digby-stuart', p.digbyRoof,
     'froebel', p.froebelRoof,
     'southlands', p.southlandsRoof,
+    'whitelands', p.whitelandsRoof,
     p.otherRoof],
 ];
 const rimColor = (p: Pal): Expr => [
@@ -73,6 +33,7 @@ const rimColor = (p: Pal): Expr => [
     'digby-stuart', p.digbyRim,
     'froebel', p.froebelRim,
     'southlands', p.southlandsRim,
+    'whitelands', p.whitelandsRim,
     p.otherRim],
 ];
 /** Roof parts: flat panels keep the college pastel; pitched roofs are slate or tile in three steps. */
@@ -85,6 +46,8 @@ const partColor = (p: Pal): Expr => ['match', ['get', 'part'],
 ];
 const wallColor = (p: Pal): Expr => ['case', ['coalesce', ['get', 'campus'], true], p.wall, p.wallOff];
 const SELECTED: Expr = ['boolean', ['feature-state', 'selected'], false];
+/** outside the university's own ground (build-context.mjs sets `ctx`): drawn in the surroundings' plain colours */
+const CTX: Expr = ['coalesce', ['get', 'ctx'], false];
 // layer filters, kept here so see-through mode (setXray) can add to them and put them back
 const TOP_FILTER: Expr = ['!', ['in', ['get', 'part'], ['literal', ['cells', 'solar']]]];
 const SOLAR_FILTER: Expr = ['==', ['get', 'part'], 'cells'];
@@ -104,24 +67,27 @@ const RIM: Expr = ['+', HEIGHT, BOUNCE, ['match', ['get', 'roof'], ['slate', 'ti
 /** Paint properties that change with the theme, applied on load and on theme switch. */
 function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
   return {
+    // the surroundings' plain ground everywhere; the university's own ground (layer "campusground") is green
     background: { 'background-color': p.bg },
+    'campus-ground': { 'fill-color': p.ground },
     outside: { 'fill-color': p.outside },
     'zone-fade': { 'line-color': p.outside },
     // every lawn, meadow and wood in one green, so neighbouring OSM areas don't show as patches; sports fields stand out
-    green: { 'fill-color': ['case', ['coalesce', ['get', 'field'], false], p.pitch, p.wood] },
-    // the plots across the roads (an estate, a school's grounds): lawn, with a thin edge
-    lot: { 'fill-color': p.green, 'fill-outline-color': p.wood },
+    green: { 'fill-color': ['case', CTX, p.ctx.green, ['coalesce', ['get', 'field'], false], p.pitch, p.wood] },
+    // the plots across the roads (an estate, a school's grounds): plain, with a thin edge
+    lot: { 'fill-color': p.ctx.lot, 'fill-outline-color': p.ctx.lotEdge },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
-    parking: { 'fill-color': p.road }, // the same asphalt as the roads
-    golf: { 'fill-color': ['match', ['get', 'kind'], 'fairway', p.golf.fairway, 'tee', p.golf.tee, 'green', p.golf.green, 'bunker', p.golf.bunker, 'water', p.golf.water, p.golf.rough] },
+    parking: { 'fill-color': ['case', CTX, p.ctx.parking, p.road] }, // on campus the same asphalt as the roads
+    // the golf course beside the campus isn't the university's: its own soft, grey-green tones
+    golf: { 'fill-color': ['match', ['get', 'kind'], 'fairway', p.ctx.golf.fairway, 'tee', p.ctx.golf.tee, 'green', p.ctx.golf.green, 'bunker', p.ctx.golf.bunker, 'water', p.ctx.golf.water, p.ctx.golf.rough] },
     courtline: { 'line-color': p.pitchLine },
     'fence-mesh': { 'fill-extrusion-color': p.fenceMesh },
     monument: { 'fill-extrusion-color': ['match', ['get', 'part'], 'roof', p.stoneRoof, 'base', p.stoneDark, 'band', p.stoneDark, p.stone] },
-    water: { 'fill-color': p.water },
-    shore: { 'line-color': p.shore },
-    waterway: { 'line-color': p.water },
-    'road-edge': { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpathEdge, 'wall', p.plinth, p.roadEdge] },
-    road: { 'line-color': ['match', ['get', 'kind'], 'footpath', p.footpath, 'wall', p.stones[1], p.road] },
+    water: { 'fill-color': ['case', CTX, p.ctx.water, p.water] },
+    shore: { 'line-color': ['case', CTX, p.ctx.water, p.shore] },
+    waterway: { 'line-color': ['case', CTX, p.ctx.water, p.water] },
+    'road-edge': { 'line-color': ['match', ['get', 'kind'], 'footpath', ['case', CTX, p.ctx.footpathEdge, p.footpathEdge], 'wall', p.plinth, ['case', CTX, p.ctx.roadEdge, p.roadEdge]] },
+    road: { 'line-color': ['match', ['get', 'kind'], 'footpath', ['case', CTX, p.ctx.footpath, p.footpath], 'wall', p.stones[1], ['case', CTX, p.ctx.road, p.road]] },
     'building-walls': { 'fill-extrusion-color': ['case', SELECTED, p.selectedWall, wallColor(p)] },
     'building-roof': { 'fill-extrusion-color': ['case', SELECTED, p.selected, rimColor(p)] },
     'building-top': { 'fill-extrusion-color': ['case', SELECTED, p.selected, partColor(p)] },
@@ -129,8 +95,9 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'roof-solar-far': { 'fill-extrusion-color': p.solar },
     ...Object.fromEntries(FLAG_SIZES.map(({ k }) => [`golfflag-${k}`, { 'fill-extrusion-color': ['match', ['get', 'part'], 'flag', p.flag, p.goalPost] }])),
     'building-ghost': { 'fill-extrusion-color': ['case', SELECTED, p.selected, roofColor(p)] },
-    'tree-trunk': { 'fill-extrusion-color': p.trunk },
-    'tree-leaf': { 'fill-extrusion-color': ['match', ['get', 'tone'], 0, p.tones[0], 1, p.tones[1], 2, p.tones[2], 3, p.tones[3], 4, p.tones[4], p.blossom] },
+    // trees outside the university's ground: one pale sage (see-through over the plain ground)
+    'tree-trunk': { 'fill-extrusion-color': ['case', CTX, p.ctx.stem, p.trunk] },
+    'tree-leaf': { 'fill-extrusion-color': ['case', CTX, p.ctx.leaf, ['match', ['get', 'tone'], 0, p.tones[0], 1, p.tones[1], 2, p.tones[2], 3, p.tones[3], 4, p.tones[4], p.blossom]] },
     accuracy: { 'fill-color': p.accuracy },
     'accuracy-line': { 'line-color': p.accuracy },
     route: { 'line-color': p.route },
@@ -412,7 +379,7 @@ function windowTile(wall: string, frame: string, glass: string): ImageData {
 // so the overview has rows of small windows instead of a few big ones (or none)
 const WINDOW_IMAGES = ['win', 'win-off', 'win-hosp', 'win-s', 'win-off-s', 'win-hosp-s'];
 function setWindowImages(map: MLMap, p: Pal) {
-  const on = windowTile(p.wall, p.frame, p.glass), off = windowTile(p.wallOff, p.frame, p.glassOff), hosp = windowTile(p.hospWall, p.frame, p.hospGlass);
+  const on = windowTile(p.wall, p.frame, p.glass), off = windowTile(p.wallOff, p.frameOff, p.glassOff), hosp = windowTile(p.hospWall, p.frame, p.hospGlass);
   for (const [id, data, ratio] of [['win', on, 2], ['win-off', off, 2], ['win-hosp', hosp, 2], ['win-s', on, 4], ['win-off-s', off, 4], ['win-hosp-s', hosp, 4]] as const) {
     if (map.hasImage(id)) map.updateImage(id, data); else map.addImage(id, data, { pixelRatio: ratio });
   }
@@ -452,10 +419,11 @@ function treePolygons(points: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
     const h = Math.abs(Math.sin(c[0] * 12.9898e3 + c[1] * 78.233e3) * 43758.5453) % 1;
     // the tree wall along the golf course (belt): only the two darkest greens, never blossom
     const tone = f.properties?.belt ? (h < 0.5 ? 3 : 1) : h < 0.05 ? 5 : Math.floor((h * 100) % 5);
-    out.push({ type: 'Feature', properties: { t, part: 'trunk', base: 0, top: 2.2 * s }, geometry: ngon(c, 0.45 * s, rot, 6) });
-    out.push({ type: 'Feature', properties: { t, tone, part: 'leaf', tier: 0, base: 2 * s, top: 3.4 * s }, geometry: ngon(c, 2.1 * s, rot, 8) });
-    out.push({ type: 'Feature', properties: { t, tone, part: 'leaf', tier: 1, base: 3.4 * s, top: 5.6 * s }, geometry: ngon(c, 2.6 * s, rot + 0.2, 8) });
-    out.push({ type: 'Feature', properties: { t, tone, part: 'leaf', tier: 2, base: 5.6 * s, top: 7.1 * s }, geometry: ngon(c, 1.7 * s, rot + 0.4, 8) });
+    const ctx = f.properties?.ctx === true;
+    out.push({ type: 'Feature', properties: { t, ctx, part: 'trunk', base: 0, top: 2.2 * s }, geometry: ngon(c, 0.45 * s, rot, 6) });
+    out.push({ type: 'Feature', properties: { t, ctx, tone, part: 'leaf', tier: 0, base: 2 * s, top: 3.4 * s }, geometry: ngon(c, 2.1 * s, rot, 8) });
+    out.push({ type: 'Feature', properties: { t, ctx, tone, part: 'leaf', tier: 1, base: 3.4 * s, top: 5.6 * s }, geometry: ngon(c, 2.6 * s, rot + 0.2, 8) });
+    out.push({ type: 'Feature', properties: { t, ctx, tone, part: 'leaf', tier: 2, base: 5.6 * s, top: 7.1 * s }, geometry: ngon(c, 1.7 * s, rot + 0.4, 8) });
   }
   return { type: 'FeatureCollection', features: out };
 }
@@ -927,6 +895,52 @@ function wallParts(fc: GeoJSON.FeatureCollection): GeoJSON.FeatureCollection {
   return { type: 'FeatureCollection', features: out };
 }
 
+/** metres the camera's centre may go past the island's edge (Southlands to Whitelands) */
+const ISLAND_PAD_M = 120;
+/**
+ * Keeps the camera's centre over the island: inside its outline, or at most ISLAND_PAD_M past it
+ * (room for a place on the edge to sit above its card). Measured from
+ * the outline itself, not its box, since the island runs diagonally and a box's corners are empty.
+ * It holds the centre, not the screen's edges, so it works the same turned and tilted and never
+ * forces a zoom.
+ */
+function islandConstrain(zonePolys: GeoJSON.Position[][][] | null, bounds: [number, number, number, number]) {
+  const mx = (lng: number) => (lng + 180) / 360;
+  const my = (lat: number) => (1 - Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) / Math.PI) / 2;
+  const [w, s, e, n] = bounds;
+  const rings = (zonePolys ? zonePolys.map((p) => p[0]) : [[[w, s], [e, s], [e, n], [w, n], [w, s]]])
+    .map((r) => r.map(([lng, lat]) => [mx(lng), my(lat)] as [number, number]));
+  const lat0 = (s + n) / 2;
+  const padM = ISLAND_PAD_M / (40075017 * Math.cos((lat0 * Math.PI) / 180)); // metres as a share of the world's width
+  const inside = (x: number, y: number) => rings.some((r) => {
+    let k = false;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      const [xi, yi] = r[i], [xj, yj] = r[j];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) k = !k;
+    }
+    return k;
+  });
+  const nearest = (x: number, y: number) => {
+    let best = Infinity, bx = x, by = y;
+    for (const r of rings) for (let i = 1; i < r.length; i++) {
+      const [ax, ay] = r[i - 1], [cx, cy] = r[i], dx = cx - ax, dy = cy - ay, l = dx * dx + dy * dy;
+      const t = l ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l)) : 0;
+      const px = ax + t * dx, py = ay + t * dy, d = (x - px) ** 2 + (y - py) ** 2;
+      if (d < best) { best = d; bx = px; by = py; }
+    }
+    return [bx, by, Math.sqrt(best)];
+  };
+  return (lngLat: maplibregl.LngLat, zoom: number) => {
+    const x = mx(lngLat.lng), y = my(lngLat.lat);
+    if (inside(x, y)) return { center: lngLat, zoom };
+    const r = padM;
+    const [px, py, d] = nearest(x, y);
+    if (d <= r) return { center: lngLat, zoom };
+    const nx = px + ((x - px) * r) / d, ny = py + ((y - py) * r) / d;
+    return { center: new maplibregl.LngLat(nx * 360 - 180, (Math.atan(Math.sinh(Math.PI * (1 - 2 * ny))) * 180) / Math.PI), zoom };
+  };
+}
+
 export function createMap(opts: {
   container: string | HTMLElement;
   campus: GeoJSON.FeatureCollection;
@@ -988,6 +1002,7 @@ export function createMap(opts: {
     },
     layers: [
       { id: 'background', type: 'background', paint: {} },
+      { id: 'campus-ground', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'campusground'], paint: { 'fill-antialias': true } },
       { id: 'lot', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'lot'], paint: {} },
       { id: 'green', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'green'], paint: {} },
       // the golf course west of campus: rough, fairways, tees, greens and bunkers, flat on the grass
@@ -1147,14 +1162,10 @@ export function createMap(opts: {
     style,
     bounds: [w, s, e, n],
     fitBoundsOptions: { padding: 10 },
-    // how far the camera may go past the campus, in metres west, south, east and north. Enough for
-    // a tilted view on a narrow phone to frame the west edge (Froebel, the Jebb) with a category or
-    // route on screen; the earlier, tighter box (280/370/150/235) held the camera back and left
-    // places just off the left of a 375 px screen
-    maxBounds: (() => {
-      const [mw, ms, me, mn] = [700, 700, 450, 500], kx = 111320 * Math.cos((s * Math.PI) / 180);
-      return [w - mw / kx, s - ms / 111320, e + me / kx, n + mn / 111320] as [number, number, number, number];
-    })(),
+    // How far the camera may go: its centre stays over the map's island (Southlands to Whitelands)
+    // or within ISLAND_PAD_M of it (islandConstrain), in place of a maxBounds box, which would
+    // force a zoom-in on wide screens and leave the island's empty corners reachable.
+    transformConstrain: islandConstrain(zonePolys, [w, s, e, n]),
     pitch: 55,
     maxPitch: 65,
     minZoom: 14, // the whole campus, Chadwick Hall included, fits a phone held upright at about 14.3
@@ -1168,6 +1179,7 @@ export function createMap(opts: {
   });
   // two fingers: pinch to zoom, twist to turn, slide up or down together to tilt
   currentTheme = theme;
+  setCssVars(theme);
   // pattern images are drawn on demand, so the first frame never asks for a missing one
   map.setMissingStyleImageResolver((id) => {
     if (WINDOW_IMAGES.includes(id)) setWindowImages(map, PALETTE[currentTheme]);
@@ -1183,8 +1195,10 @@ export function createMap(opts: {
 
 type PaintArgs = Parameters<MLMap['setPaintProperty']>;
 let currentTheme: Theme = 'light';
+const setCssVars = (theme: Theme) => { for (const [k, v] of Object.entries(cssVars(theme))) document.documentElement.style.setProperty(k, v); };
 export function applyTheme(map: MLMap, theme: Theme) {
   currentTheme = theme;
+  setCssVars(theme);
   // (map.loaded() reads false while the route dashes animate, so check for the images instead)
   if (map.hasImage('win')) setWindowImages(map, PALETTE[theme]);
   const paints = themedPaint(PALETTE[theme]);

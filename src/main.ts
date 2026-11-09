@@ -57,8 +57,12 @@ const PROPER = /(House|Building|Hall|Court|Centre|Auditorium|Mausoleum|Chapel|Ga
 const theName = (name: string) => (/^The /.test(name) ? name.replace(/^The /, 'the ') : PROPER.test(name) ? name : `the ${name}`);
 const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 /** a few kinds keep their own look whatever their group: the hospital's red H sign */
-const kindClass = (p: Place) => (p.kind === 'hospital' ? ' k-hospital' : '');
-const COLLEGE: Record<string, string> = { 'digby-stuart': 'Digby Stuart', froebel: 'Froebel', southlands: 'Southlands' };
+// key surroundings (the hospital, its car park, bus stops, shops) keep a clear pin; every other
+// off-campus place is background: a smaller, fainter pin (the shape changes too, not just colour)
+const KEY_KINDS = new Set(['hospital', 'bus-stop', 'shop']);
+const kindClass = (p: Place) => (p.kind === 'hospital' ? ' k-hospital' : '')
+  + (p.category === 'nearby' && !KEY_KINDS.has(p.kind ?? '') && p.id !== 'queen-marys-hospital-car-park' ? ' k-ctx' : '');
+const COLLEGE: Record<string, string> = { 'digby-stuart': 'Digby Stuart', froebel: 'Froebel', southlands: 'Southlands', whitelands: 'Whitelands' };
 /** icon for a whole category (chips, key, "show all" suggestions) */
 const groupIcon = (g: GroupId) =>
   g === 'entrance' ? icons.entrance : g === 'nearby' ? icons.bus : placeIcon(g === 'food' ? 'food' : g === 'sport' ? 'sport' : 'building', g === 'services' ? 'service' : g);
@@ -78,9 +82,15 @@ setVisibleHeight();
 window.visualViewport?.addEventListener('resize', setVisibleHeight);
 
 let toastTimer = 0;
-function toast(msg: string, time = 4500) {
+function toast(msg: string, time = 4500, action?: { label: string; run: () => void }) {
   const t = $('#toast');
   t.textContent = msg;
+  if (action) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'toast-action'; b.textContent = action.label;
+    b.addEventListener('click', () => { t.hidden = true; action.run(); });
+    t.append(' ', b);
+  }
   t.hidden = false;
   clearTimeout(toastTimer);
   if (time) toastTimer = window.setTimeout(() => (t.hidden = true), time);
@@ -330,7 +340,7 @@ async function main() {
   const passes = (p: Place) => inFilter(p) && (!openOnly || !openApplies() || isOpenNow(p.id));
 
   // ---------- markers ----------
-  type M = { p: Place; group: GroupId; marker: MLMarker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; gate: boolean };
+  type M = { p: Place; group: GroupId; marker: MLMarker; el: HTMLButtonElement; offset: [number, number]; labelW: number; at: LngLat; gate: boolean; ctx: boolean };
   const markers = new Map<string, M>();
   // a named entrance's pin stands over its garden gate in the wall (data/walls.geojson)
   const gateAt = new Map<string, LngLat>();
@@ -352,7 +362,7 @@ async function main() {
     const at = gateAt.get(p.id) ?? p.position;
     const marker = new Marker({ element: el, anchor: 'center' }).setLngLat(at);
     if (map) marker.addTo(map);
-    markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0, at, gate: gateAt.has(p.id) });
+    markers.set(p.id, { p, group, marker, el, offset: [0, 0], labelW: 0, at, gate: gateAt.has(p.id), ctx: el.classList.contains('k-ctx') });
   }
   // places sharing a spot (e.g. a café inside its building) sit side by side instead of stacking
   {
@@ -377,7 +387,7 @@ async function main() {
   // (Chadwick Hall, Froebel's halls down the road, gets its own: it is a walk from the rest of Froebel)
   const isChadwick = (p: Place) => p.id.startsWith('chadwick-hall') || p.id === 'downshire-house';
   const AREAS = [
-    ...(['digby-stuart', 'froebel', 'southlands'] as const).map((college) => ({ key: college, name: COLLEGE[college], what: 'college', of: (p: Place) => p.college === college && !isChadwick(p) })),
+    ...(['digby-stuart', 'froebel', 'southlands', 'whitelands'] as const).map((college) => ({ key: college, name: COLLEGE[college], what: 'college', of: (p: Place) => p.college === college && !isChadwick(p) })),
     { key: 'chadwick', name: 'Chadwick Hall', what: 'halls', of: (p: Place) => isChadwick(p) && p.category === 'building' && p.kind === 'accommodation' },
   ];
   const areas = AREAS.map(({ key, name, what, of }) => {
@@ -430,6 +440,10 @@ async function main() {
       a.el.tabIndex = showAreas ? 0 : -1;
       if (!showAreas) continue;
       const pt = map.project(a.c), w = a.el.offsetWidth / 2 + 8;
+      // a college that's off the screen gets no name pinned to the edge (it would float over nothing)
+      const away = pt.x < -w || pt.x > W + w || pt.y < 0 || pt.y > H;
+      a.el.classList.toggle('hidden', away);
+      if (away) continue;
       const right = ctl.width && pt.y > ctl.top - 24 && pt.y < ctl.bottom + 24 ? ctl.left - 4 : W - 8;
       const dx = Math.round(pt.x + w > right ? right - (pt.x + w) : pt.x - w < 8 ? 8 - (pt.x - w) : 0);
       a.marker.setOffset([dx, 0]);
@@ -465,7 +479,7 @@ async function main() {
       m.el.classList.toggle('hidden', !show);
       m.el.tabIndex = show ? 0 : -1;
       m.el.classList.remove('show-label');
-      if (show && onScreen) { dots.push([x, y]); if ((!filtered || sel) && !mini) { shown.push({ m, x, y, sel }); keyDots.push([x, y]); } }
+      if (show && onScreen) { dots.push([x, y]); if ((!filtered || sel) && !mini) { shown.push({ m, x, y, sel }); if (!m.ctx || sel) keyDots.push([x, y]); } }
     }
     // second pass: names where they cover neither another label nor a dot. The main buildings and
     // the library get theirs from zoom 16.3, food and sport from 16.8, everything else from 17.
@@ -475,6 +489,8 @@ async function main() {
       .map((r) => [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4] as [number, number, number, number]);
     for (const { m, x, y, sel } of shown) {
       if (!sel && PRIORITY[m.group] < minPriority) continue;
+      // background surroundings: their small grey name only close up
+      if (!sel && m.ctx && z < 17.5) continue;
       if (!m.labelW) m.labelW = m.el.querySelector<HTMLElement>('.label')!.offsetWidth || 120;
       const box: [number, number, number, number] = [x - m.labelW / 2, y + 14, x + m.labelW / 2, y + 36];
       const clipped = box[0] < 4 || box[2] > W - 4 || taken.some(([a, b, c, d]) => box[0] < c && box[2] > a && box[1] < d && box[3] > b);
@@ -611,6 +627,7 @@ async function main() {
       <li><span class="swatch roof-digby"></span>Digby Stuart</li>
       <li><span class="swatch roof-froebel"></span>Froebel</li>
       <li><span class="swatch roof-southlands"></span>Southlands</li>
+      <li><span class="swatch roof-whitelands"></span>Whitelands</li>
       <li><span class="swatch roof-other"></span>Other university building</li>
     </ul>
     <h4>Roof types (from aerial views)</h4><ul>
@@ -730,6 +747,10 @@ async function main() {
   // The home view is worked out once per screen size and then reused, so the ⛶ button brings back
   // exactly the opening view (closing the welcome card doesn't move the map either).
   let home: { size: string; center: MLLngLat; zoom: number } | null = null;
+  /** GPS says you're off the map: say so, don't follow you there, offer the whole map instead */
+  function outsideToast(off: number) {
+    toast(`You're outside the campus map · ${formatDistance(off)} away.`, 8000, { label: 'Show campus', run: () => showWholeCampus() });
+  }
   function showWholeCampus(duration = 500) {
     if (!map) return;
     pitchedByHand = false;
@@ -938,7 +959,7 @@ async function main() {
     findBtn.classList.add('active');
     document.body.classList.add('has-fix');
     const off = distanceToBounds(f.pos, doc.bounds);
-    if (off > 0) { setFollowing(false); toast(`You're not on campus yet · ${formatDistance(off)} away`, 6000); return; }
+    if (off > 0) { setFollowing(false); outsideToast(off); return; }
     if (f.accuracy > config.weakGpsM) toast(`GPS is weak here · accurate to about ${Math.round(f.accuracy)} m`, 5000);
     if (!routeShown) {
       setFollowing(true);
@@ -953,7 +974,7 @@ async function main() {
     if (map && tracking && fix && !stale) {
       // already live: bring the map back to you and keep following
       const off = distanceToBounds(fix.pos, doc.bounds);
-      if (off > 0) { toast(`You're not on campus yet · ${formatDistance(off)} away`, 6000); return; }
+      if (off > 0) { outsideToast(off); return; }
       setFollowing(true);
       camMove({ center: fix.pos, zoom: Math.max(map.getZoom(), 17.2), duration: ms(500) });
       return;

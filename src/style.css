@@ -32,6 +32,7 @@
   --roof-digby: #a8cdee;
   --roof-froebel: #f6d77a;
   --roof-southlands: #bba9e8;
+  --roof-whitelands: #f4b48f;
   --roof-other: #ecd3bb;
   --path: #fcf3dc;
   --path-edge: #d8c08b;
@@ -68,6 +69,7 @@
   --roof-digby: #5689b0;
   --roof-froebel: #b39545;
   --roof-southlands: #7666a8;
+  --roof-whitelands: #b07a5a;
   --roof-other: #7a6a5a;
   --path: #6d6450;
   --path-edge: #4d4636;
@@ -246,6 +248,10 @@ svg { display: block; flex: none; }
   background: var(--text); color: var(--surface); font-size: 14px; font-weight: 650;
   box-shadow: var(--shadow); animation: pop 0.18s var(--ease);
 }
+.toast-action {
+  margin-left: 6px; padding: 4px 10px; border: 0; border-radius: 999px; font: inherit;
+  background: var(--surface); color: var(--text); cursor: pointer; pointer-events: auto;
+}
 
 /* category colour variable, shared by markers, chips, key and list */
 .g-academic { --g: var(--g-academic); }
@@ -302,6 +308,7 @@ svg { display: block; flex: none; }
 .roof-digby { background: var(--roof-digby); }
 .roof-froebel { background: var(--roof-froebel); }
 .roof-southlands { background: var(--roof-southlands); }
+.roof-whitelands { background: var(--roof-whitelands); }
 .roof-other { background: var(--roof-other); }
 .line-path { height: 6px; background: var(--path); box-shadow: 0 0 0 1px var(--path-edge); }
 .line-road { height: 8px; background: var(--road); box-shadow: 0 0 0 1px var(--road-edge); }
@@ -835,6 +842,7 @@ body.has-fix .find-label, body.panel-open .find-label { display: none; }
 .area-digby-stuart .area-icon { background: var(--roof-digby); }
 .area-froebel .area-icon { background: var(--roof-froebel); }
 .area-southlands .area-icon { background: var(--roof-southlands); }
+.area-whitelands .area-icon { background: var(--roof-whitelands); }
 .area-chadwick .area-icon { background: var(--roof-froebel); }
 
 /* ---------- saved places ---------- */
@@ -904,5 +912,9 @@ body.navigating .top > :not(.toast), body.navigating .key-btn, body.navigating .
 
 /* the hospital: a red square with a white H, the usual hospital sign, in its pin, card and search results */
 .k-hospital { --g: #d7372f; }
-.pin.k-hospital .dot, .cat-icon.k-hospital { border-radius: 7px; background: #d7372f; color: #fff; }
+.pin.k-hospital .dot, .cat-icon.k-hospital { border-radius: 7px; background: var(--hosp-accent, #d64541); color: #fff; }
+/* background surroundings: small, faded, no label until close (the label rule in layoutMarkers) */
+.pin.k-ctx:not(.selected) { opacity: 0.72; }
+.pin.k-ctx:not(.selected) .dot { transform: scale(0.78); filter: saturate(0.4); }
+.pin.k-ctx:not(.selected) .label { font-size: 11px; font-weight: 600; color: var(--muted, #6b6f73); }
 .pin.k-hospital .dot svg { width: 16px; height: 16px; stroke-width: 3; }

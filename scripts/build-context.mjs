@@ -21,7 +21,11 @@ import { existsSync } from 'node:fs';
 // ---------- the rule's settings ----------
 const CONTEXT_BUFFER_M = 50; // corridor half-width, each side of a road's centre line
 const FRONT_M = 25; // "first row": the building's nearest corner is this close to the centre line
-const LANE_Y = [-350, 560]; // Roehampton Lane, metres north of ORIGIN: Chadwick Hall's south end to Southlands' north wall
+const LANE_Y = [-745, 560]; // Roehampton Lane, metres north of ORIGIN: past Little Waitrose (south-east of Whitelands) to Southlands' north wall
+const DANEBURY_X = [235, 360]; // Danebury Avenue, metres east of ORIGIN: from Roehampton Lane to just past the Co-op (the Alton estate's streets further west stay out)
+const WHITELANDS = 'way/269315444'; // Whitelands College's grounds (OSM amenity=university, part of relation/5904595)
+const WL_PAD_M = 14; // round Whitelands: the roads along its edge (Holybourne Avenue, Danebury Avenue)
+const TALL_LEVELS = 5; // south of Chadwick Hall, outside Whitelands, blocks this tall (the Alton estate's) stay out
 const CLARENCE_X = [-243, 175]; // Clarence Lane, metres east of ORIGIN: south of Froebel (west of it, south of the lane, is the Alton estate: left out)
 const LONG_BLOCK_M = 45; // west of CLARENCE_WEST_X, a block of flats longer than this is the Alton estate's: left out
 const CLARENCE_WEST_X = -243;
@@ -50,7 +54,8 @@ const ROOT = new URL('..', import.meta.url);
 const OUT = new URL('data/campus.geojson', ROOT);
 const CACHE = new URL('scripts/.overpass-context-cache.json', ROOT);
 const MAIN_CACHE = new URL('scripts/.overpass-cache.json', ROOT);
-const BOX = '51.4510,-0.2525,51.4615,-0.2380';
+const BOX = '51.4470,-0.2525,51.4615,-0.2360';
+const WL_BOX = '51.4470,-0.2490,51.4520,-0.2400'; // Whitelands College and round it
 const query = `[out:json][timeout:110];
 (
   nwr["building"](${BOX});
@@ -60,7 +65,12 @@ const query = `[out:json][timeout:110];
   way["highway"](${BOX});
   node["entrance"](${BOX});
   relation["leisure"="track"](${BOX});
-  way(id:385820703,393563929,393563927);
+  way(id:385820703,393563929,393563927,269315444);
+  nwr["landuse"](${WL_BOX});
+  nwr["leisure"](${WL_BOX});
+  nwr["natural"](${WL_BOX});
+  way["barrier"](${WL_BOX});
+  nwr["shop"](${BOX});
   way["landuse"~"^(grass|village_green|recreation_ground)$"](${BOX});
 );
 out body geom;`;
@@ -144,6 +154,12 @@ const laneSegs = clipSegs(laneAll, 1, LANE_Y);
 // Clarence Lane's through road (not its spurs into the estates south of it)
 const clarenceLine = highways.filter((h) => h.tags.name === 'Clarence Lane' && h.tags.highway === 'tertiary').flatMap((h) => segsOf(h.pts));
 const clarenceSegs = clipSegs(clarenceLine, 0, CLARENCE_X);
+const daneburySegs = clipSegs(highways.filter((h) => h.tags.name === 'Danebury Avenue').flatMap((h) => segsOf(h.pts)), 0, DANEBURY_X);
+const wlEl = osm.elements.find((e) => `${e.type}/${e.id}` === WHITELANDS && e.geometry) ?? osm.elements.filter((e) => e.type === "relation").flatMap((r) => (r.members ?? []).filter((mb) => `way/${mb.ref}` === WHITELANDS && mb.geometry))[0];
+const WL = wlEl ? wlEl.geometry.map((p) => toM(ll(p))) : [];
+if (!WL.length) console.warn('Whitelands College (way/269315444) is not in the download');
+const wlSegs = segsOf(WL);
+const inWL = (p, pad = 0) => WL.length > 0 && (pointInRing(p, WL) || (pad > 0 && distToSegs(p, wlSegs) <= pad));
 const hospitalSite = osm.elements.find((e) => e.type === 'way' && e.tags?.amenity === 'hospital');
 const SITE = hospitalSite ? hospitalSite.geometry.map((p) => toM(ll(p))) : [];
 const mainOsm = existsSync(MAIN_CACHE) ? JSON.parse(await readFile(MAIN_CACHE, 'utf8')) : { elements: [] };
@@ -171,7 +187,7 @@ const northOfCampus = (p) => { const [a, b] = NORTH_LINE; return (b[0] - a[0]) *
 const inCampus = (p) => pointInRing(p, EDGE) && westOfLane(p) && !southOfClarence(p);
 const inPlot = (p) => PLOT.length > 0 && (pointInRing(p, PLOT) || distToSegs(p, plotSegs) <= PLOT_PAD_M);
 const inSite = (p) => SITE.length > 0 && p[0] <= HOSPITAL_MAX_X && pointInRing(p, SITE);
-const inCorridor = (p) => !northOfCampus(p) && (distToSegs(p, laneSegs) <= CONTEXT_BUFFER_M || distToSegs(p, clarenceSegs) <= CONTEXT_BUFFER_M);
+const inCorridor = (p) => !northOfCampus(p) && (distToSegs(p, laneSegs) <= CONTEXT_BUFFER_M || distToSegs(p, clarenceSegs) <= CONTEXT_BUFFER_M || distToSegs(p, daneburySegs) <= CONTEXT_BUFFER_M);
 // places on buildings outside all that (Eastwood Nursery School): their building and a little round it
 const outerOf = (e) => {
   if (e.type === 'way') return e.geometry?.length > 3 ? e.geometry.map(ll) : null;
@@ -194,7 +210,7 @@ const parcelRings = PARCELS.map((pc) => {
 const inParcel = (p, pad = 0) => parcelRings.some(({ ring }) => pointInRing(p, ring) || (pad > 0 && distToSegs(p, segsOf(ring)) <= pad));
 // nothing south of Clarence Lane west of Froebel's south-west corner (the Alton estate)
 const swCut = (p) => p[0] < CLARENCE_WEST_X && southOfClarence(p);
-const inZone = (p) => inCampus(p) || inPlot(p) || inSite(p) || inParcel(p) || (inCorridor(p) && !swCut(p)) || nearPlace(p);
+const inZone = (p) => inCampus(p) || inPlot(p) || inSite(p) || inParcel(p) || inWL(p, WL_PAD_M) || (inCorridor(p) && !swCut(p)) || nearPlace(p);
 
 // ---------- what was there, outside the zone, goes ----------
 const removed = { building: 0, tree: 0, path: 0, other: 0 };
@@ -245,7 +261,7 @@ for (const f of features) {
 const have = new Set(features.map((f) => f.properties.osmId ?? f.id).filter(Boolean));
 const heightOf = (t) => (t.height ? parseFloat(t.height) || null : t['building:levels'] ? (parseFloat(t['building:levels']) || 2) * 3.2 : null);
 const PITCHED = new Set(['house', 'detached', 'semidetached_house', 'terrace', 'bungalow']);
-const counts = { lane: 0, clarence: 0, campus: 0, hospital: 0, place: 0, parcel: 0 };
+const counts = { lane: 0, clarence: 0, danebury: 0, campus: 0, hospital: 0, place: 0, parcel: 0, whitelands: 0 };
 const bRings = features.filter((f) => f.properties.layer === 'building').map((f) => f.geometry.coordinates[0].map(toM));
 const firstRow = (m, c, segs) => segs.length > 0 && distToSegs(c, segs) <= CONTEXT_BUFFER_M && ringDist(m, segs) <= FRONT_M;
 for (const e of osm.elements) {
@@ -256,7 +272,12 @@ for (const e of osm.elements) {
   if (!ring) continue;
   const m = ring.map(toM), c = centre(m), a = area(m);
   let why = null;
-  if (footprints.has(id)) why = 'place';
+  const xs = m.map((q) => q[0]), ys = m.map((q) => q[1]);
+  const long = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  // the Alton estate's tall blocks and long slabs, south of Chadwick Hall (outside Whitelands)
+  const tall = c[1] < -340 && !inWL(c) && ((parseFloat(e.tags['building:levels']) || 0) >= TALL_LEVELS || (parseFloat(e.tags.height) || 0) >= 15 || (e.tags.building === 'apartments' && long > LONG_BLOCK_M));
+  if (inWL(c) && m.every((q) => inWL(q, 3))) why = 'whitelands'; // the college's own buildings: drawn like the campus's
+  else if (footprints.has(id)) why = 'place';
   else if (inSite(c)) {
     // the hospital's own buildings (not the houses along the site's edge)
     if (!PITCHED.has(e.tags.building) && e.tags.building !== 'apartments') why = 'hospital';
@@ -265,7 +286,9 @@ for (const e of osm.elements) {
   else if (inCampus(c) && m.every(inZone)) why = 'campus'; // inside the campus but not the university's (Ibstock Place School)
   else if (northOfCampus(c)) continue;
   else if (!westOfLane(c) && c[1] >= HOSPITAL_NORTH_CLEAR[0] && c[1] <= HOSPITAL_NORTH_CLEAR[1]) continue;
+  else if (tall) continue;
   else if (c[1] >= LANE_Y[0] && c[1] <= LANE_Y[1] && firstRow(m, c, laneSegs)) why = 'lane';
+  else if (firstRow(m, c, daneburySegs)) why = 'danebury';
   else if (swCut(c)) continue;
   else if (firstRow(m, c, clarenceSegs)) {
     const xs = m.map((q) => q[0]), ys = m.map((q) => q[1]);
@@ -279,7 +302,9 @@ for (const e of osm.elements) {
   const pitched = PITCHED.has(e.tags.building) && e.tags['roof:shape'] !== 'flat' && ring.length <= 12;
   features.push({
     type: 'Feature', id,
-    properties: { layer: 'building', osmId: id, name: e.tags.name ?? null, building: e.tags.building, height: LOW_HEIGHT[id] ?? (why === 'parcel' ? Math.min(PARCEL_MAX_HEIGHT, heightOf(e.tags) ?? 9) : heightOf(e.tags)), campus: false, college: null, context: true, ...(pitched ? { roof: 'tile' } : {}), ...(why === 'hospital' ? { hospital: true } : {}) },
+    properties: why === 'whitelands'
+      ? { layer: 'building', osmId: id, name: e.tags.name ?? null, building: e.tags.building, height: heightOf(e.tags), campus: true, college: 'whitelands', context: true }
+      : { layer: 'building', osmId: id, name: e.tags.name ?? null, building: e.tags.building, height: LOW_HEIGHT[id] ?? (why === 'parcel' ? Math.min(PARCEL_MAX_HEIGHT, heightOf(e.tags) ?? 9) : heightOf(e.tags)), campus: false, college: null, context: true, ...(pitched ? { roof: 'tile' } : {}), ...(why === 'hospital' ? { hospital: true } : {}) },
     geometry: { type: 'Polygon', coordinates: [ring.map((p) => [round(p[0]), round(p[1])])] },
   });
 }
@@ -291,7 +316,7 @@ const kindOf = (h) => (['footway', 'path', 'pedestrian', 'steps', 'cycleway', 't
 let newPaths = 0;
 for (const h of highways) {
   const id = `way/${h.id}`;
-  if (have.has(id) || !ROADISH.has(h.tags.highway) || h.tags.access === 'private' && !h.pts.some(inSite)) continue;
+  if (have.has(id) || !ROADISH.has(h.tags.highway) || h.tags.access === 'private' && !h.pts.some(inSite) && !h.pts.some((q) => inWL(q))) continue;
   if (h.pts.some(northOfCampus) && !h.pts.some(inCampus)) continue;
   // only the part inside the zone (and the hospital's site: its front only)
   const runs = [];
@@ -416,6 +441,26 @@ for (const e of osm.elements) {
   greens++;
 }
 
+// ---------- Whitelands College: its grounds like the campus's (pitches, lawns, woods, car park) ----------
+const wlCounts = { green: 0, parking: 0 };
+for (const e of osm.elements) {
+  if (e.type !== 'way' || !e.geometry || e.geometry.length < 4 || `way/${e.id}` === WHITELANDS || have.has(`way/${e.id}`)) continue;
+  const t = e.tags ?? {};
+  const m = e.geometry.map((p) => toM(ll(p)));
+  if (m.filter((q) => inWL(q, 2)).length / m.length < 0.8) continue;
+  const field = /^(pitch|sports_centre|stadium|track)$/.test(t.leisure ?? '');
+  const wooded = /^(wood|scrub)$/.test(t.natural ?? '') || t.landuse === 'forest';
+  const lawn = /^(grass|meadow|village_green|recreation_ground)$/.test(t.landuse ?? '') || /^(park|garden)$/.test(t.leisure ?? '');
+  if (t.amenity === 'parking') {
+    features.push({ type: 'Feature', id: `way/${e.id}`, properties: { layer: 'parking', context: true, osmId: `way/${e.id}` }, geometry: { type: 'Polygon', coordinates: [m.map(fromM)] } });
+    wlCounts.parking++;
+  } else if (field || wooded || lawn) {
+    features.push({ type: 'Feature', id: `way/${e.id}`, properties: { layer: 'green', wooded, ...(field ? { field: true } : {}), context: true, osmId: `way/${e.id}` }, geometry: { type: 'Polygon', coordinates: [m.map(fromM)] } });
+    wlCounts.green++;
+  } else continue;
+  have.add(`way/${e.id}`);
+}
+
 // ---------- the plots' ground ----------
 for (const pc of parcelRings) {
   features.push({ type: 'Feature', id: `lot/${pc.osm}`, properties: { layer: 'lot', context: true, osmId: pc.osm, name: pc.name }, geometry: { type: 'Polygon', coordinates: [pc.ring.map(fromM)] } });
@@ -490,9 +535,10 @@ if (PLOT.length) {
   }
 }
 // open ground in the corridor and on the hospital's site: scattered trees, with gaps
-for (let x = -420; x < 440; x += TREE_GAP_M) for (let y = -460; y < 600; y += TREE_GAP_M) {
+for (let x = -420; x < 620; x += TREE_GAP_M) for (let y = -920; y < 600; y += TREE_GAP_M) {
   const p = [x + (rand() - 0.5) * 6, y + (rand() - 0.5) * 6];
-  if (rand() < 0.4 || inCampus(p) || pointInRing(p, PLOT)) continue;
+  // (sparser in the plain surroundings than on Whitelands' lawns: background, and a smaller file)
+  if (rand() < (inWL(p) ? 0.3 : 0.6) || inCampus(p) || pointInRing(p, PLOT)) continue;
   if (clear(p)) plant(p, 'open');
 }
 
@@ -500,7 +546,7 @@ for (let x = -420; x < 440; x += TREE_GAP_M) for (let y = -460; y < 600; y += TR
 // traced round the grid cells inside the zone (inside on the left, so outer rings run anticlockwise
 // and holes clockwise), then simplified and smoothed into soft curves
 const zoneRings = (() => {
-  const X0 = -470, Y0 = -500, X1 = 480, Y1 = 640, G = GRID_M;
+  const X0 = -470, Y0 = -940, X1 = 640, Y1 = 640, G = GRID_M;
   const nx = Math.ceil((X1 - X0) / G), ny = Math.ceil((Y1 - Y0) / G);
   const cell = new Uint8Array(nx * ny);
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) cell[i + j * nx] = inZone([X0 + (i + 0.5) * G, Y0 + (j + 0.5) * G]) ? 1 : 0;
@@ -561,6 +607,75 @@ const outers = zoneRings.filter((r) => signedArea(r) > 0);
 const holes = zoneRings.filter((r) => signedArea(r) < 0);
 const polys = outers.map((o) => [o, ...holes.filter((h) => pointInRing(h[0], o))]);
 features.push({ type: 'Feature', properties: { layer: 'contextzone', context: true }, geometry: { type: 'MultiPolygon', coordinates: polys.map((p) => p.map((r) => r.map(fromM))) } });
+
+// ---------- the focus: the university's own ground (green in the app; everything else is plain) ----------
+// The main campus: its wall (data/walls.geojson: down Roehampton Lane, then west along Clarence Lane),
+// closed round the map's west and north edge; Chadwick Hall: the wall round its plot; Whitelands:
+// its OSM outline. The wall and the green edge share the same line, so the colour change is crisp.
+const wallLines = walls.features.filter((f) => f.properties?.part === 'wall' && !f.properties?.whitelands && f.geometry.type === 'LineString').map((f) => f.geometry.coordinates.map(toM));
+const isChadwickWall = (l) => PLOT.length > 0 && l.every((q) => distToSegs(q, plotSegs) < 15);
+const chain = (lines) => lines.reduce((acc, l) => [...acc, ...l], []);
+const mainWall = chain(wallLines.filter((l) => !isChadwickWall(l)));
+const MAIN_CLOSE = [[-386, -67], [-360, 98], [-304, 244], [-244, 378], [-177, 497], [166, 559]]; // the map's edge (build-campus MAP_EDGE), west and north
+const focusRings = [
+  { name: 'campus', ring: [...mainWall, ...MAIN_CLOSE] },
+  { name: 'chadwick', ring: chain(wallLines.filter(isChadwickWall)) },
+  { name: 'whitelands', ring: WL.slice(0, -1) },
+].filter((r) => r.ring.length > 3).map((r) => ({ ...r, ring: [...r.ring, r.ring[0]] }));
+const inFocus = (p) => focusRings.some((r) => pointInRing(p, r.ring));
+for (const r of focusRings) features.push({ type: 'Feature', id: `focus/${r.name}`, properties: { layer: 'campusground', context: true, name: r.name }, geometry: { type: 'Polygon', coordinates: [r.ring.map(fromM)] } });
+// every ground feature, tree and path outside it is drawn in the plain surroundings' colours (`ctx`)
+const CTX_LAYERS = new Set(['tree', 'path', 'green', 'water', 'waterway', 'parking', 'car', 'courtline', 'lot', 'flowerbed']);
+const where = (g) => {
+  if (g.type === 'Point') return toM(g.coordinates);
+  const line = g.type === 'LineString' ? g.coordinates : g.type === 'Polygon' ? g.coordinates[0] : g.type === 'MultiLineString' ? g.coordinates[0] : g.coordinates[0][0];
+  if (g.type === 'LineString' || g.type === 'MultiLineString') return toM(line[Math.floor(line.length / 2)]);
+  return centre(line.map(toM));
+};
+const ctxCount = { focus: 0, ctx: 0 };
+for (const f of features) {
+  const { layer } = f.properties;
+  if (layer === 'golf' || layer === 'golfflag') { f.properties.ctx = true; continue; } // the golf course isn't the university's
+  if (!CTX_LAYERS.has(layer)) continue;
+  const c = inFocus(where(f.geometry)) ? 0 : 1;
+  if (c) f.properties.ctx = true; else delete f.properties.ctx;
+  ctxCount[c ? 'ctx' : 'focus']++;
+}
+
+// ---------- Whitelands College's boundary wall (data/walls.geojson, `whitelands: true`) ----------
+// OSM maps no wall round it: the line is the college's outline, drawn like the campus's own boundary,
+// open wherever a road or path crosses it
+const segX = (a, b, c, d) => {
+  const r = [b[0] - a[0], b[1] - a[1]], q = [d[0] - c[0], d[1] - c[1]], den = r[0] * q[1] - r[1] * q[0];
+  if (Math.abs(den) < 1e-9) return null;
+  const t = ((c[0] - a[0]) * q[1] - (c[1] - a[1]) * q[0]) / den, u = ((c[0] - a[0]) * r[1] - (c[1] - a[1]) * r[0]) / den;
+  return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? t : null;
+};
+walls.features = walls.features.filter((f) => !f.properties?.whitelands);
+if (WL.length) {
+  const ways = highways.filter((h) => ROADISH.has(h.tags.highway) || FOOT_SET.has(h.tags.highway)).flatMap((h) => segsOf(h.pts));
+  // the ring, cut at every crossing (a 2.5 m opening each side)
+  const pieces = [];
+  let cur = [];
+  for (const [a, b] of segsOf(WL)) {
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const cuts = ways.map(([c, d]) => segX(a, b, c, d)).filter((t) => t !== null).map((t) => t * L).sort((x, y) => x - y);
+    const at = (d) => [a[0] + ((b[0] - a[0]) * d) / L, a[1] + ((b[1] - a[1]) * d) / L];
+    if (!cur.length) cur.push(a);
+    for (const d of cuts) {
+      if (d - 2.5 > 0) cur.push(at(d - 2.5));
+      if (cur.length > 1) pieces.push(cur);
+      cur = d + 2.5 < L ? [at(d + 2.5)] : [];
+    }
+    cur.push(b);
+  }
+  if (cur.length > 1) pieces.push(cur);
+  for (const pc of pieces) if (pc.length > 1 && pc.reduce((t, q, k) => (k ? t + Math.hypot(q[0] - pc[k - 1][0], q[1] - pc[k - 1][1]) : 0), 0) > 3)
+    walls.features.push({ type: 'Feature', properties: { part: 'wall', whitelands: true }, geometry: { type: 'LineString', coordinates: pc.map(fromM) } });
+  await writeFile(new URL('data/walls.geojson', ROOT), JSON.stringify(walls));
+  console.log(`  Whitelands: wall in ${pieces.length} pieces; grounds ${JSON.stringify(wlCounts)}`);
+}
+console.log(`  focus ground: ${focusRings.map((r) => r.name).join(', ')}; ctx flags ${JSON.stringify(ctxCount)}`);
 
 await writeFile(OUT, JSON.stringify(fc));
 console.log(`context zone (buffer ${CONTEXT_BUFFER_M} m, first row within ${FRONT_M} m): ${outers.length} part(s), ${holes.length} hole(s)`);

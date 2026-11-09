@@ -135,6 +135,14 @@ export const HOURS: HoursEntry[] = [
     checked: '2026-10-23',
     serving: 'Breakfast 8–11 · Lunch 11:30–2',
   },
+  {
+    place: 'coop-danebury-avenue',
+    period: 'All year',
+    from: '2026-11-09',
+    weekly: EVERY_DAY('07:00', '23:00'),
+    source: { name: 'Co-op store finder', url: 'https://www.coop.co.uk/store-finder/SW15-4DU/39-41-danebury-avenue' },
+    checked: '2026-11-09',
+  },
   // no verified hours: the card sends people to Nest
   ...['digby-den-diner'].map((place): HoursEntry => ({
     place, period: 'All year', from: '2026-10-21', weekly: {}, checked: '2026-10-21', unknown: 'Hours: check on Nest',

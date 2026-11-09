@@ -1,6 +1,6 @@
 export type LngLat = [number, number];
 export type Category = 'building' | 'food' | 'sport' | 'entrance' | 'nearby';
-export type College = 'digby-stuart' | 'froebel' | 'southlands' | null;
+export type College = 'digby-stuart' | 'froebel' | 'southlands' | 'whitelands' | null;
 export type Day = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
 /**

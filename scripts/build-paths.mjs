@@ -15,6 +15,31 @@ if (!existsSync(CACHE)) {
   process.exit(1);
 }
 const osm = JSON.parse(await readFile(CACHE, 'utf8'));
+// the surroundings' download (scripts/build-context.mjs): the ways of the map's wider island (Roehampton
+// Lane south to Whitelands College, Danebury Avenue, Whitelands' own paths), only those with a point
+// inside the island's outline (layer "contextzone" in campus.geojson). They share OSM node ids with the
+// campus download, so the two join where they meet.
+{
+  const CONTEXT = new URL('.overpass-context-cache.json', import.meta.url);
+  const campus = JSON.parse(await readFile(new URL('../data/campus.geojson', import.meta.url), 'utf8'));
+  const zone = campus.features.find((f) => f.properties?.layer === 'contextzone');
+  if (existsSync(CONTEXT) && zone) {
+    const rings = zone.geometry.coordinates.map((p) => p[0]);
+    const inZone = (q) => rings.some((r) => pointInRing(q, r));
+    const have = new Set(osm.elements.map((e) => `${e.type}/${e.id}`));
+    const ctx = JSON.parse(await readFile(CONTEXT, 'utf8'));
+    let n = 0;
+    for (const e of ctx.elements) {
+      if (e.type !== 'way' || !e.tags?.highway || !e.nodes || !e.geometry || have.has(`way/${e.id}`)) continue;
+      if (!e.geometry.some((g) => inZone([g.lon, g.lat]))) continue;
+      osm.elements.push(e); n++;
+    }
+    // (relations too: Whitelands' outline, so its private paths count as campus)
+    for (const e of ctx.elements) if (e.type === 'relation' && e.tags?.amenity === 'university' && !have.has(`relation/${e.id}`)) osm.elements.push(e);
+    for (const e of ctx.elements) if (e.type === 'way' && e.id === 269315444) osm.elements.push({ ...e, tags: { amenity: 'university' } });
+    console.log(`surroundings: ${n} more ways from the island`);
+  }
+}
 
 const round = (v) => Math.round(v * 1e6) / 1e6;
 function metres([lng1, lat1], [lng2, lat2]) {

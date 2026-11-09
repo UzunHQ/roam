@@ -3,8 +3,8 @@
   "generated": "2026-10-20",
   "bounds": [
     -0.25137,
-    51.4513,
-    -0.2413,
+    51.4474,
+    -0.2372,
     51.46021
   ],
   "sources": [
@@ -5072,6 +5072,721 @@
           "checked": "2026-11-09"
         }
       ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [
+        "School of Life and Health Sciences",
+        "School of Psychology",
+        "Reception: staffed 9am to 6pm on weekdays (Security covers the rest of the time)"
+      ],
+      "tags": [
+        "Grade I listed",
+        "lecture spaces",
+        "laboratories"
+      ],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+      "id": "parkstead-house",
+      "name": "Parkstead House",
+      "aliases": [
+        "Whitelands College",
+        "Whitelands",
+        "Whitelands main building",
+        "School of Psychology",
+        "School of Life and Health Sciences",
+        "Psychology",
+        "Life Sciences",
+        "Whitelands Reception",
+        "Holybourne Avenue"
+      ],
+      "category": "building",
+      "kind": "academic",
+      "college": "whitelands",
+      "description": "Whitelands College's main building: a Grade I listed Georgian villa from the early 1760s, with the college's reception, teaching rooms and labs. Home of the School of Life and Health Sciences and the School of Psychology. Holybourne Avenue, London SW15 4JD.",
+      "position": [
+        -0.243342,
+        51.448717
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": "way/639760368",
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+          "title": "University of Roehampton: Whitelands College (Parkstead House, Grade I; School of Life and Health Sciences and School of Psychology)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/colleges/whitelands/whitelands-college-handbook.pdf",
+          "title": "Whitelands College handbook (Holybourne Avenue; Reception 9am to 6pm on weekdays)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/639760368",
+          "title": "OpenStreetMap way 639760368: footprint and name",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/chaplaincy/",
+      "id": "whitelands-chapel",
+      "name": "Whitelands Chapel",
+      "aliases": [
+        "Chapel",
+        "Whitelands Chaplaincy",
+        "Chaplaincy",
+        "Burne-Jones windows"
+      ],
+      "category": "building",
+      "kind": "faith",
+      "college": "whitelands",
+      "description": "Whitelands College's chapel, entered through the Chaplaincy on the ground floor, with Burne-Jones stained glass and a William Morris reredos. Open for much of the week as a quiet space for reflection and prayer.",
+      "position": [
+        -0.242964,
+        51.448335
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": "way/1339072176",
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/colleges/whitelands/whitelands-college-handbook.pdf",
+          "title": "Whitelands College handbook (the Chapel, entered through the Chaplaincy; Burne-Jones windows, William Morris reredos)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/1339072176",
+          "title": "OpenStreetMap way 1339072176: footprint and name",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [
+        "Laundry on the ground floor of Cheltenham Block (card payment)"
+      ],
+      "tags": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+      "id": "whitelands-beverley-cheltenham",
+      "name": "Beverley and Cheltenham",
+      "aliases": [
+        "Beverley",
+        "Cheltenham",
+        "Beverley Hall",
+        "Cheltenham Hall",
+        "Whitelands halls",
+        "Whitelands accommodation",
+        "Halls"
+      ],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "whitelands",
+      "description": "A Whitelands College hall block (Beverley, Cheltenham) on the college's grounds off Holybourne Avenue. The laundry is on the ground floor of Cheltenham Block (college handbook). The Beverley name comes from OpenStreetMap and isn't verified on the university's pages yet.",
+      "position": [
+        -0.242277,
+        51.449143
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": "way/1339072175",
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/colleges/whitelands/whitelands-college-handbook.pdf",
+          "title": "Whitelands College handbook (laundry rooms on the ground floor of Cheltenham Block)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/1339072175",
+          "title": "OpenStreetMap way 1339072175: footprint and name",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+      "id": "whitelands-durham-gilesgate",
+      "name": "Durham and Gilesgate",
+      "aliases": [
+        "Durham",
+        "Gilesgate",
+        "Durham Hall",
+        "Gilesgate Hall",
+        "Whitelands halls",
+        "Whitelands accommodation",
+        "Halls"
+      ],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "whitelands",
+      "description": "A Whitelands College hall block (Durham, Gilesgate) on the college's grounds off Holybourne Avenue. The block names come from OpenStreetMap and are not verified on the university's pages yet.",
+      "position": [
+        -0.241713,
+        51.448995
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": "way/865392915",
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/865392915",
+          "title": "OpenStreetMap way 865392915: footprint and name",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+      "id": "whitelands-kings-melrose",
+      "name": "Kings and Melrose",
+      "aliases": [
+        "Kings",
+        "Melrose",
+        "Kings Hall",
+        "Melrose Hall",
+        "Whitelands halls",
+        "Whitelands accommodation",
+        "Halls"
+      ],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "whitelands",
+      "description": "A Whitelands College hall block (Kings, Melrose) on the college's grounds off Holybourne Avenue. The block names come from OpenStreetMap and are not verified on the university's pages yet.",
+      "position": [
+        -0.241698,
+        51.44865
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": "way/1339072174",
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/1339072174",
+          "title": "OpenStreetMap way 1339072174: footprint and name",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+      "id": "whitelands-walpole-sutherland",
+      "name": "Walpole and Sutherland",
+      "aliases": [
+        "Walpole",
+        "Sutherland",
+        "Walpole Hall",
+        "Sutherland Hall",
+        "Whitelands halls",
+        "Whitelands accommodation",
+        "Halls"
+      ],
+      "category": "building",
+      "kind": "accommodation",
+      "college": "whitelands",
+      "description": "A Whitelands College hall block (Walpole, Sutherland) on the college's grounds off Holybourne Avenue. The block names come from OpenStreetMap and are not verified on the university's pages yet.",
+      "position": [
+        -0.241753,
+        51.4482
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": "way/865392917",
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/865392917",
+          "title": "OpenStreetMap way 865392917: footprint and name",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": "https://www.roehampton.ac.uk/student-life/colleges/whitelands/",
+      "id": "whitelands-playing-field",
+      "name": "Whitelands playing field",
+      "aliases": [
+        "Whitelands sports field",
+        "Whiteland Sports field",
+        "Playing field"
+      ],
+      "category": "sport",
+      "kind": "field",
+      "college": "whitelands",
+      "description": "Whitelands College's playing field, on the west side of its grounds; home to the college's sports programme (college handbook).",
+      "position": [
+        -0.245169,
+        51.448749
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 20,
+      "footprintId": null,
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.roehampton.ac.uk/globalassets/documents/colleges/whitelands/whitelands-college-handbook.pdf",
+          "title": "Whitelands College handbook (the grounds include a playing field)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/838957959",
+          "title": "OpenStreetMap way 838957959 (Whiteland Sports field, leisure=sports_centre)",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [
+        "39–41 Danebury Avenue, London SW15 4DU"
+      ],
+      "tags": [
+        "supermarket",
+        "groceries"
+      ],
+      "officialUrl": "https://www.coop.co.uk/store-finder/SW15-4DU/39-41-danebury-avenue",
+      "id": "coop-danebury-avenue",
+      "name": "Co-op Food (Danebury Avenue)",
+      "aliases": [
+        "Co-op",
+        "Coop",
+        "Co-op Food",
+        "Supermarket",
+        "Groceries",
+        "Convenience shop",
+        "Shop",
+        "Danebury Avenue"
+      ],
+      "category": "nearby",
+      "kind": "shop",
+      "college": null,
+      "description": "A Co-op Food convenience shop at 39–41 Danebury Avenue, a short walk from Whitelands College.",
+      "position": [
+        -0.24192,
+        51.449457
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": null,
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.coop.co.uk/store-finder/SW15-4DU/39-41-danebury-avenue",
+          "title": "Co-op store finder: Roehampton - Danebury Avenue (address, opening hours)",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/way/932193700",
+          "title": "OpenStreetMap way 932193700: position",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [
+        "237–239 Roehampton Lane, London SW15 4LB"
+      ],
+      "tags": [
+        "supermarket",
+        "groceries"
+      ],
+      "officialUrl": "https://www.waitrose.com/find-a-store/roehampton",
+      "id": "little-waitrose-roehampton",
+      "name": "Little Waitrose (Roehampton Lane)",
+      "aliases": [
+        "Waitrose",
+        "little Waitrose",
+        "Little Waitrose Roehampton",
+        "Supermarket",
+        "Groceries",
+        "Convenience shop",
+        "Shell",
+        "Shop"
+      ],
+      "category": "nearby",
+      "kind": "shop",
+      "college": null,
+      "description": "A Little Waitrose shop with the Shell petrol station at 237–239 Roehampton Lane. Hours not listed: check with Waitrose.",
+      "position": [
+        -0.2381,
+        51.449433
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 10,
+      "footprintId": null,
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/1001833335",
+          "title": "OpenStreetMap way 1001833335 (Little Waitrose, operator Shell): position and address",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": null,
+      "id": "bus-danebury-avenue-a",
+      "name": "Bus stop A: Roehampton Lane / Danebury Avenue",
+      "aliases": [
+        "Bus stop A",
+        "Roehampton Lane / Danebury Avenue bus stop",
+        "Bus stop",
+        "Bus",
+        "265",
+        "419",
+        "493",
+        "969",
+        "N72",
+        "N74",
+        "Bus 265",
+        "Bus 419",
+        "Bus 493",
+        "Bus 969",
+        "Bus N72",
+        "Bus N74",
+        "Danebury Avenue",
+        "Whitelands bus stop",
+        "Whitelands"
+      ],
+      "category": "nearby",
+      "kind": "bus-stop",
+      "college": null,
+      "description": "TfL bus stop A on Roehampton Lane by the Danebury Avenue junction, a short walk from Whitelands College. Buses northbound, past the campus, towards Barnes or Sheen.",
+      "position": [
+        -0.242354,
+        51.450655
+      ],
+      "positionSource": "osm-node",
+      "positionAccuracyM": 5,
+      "footprintId": null,
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://api.tfl.gov.uk/StopPoint/490003134A",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/node/469779440",
+          "title": "OpenStreetMap node 469779440: position",
+          "checked": "2026-11-09"
+        }
+      ],
+      "bus": {
+        "atco": "490003134A",
+        "letter": "A",
+        "direction": "north",
+        "towards": "Barnes or Sheen",
+        "routes": [
+          "265",
+          "419",
+          "493",
+          "969",
+          "N72",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": null,
+      "id": "bus-danebury-avenue-m",
+      "name": "Bus stop M: Roehampton Lane / Danebury Avenue",
+      "aliases": [
+        "Bus stop M",
+        "Roehampton Lane / Danebury Avenue bus stop",
+        "Bus stop",
+        "Bus",
+        "265",
+        "419",
+        "85",
+        "969",
+        "N72",
+        "Bus 265",
+        "Bus 419",
+        "Bus 85",
+        "Bus 969",
+        "Bus N72",
+        "Danebury Avenue",
+        "Whitelands bus stop",
+        "Whitelands",
+        "Kingston Vale"
+      ],
+      "category": "nearby",
+      "kind": "bus-stop",
+      "college": null,
+      "description": "TfL bus stop M on Roehampton Lane, south-east of the Danebury Avenue junction near Little Waitrose. Buses towards Kingston Vale.",
+      "position": [
+        -0.238862,
+        51.449317
+      ],
+      "positionSource": "osm-node",
+      "positionAccuracyM": 5,
+      "footprintId": null,
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://api.tfl.gov.uk/StopPoint/490003134M",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/node/469779454",
+          "title": "OpenStreetMap node 469779454: position",
+          "checked": "2026-11-09"
+        }
+      ],
+      "bus": {
+        "atco": "490003134M",
+        "letter": "M",
+        "direction": "south",
+        "towards": "Kingston Vale",
+        "routes": [
+          "265",
+          "419",
+          "85",
+          "969",
+          "N72"
+        ],
+        "checked": "2026-11-09"
+      }
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": null,
+      "id": "bus-roehampton-library-b",
+      "name": "Bus stop B: Roehampton Library",
+      "aliases": [
+        "Bus stop B",
+        "Roehampton Library bus stop",
+        "Bus stop",
+        "Bus",
+        "170",
+        "430",
+        "639",
+        "670",
+        "N74",
+        "Bus 170",
+        "Bus 430",
+        "Bus 639",
+        "Bus 670",
+        "Bus N74",
+        "Danebury Avenue",
+        "Roehampton Library",
+        "Whitelands bus stop",
+        "Whitelands",
+        "Co-op"
+      ],
+      "category": "nearby",
+      "kind": "bus-stop",
+      "college": null,
+      "description": "TfL bus stop B on Danebury Avenue by Roehampton Library, next to the Co-op and Whitelands College. Buses eastbound, towards Putney or Wandsworth.",
+      "position": [
+        -0.242388,
+        51.44976
+      ],
+      "positionSource": "osm-node",
+      "positionAccuracyM": 5,
+      "footprintId": null,
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://api.tfl.gov.uk/StopPoint/490011641B",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/node/469779457",
+          "title": "OpenStreetMap node 469779457: position",
+          "checked": "2026-11-09"
+        }
+      ],
+      "bus": {
+        "atco": "490011641B",
+        "letter": "B",
+        "direction": "east",
+        "towards": "Putney or Wandsworth",
+        "routes": [
+          "170",
+          "430",
+          "639",
+          "670",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
+    },
+    {
+      "code": "",
+      "roomCodePrefixes": [],
+      "lastVerified": null,
+      "status": "confirmed",
+      "entrance": null,
+      "photo": null,
+      "accessibility": null,
+      "services": [],
+      "tags": [],
+      "officialUrl": null,
+      "id": "bus-roehampton-library-c",
+      "name": "Bus stop C: Roehampton Library",
+      "aliases": [
+        "Bus stop C",
+        "Roehampton Library bus stop",
+        "Bus stop",
+        "Bus",
+        "170",
+        "430",
+        "639",
+        "670",
+        "N74",
+        "Bus 170",
+        "Bus 430",
+        "Bus 639",
+        "Bus 670",
+        "Bus N74",
+        "Danebury Avenue",
+        "Roehampton Library",
+        "Whitelands"
+      ],
+      "category": "nearby",
+      "kind": "bus-stop",
+      "college": null,
+      "description": "TfL bus stop C on Danebury Avenue by Roehampton Library, across from stop B. Buses westbound, towards Minstead Gardens.",
+      "position": [
+        -0.242049,
+        51.449579
+      ],
+      "positionSource": "osm-node",
+      "positionAccuracyM": 5,
+      "footprintId": null,
+      "offCampus": false,
+      "sources": [
+        {
+          "url": "https://api.tfl.gov.uk/StopPoint/490011641C",
+          "title": "TfL StopPoint: routes and direction",
+          "checked": "2026-11-09"
+        },
+        {
+          "url": "https://www.openstreetmap.org/node/469779461",
+          "title": "OpenStreetMap node 469779461: position",
+          "checked": "2026-11-09"
+        }
+      ],
+      "bus": {
+        "atco": "490011641C",
+        "letter": "C",
+        "direction": "west",
+        "towards": "Minstead Gardens",
+        "routes": [
+          "170",
+          "430",
+          "639",
+          "670",
+          "N74"
+        ],
+        "checked": "2026-11-09"
+      }
     }
   ]
 }
