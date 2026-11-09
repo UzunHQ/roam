@@ -145,6 +145,72 @@ const layout = () => {
   await ctx.close();
 }
 
+// ---------- walking with GPS: 30 readings along a route ----------
+// (fake readings, a few metres off the route, through Playwright's geolocation; src/gps.ts does the rest)
+{
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, permissions: ['geolocation'], geolocation: { latitude: 51.458225, longitude: -0.244758, accuracy: 8 } });
+  await ctx.addInitScript(() => { try { localStorage.setItem('roam.welcomed', '1'); localStorage.setItem('roam.locationAsked', '1'); } catch { /* */ } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  await page.goto(BASE + '/?notrack&place=students-union');
+  await page.waitForSelector('#loading', { state: 'hidden', timeout: 90_000 });
+  await page.waitForTimeout(1500);
+  if (await page.evaluate(() => !!window.roamDebug)) {
+    // a route from the Students' Union to the Library, then walk it from its start
+    await page.click('#panel .dir');
+    await page.waitForSelector('#from-input');
+    await page.fill('#from-input', 'Library');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => /min/.test(document.querySelector('#route-result')?.textContent ?? ''), null, { timeout: 15_000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    const route = await page.evaluate(() => window.roamDebug.route()?.coordinates ?? []);
+    check('gps walk: a route to walk', route.length > 3, `${route.length} points`);
+    // 30 readings, one a second, 1.3 m apart along the route (walking pace), each up to 4 m off, accuracy 8 m
+    const R = 111320, k = Math.cos((route[0][1] * Math.PI) / 180);
+    const d = (a, b) => Math.hypot((a[0] - b[0]) * R * k, (a[1] - b[1]) * R);
+    const pts = [];
+    let need = 0;
+    for (let i = 1; i < route.length && pts.length < 60; i++) {
+      let a = route[i - 1]; const b = route[i]; let L = d(a, b);
+      while (L >= need && pts.length < 60) { const t = need / L; a = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; pts.push(a); L -= need; need = 1.3; }
+      need -= L;
+    }
+    let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5;
+    const walk = pts.slice(0, 30).map((p) => [p[0] + (rnd() * 8) / (R * k), p[1] + (rnd() * 8) / R]);
+    await ctx.setGeolocation({ longitude: walk[0][0], latitude: walk[0][1], accuracy: 8 });
+    await page.click('#findme');
+    await page.waitForFunction(() => !!window.roamDebug.me(), null, { timeout: 15_000 }).catch(() => {});
+    const seen = [];
+    for (const p of walk) {
+      await ctx.setGeolocation({ longitude: p[0], latitude: p[1], accuracy: 8 });
+      await page.waitForTimeout(1000);
+      seen.push(await page.evaluate(() => window.roamDebug.me()));
+    }
+    const shown = seen.filter(Boolean).map((m) => m.shown);
+    let maxStep = 0;
+    for (let i = 1; i < shown.length; i++) maxStep = Math.max(maxStep, d(shown[i - 1], shown[i]));
+    check('gps walk: the character got every reading', shown.length === walk.length, `${shown.length}/${walk.length}`);
+    check('gps walk: never jumps more than 15 m in one step', maxStep <= 15, `${maxStep.toFixed(1)} m`);
+    const full = await page.evaluate(() => window.roamDebug.routeLine());
+    const off = (p) => {
+      let best = Infinity;
+      for (let i = 1; i < full.length; i++) {
+        const a = [(full[i - 1][0] - p[0]) * R * k, (full[i - 1][1] - p[1]) * R], b = [(full[i][0] - p[0]) * R * k, (full[i][1] - p[1]) * R];
+        const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy, u = L ? Math.max(0, Math.min(1, -(a[0] * dx + a[1] * dy) / L)) : 0;
+        best = Math.min(best, Math.hypot(a[0] + u * dx, a[1] + u * dy));
+      }
+      return best;
+    };
+    const onLine = shown.filter((p) => off(p) < 0.5).length;
+    check('gps walk: with the route shown, the character stands on its line', onLine >= shown.length * 0.9, `${onLine}/${shown.length} on the line`);
+  } else console.log('skip gps walk (no window.roamDebug: run against the dev server)');
+  check('gps walk: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+
 // ---------- a link, and directions, on a laptop ----------
 {
   const { page, ctx, errors } = await open([1440, 900], '/?place=library');

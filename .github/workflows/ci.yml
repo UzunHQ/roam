@@ -1,4 +1,4 @@
-# Every push and pull request: types, the build, the data and hours checks, and the smoke tests in a
+# Every push and pull request: types, the build, the data, hours, and GPS-filter checks, and the smoke tests in a
 # real browser (scripts/smoke.mjs). Red means don't merge.
 name: CI
 on:
@@ -20,6 +20,7 @@ jobs:
       - run: npm run build
       - run: npm run check:hours
       - run: npm run check:data
+      - run: npm run check:gps
       - run: npx playwright-core install --with-deps chromium
       - name: Smoke tests
         run: |

@@ -17,6 +17,8 @@
     "photos": "node scripts/make-photos.mjs",
     "check:hours": "node scripts/check-hours.mjs",
     "check:data": "node scripts/check-data.mjs",
+    "check:gps": "node scripts/check-gps.mjs",
+    "gps:report": "node scripts/gps-report.mjs",
     "test:smoke": "node scripts/smoke.mjs http://localhost:5173"
   },
   "dependencies": {

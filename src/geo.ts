@@ -35,8 +35,11 @@ export interface Fix {
   speed: number | null;
   /** ms timestamp of the reading */
   time: number;
+  /** the phone's own values, untouched (for the ?gpslog recording) */
+  raw?: { heading: number | null; speed: number | null; altitude: number | null; altitudeAccuracy: number | null };
 }
 
+const num = (v: number | null | undefined) => (v == null || Number.isNaN(v) ? null : v);
 const toFix = (p: GeolocationPosition): Fix => {
   const speed = p.coords.speed != null && p.coords.speed >= 0 && !Number.isNaN(p.coords.speed) ? p.coords.speed : null;
   return {
@@ -45,6 +48,7 @@ const toFix = (p: GeolocationPosition): Fix => {
     heading: p.coords.heading != null && !Number.isNaN(p.coords.heading) && (speed ?? 0) > 0.5 ? p.coords.heading : null,
     speed,
     time: p.timestamp || Date.now(),
+    raw: { heading: num(p.coords.heading), speed: num(p.coords.speed), altitude: num(p.coords.altitude), altitudeAccuracy: num(p.coords.altitudeAccuracy) },
   };
 };
 

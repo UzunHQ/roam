@@ -6,6 +6,8 @@ import type { Theme } from './map';
 import { icons, placeIcon } from './icons';
 import { matchingGroups, parseRoom, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
+import { GpsFilter, nearEnd, pickHeading, type GpsStep, type GpsView } from './gps';
+import { clearGpsLog, gpsLogOn, logGps, readGpsLog, toGpx } from './gpslog';
 import { avatarSvg } from './avatar';
 import { Router, type Route } from './route';
 import { routeSteps } from './steps';
@@ -175,7 +177,42 @@ const settings = $('#settings');
 function openSettings() {
   $$<HTMLInputElement>('input[name=theme]').forEach((r) => (r.checked = r.value === themePref()));
   $$<HTMLInputElement>('input[name=motion]').forEach((r) => (r.checked = r.value === motion()));
+  if (gpsLog) showGpsLogCount();
   openDialog(settings, $('#settings-close'));
+}
+// ?gpslog: the GPS recording's two buttons (src/gpslog.ts); hidden otherwise
+const gpsLog = gpsLogOn();
+const gpsDelete = $('#gpslog-delete');
+function showGpsLogCount() {
+  gpsDelete.textContent = 'Delete log';
+  delete gpsDelete.dataset.armed;
+  readGpsLog().then((l) => { $('#gpslog-count').textContent = `${l.length} readings recorded on this device only. Nothing is sent anywhere.`; }, () => {});
+}
+if (gpsLog) {
+  $('#gpslog-set').hidden = false;
+  $('#gpslog-download').addEventListener('click', async () => {
+    const log = await readGpsLog();
+    if (!log.length) { toast('The GPS log is empty. Use Find me and walk a little first.'); return; }
+    const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+    const save = (text: string, type: string, name: string) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([text], { type }));
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    };
+    save(toGpx(log), 'application/gpx+xml', `roam-gps-${stamp}.gpx`);
+    save(JSON.stringify({ app: 'Roam', version: 1, recorded: log.length, entries: log }, null, 1), 'application/json', `roam-gps-${stamp}.json`);
+  });
+  // two taps: the first asks
+  gpsDelete.addEventListener('click', async () => {
+    if (!gpsDelete.dataset.armed) { gpsDelete.dataset.armed = '1'; gpsDelete.textContent = 'Tap again to delete the log'; return; }
+    await clearGpsLog();
+    showGpsLogCount();
+    toast('GPS log deleted.');
+  });
 }
 settings.addEventListener('change', (e) => {
   const r = e.target as HTMLInputElement;
@@ -291,7 +328,9 @@ async function main() {
     const slow = setTimeout(() => { loading.textContent = 'The map is taking a while. You can use the list view in the meantime.'; }, 10000);
     map.once('load', () => { clearTimeout(slow); doneLoading(); });
     document.addEventListener('roam-theme', () => applyTheme(map!, theme()));
-    if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute, home: () => ({ box: homeBox(map!.getCanvas().clientWidth, map!.getCanvas().clientHeight), points: campusPoints }),
+    if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute, routeLine: () => routeLine,
+      // where the character is headed (not mid-glide), and the filtered fix
+      me: () => (lastView ? { shown: lastView.shown, on: lastView.on, inside: lastView.inside, fix } : null), home: () => ({ box: homeBox(map!.getCanvas().clientWidth, map!.getCanvas().clientHeight), points: campusPoints }),
       // the camera study: open on candidate `c` (null: the chosen one)
       cam: (c: Cam | null) => { camOverride = c; homes.main = homes.island = null; showWholeCampus(0, 'main'); } } });
   }
@@ -964,13 +1003,14 @@ async function main() {
   const avatarEl = document.createElement('div');
   avatarEl.className = 'avatar';
   avatarEl.setAttribute('aria-hidden', 'true');
-  avatarEl.innerHTML = `<div class="arrow" hidden></div><div class="halo"></div>${avatarSvg}`;
+  avatarEl.innerHTML = `<div class="arrow" hidden></div><div class="halo"></div>${avatarSvg}<div class="inside" hidden></div>`;
   // feet on the spot: the SVG's ground line is 2 px above its bottom edge
   const avatar = new Marker({ element: avatarEl, anchor: 'bottom', offset: [0, 2] });
 
   function drawHeading() {
     const arrow = avatarEl.querySelector<HTMLElement>('.arrow')!;
-    const h = compassHeading ?? fix?.heading ?? null;
+    // GPS course when walking briskly, the compass when slower (src/gps.ts pickHeading)
+    const h = pickHeading(fix?.speed ?? null, fix?.heading ?? null, compassHeading);
     arrow.hidden = h == null; // no compass, or permission refused: no arrow
     if (h != null && map) arrow.style.transform = `rotate(${h - map.getBearing()}deg)`;
   }
@@ -982,7 +1022,39 @@ async function main() {
 
   let tracking = false;
   let stopWatch: (() => void) | null = null;
-  let trail: Fix[] = []; // the last few seconds of fixes
+  // Raw readings go through the GPS filter (src/gps.ts): `fix` is the filtered position (routes,
+  // arrival, distances use it); the character stands where the filter shows it (on the path).
+  let gps: GpsFilter | null = null;
+  const gpsReady = () => loadPaths().catch(() => null).then((g) => gps ?? (gps = newGps(g)));
+  const newGps = (g: Awaited<ReturnType<typeof loadPaths>> | null) => {
+    const f = new GpsFilter({
+    paths: g ? g.edges.map(([a, b]) => [g.nodes[a], g.nodes[b]] as [LngLat, LngLat]) : [],
+    buildings: campus.features.filter((f) => f.properties?.layer === 'building' && f.geometry.type === 'Polygon').map((f) => ({
+      name: footprintToPlace.get(f.properties!.osmId)?.name ?? null,
+      ring: (f.geometry as GeoJSON.Polygon).coordinates[0] as LngLat[],
+    })),
+    });
+    if (routeShown) f.setRoute(routeLine);
+    return f;
+  };
+  /** feeds a raw reading to the filter (and to the ?gpslog recording) */
+  function gpsStep(f: Fix): GpsStep {
+    const step = gps!.push(f);
+    if (gpsLog) recordGps(f, step);
+    return step;
+  }
+  function recordGps(f: Fix, step: GpsStep) {
+    const v = step.kind === 'show' ? step.view : null;
+    logGps({
+      lat: f.pos[1], lon: f.pos[0], accuracy: f.accuracy,
+      speed: f.raw?.speed ?? f.speed, heading: f.raw?.heading ?? f.heading, altitude: f.raw?.altitude ?? null, altitudeAccuracy: f.raw?.altitudeAccuracy ?? null,
+      timestamp: f.time, step: step.kind, shown: v?.shown ?? null, filtered: v?.fix.pos ?? null, on: v?.on ?? null, inside: v?.inside ?? null,
+    });
+  }
+  /** while the first position waits for a better reading (up to 4 s): who wants it */
+  let firstWanted: ((v: GpsView) => void) | null = null;
+  let lastView: GpsView | null = null;
+  let arriveRun = 0;
   let shownPos: LngLat | null = null;
   let glide = 0;
   let walkTimer = 0;
@@ -1038,33 +1110,46 @@ async function main() {
     stopWatch = watchFix(onLiveFix, (err) => { if (err.code === 1) { tracking = false; stopWatch?.(); stopWatch = null; } });
   }
 
-  function onLiveFix(f: Fix) {
-    if (!map || !shownPos) return; // the first fix goes through showFix
+  function onLiveFix(raw: Fix) {
+    if (!gps) return;
+    const step = gpsStep(raw);
+    if (step.kind !== 'show') return; // a jump dropped, or still waiting for a decent first reading
+    const v = step.view;
+    if (firstWanted) { const w = firstWanted; firstWanted = null; w(v); return; }
+    if (!map || !shownPos) return; // the first position goes through showFix
+    showLive(v);
+  }
+
+  /** each new position after the first: the filtered fix for routes, the character where the filter shows it */
+  function showLive(v: GpsView) {
+    lastView = v;
+    if (!map) return;
+    const f = v.fix;
     fix = f;
     markFresh();
     setGeoJSON(map, 'user', { type: 'Feature', properties: {}, geometry: circle(f.pos, f.accuracy) });
-    trail = [...trail, f].filter((t) => f.time - t.time <= 6000);
-    const first = trail[0];
-    // GPS wanders a few metres even when you stand still, so only count a clear move over the last few seconds
-    const clearMove = distanceM(first.pos, f.pos) > Math.max(4, Math.min(f.accuracy * 0.6, 15));
-    const moving = f.speed != null ? f.speed > 0.6 : clearMove;
-    if (f.heading != null) faceLeft(Math.sin(((f.heading - map.getBearing()) * Math.PI) / 180) < 0);
-    else if (clearMove) {
-      const a = map.project(first.pos), b = map.project(f.pos);
+    avatarEl.classList.toggle('weak', f.accuracy > config.weakGpsM);
+    showInside(v.inside);
+    const from = shownPos;
+    if (f.heading != null && v.moving) faceLeft(Math.sin(((f.heading - map.getBearing()) * Math.PI) / 180) < 0);
+    else if (from && v.moving) {
+      const a = map.project(from), b = map.project(v.shown);
       if (Math.abs(b.x - a.x) > 2) faceLeft(b.x < a.x);
     }
-    if (moving) {
+    if (v.moving) {
       avatarEl.classList.add('walking');
       clearTimeout(walkTimer);
       walkTimer = window.setTimeout(() => avatarEl.classList.remove('walking'), 2500);
     }
-    glideTo(f.pos);
+    if (!from || from[0] !== v.shown[0] || from[1] !== v.shown[1]) glideTo(v.shown);
     drawHeading();
-    if (following && Date.now() > camBusyUntil) map.easeTo({ center: f.pos, duration: ms(700) });
+    if (following && Date.now() > camBusyUntil) map.easeTo({ center: v.shown, duration: ms(700) });
     if (navigating) onNavFix(f);
-    // arrival: only from a decent fix, close to the end of the route you were shown
-    if (routeShown && routeEnd && arrivalArmed && f.accuracy <= 30 && distanceM(f.pos, routeEnd) <= Math.max(12, f.accuracy)) {
+    // arrival: from the filtered position (never the one moved onto the path), twice running
+    arriveRun = routeShown && routeEnd && arrivalArmed && nearEnd(f, routeEnd) ? arriveRun + 1 : 0;
+    if (arriveRun >= 2) {
       arrivalArmed = false;
+      arriveRun = 0;
       play('cheer', 1400);
       say('You made it!');
       toast(`You've arrived${current ? ` at ${current.name}` : ''}.`, 5000);
@@ -1075,6 +1160,12 @@ async function main() {
         setTimeout(() => { if (navigating && navId === walk) endNavigation(); }, 4000);
       }
     }
+  }
+  /** a weak reading inside a building: the character waits at its edge, saying so */
+  function showInside(name: string | null) {
+    const el = avatarEl.querySelector<HTMLElement>('.inside')!;
+    el.hidden = name == null;
+    if (name != null) el.textContent = name ? `Inside ${name}` : 'Inside a building';
   }
 
   const faceLeft = (left: boolean) => avatarEl.classList.toggle('face-left', left);
@@ -1119,10 +1210,11 @@ async function main() {
     btn.setAttribute('aria-busy', 'true');
     btn.classList.add('busy');
     try {
-      fix = await getFix();
+      await gpsReady();
+      const first = await getFix();
       lastLocateError = null;
-      showFix(fix);
-      startTracking();
+      const v = await firstPosition(first);
+      showFix(v);
       pendingLocate?.(true);
     } catch (err) {
       lastLocateError = (err as GeolocationPositionError).code ?? 2;
@@ -1137,15 +1229,46 @@ async function main() {
     }
   }
 
-  function showFix(f: Fix) {
+  /**
+   * The first position: a reading worse than 30 m waits up to 4 s for a better one while the
+   * live readings start ("Finding you…"), then the best of them (src/gps.ts). Tracking is on after.
+   */
+  function firstPosition(f: Fix): Promise<GpsView> {
+    if (gps!.started) {
+      // tracking already ran: this reading just continues it
+      startTracking();
+      const s = gpsStep(f);
+      if (s.kind === 'show') return Promise.resolve(s.view);
+    }
+    const s = gps!.started ? ({ kind: 'wait' } as GpsStep) : gpsStep(f);
+    startTracking();
+    if (s.kind === 'show') return Promise.resolve(s.view);
+    toast('Finding you…', 4000);
+    return new Promise((resolve) => {
+      firstWanted = resolve;
+      setTimeout(() => {
+        if (firstWanted !== resolve) return;
+        firstWanted = null;
+        const s2 = gps!.flush();
+        // still nothing to show (a reading dropped as a jump): the filter's latest
+        resolve(s2.kind === 'show' ? s2.view : { shown: f.pos, fix: { ...f }, on: null, inside: null, moving: false });
+      }, 4000);
+    });
+  }
+
+  function showFix(v: GpsView) {
+    lastView = v;
+    const f = v.fix;
+    fix = f;
     if (!$('#list').hidden) renderList(); // distances, and Nearest, now that we know where you are
     if (!map) return;
     cancelAnimationFrame(glide);
-    shownPos = f.pos;
-    trail = [f];
-    avatar.setLngLat(f.pos).addTo(map);
+    shownPos = v.shown;
+    avatar.setLngLat(v.shown).addTo(map);
     markFresh();
     setGeoJSON(map, 'user', { type: 'Feature', properties: {}, geometry: circle(f.pos, f.accuracy) });
+    avatarEl.classList.toggle('weak', f.accuracy > config.weakGpsM);
+    showInside(v.inside);
     drawHeading();
     findBtn.classList.add('active');
     document.body.classList.add('has-fix');
@@ -1938,6 +2061,8 @@ async function main() {
     lastRoute = r;
     routeLine = [...r.startHop, ...r.coordinates];
     routeEnd = r.coordinates[r.coordinates.length - 1];
+    gps?.setRoute(routeLine); // the character walks on the route line while it shows
+    arriveRun = 0;
     if (!quiet) {
       setFollowing(false); // show the whole route first; Start (or the locate button) follows you again
       arrivalArmed = !fix || distanceM(fix.pos, routeEnd) > 25;
@@ -1969,6 +2094,7 @@ async function main() {
     arrivalArmed = false;
     lastRoute = null;
     routeLine = [];
+    gps?.setRoute(null);
     cancelAnimationFrame(drawAnim);
     stopFlow();
     startMarker.remove();
