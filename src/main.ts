@@ -278,13 +278,13 @@ async function main() {
     const pts = places.filter(onCampus).map((p) => p.position);
     return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
   })();
+  const HOME_BEARING_WIDE = -10;
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
-  // The home view: the four parts of campus (Southlands, Digby Stuart, Froebel and Chadwick Hall)
-  // filling the screen, a little tilted. On a wide screen it faces north-east, like the university's
-  // own campus map (40°: the campus fills the most of the screen); on a phone held upright it faces north (as wide a view as any angle there, and a turn of the
-  // fingers near north snaps back to it anyway), so the campus's long side (north
-  // to south, Southlands down to Chadwick Hall) runs up the screen.
-  const HOME = { get bearing() { return isDesktop() ? 40 : 0; }, get pitch() { return isDesktop() ? 50 : 45; } };
+  // The home view: the four parts of campus filling the screen, clearly tilted (like a 3D city view
+  // in Apple or Google Maps): facing north, Southlands at the top, Froebel in the middle, Chadwick
+  // Hall bottom right. The tilt also squeezes the far (northern) half, so the long campus fits a wide
+  // screen closer than a flat view would.
+  const HOME = { get bearing() { return isDesktop() ? HOME_BEARING_WIDE : 0; }, get pitch() { return isDesktop() ? 58 : 56; } };
   map?.jumpTo({ center: campusCenter, zoom: homeZoom(), bearing: HOME.bearing, pitch: HOME.pitch });
   // Every deliberate camera move goes through here: live GPS following waits for it to finish
   // instead of cutting it short (MapLibre's easeTo stops whatever move is running).
@@ -296,12 +296,10 @@ async function main() {
     camBusyUntil = Date.now() + opts.duration + 80;
     map?.flyTo({ ...opts, curve: 1.2, essential: true });
   };
-  // the home view frames the campus itself: its wall and gates, and every campus building (its
-  // footprint's corners). The park to the west and the houses across the road are left out.
+  // the home view frames the campus itself: its places and every campus building (its footprint's
+  // corners). The wall's far corners (by the park and the golf course) and the houses across the road
+  // are left out, so the view comes in closer.
   const campusPoints: LngLat[] = places.filter(onCampus).map((p) => p.position);
-  for (const f of walls.features) {
-    if ((f.properties?.part === 'wall' || f.properties?.part === 'gate') && f.geometry.type === 'LineString') campusPoints.push(...(f.geometry.coordinates as LngLat[]));
-  }
   for (const f of campus.features) {
     if (f.properties?.layer !== 'building' || f.properties?.campus === false || f.geometry.type !== 'Polygon') continue;
     const ring = f.geometry.coordinates[0] as LngLat[];
@@ -672,12 +670,12 @@ async function main() {
   let flat = false; // 2D: looking straight down
   const tilt = (pitch: number) => (flat ? 0 : pitch);
   /**
-   * Like Apple Maps, the view tilts a little more as you zoom in and flattens as you zoom out: 42°
-   * at the widest, the home view's 50° at street level, 60° close up. It settles after a pinch or
+   * Like Apple Maps, the view tilts a little more as you zoom in and flattens as you zoom out: 45°
+   * at the widest, about the home view's 56° at campus level, 60° close up. It settles after a pinch or
    * scroll (never during one, which would fight the gesture), and stops once you tilt by hand
    * (two fingers up or down) until the compass, the 2D/3D button or the home view resets it.
    */
-  const autoPitch = (z: number) => (z <= 14.5 ? 42 : z <= 16.2 ? 42 + ((z - 14.5) / 1.7) * 8 : Math.min(60, 50 + ((z - 16.2) / 2.3) * 10));
+  const autoPitch = (z: number) => (z <= 14.5 ? 45 : z <= 16.2 ? 45 + ((z - 14.5) / 1.7) * 11 : Math.min(60, 56 + ((z - 16.2) / 2.3) * 4));
   let pitchedByHand = false;
   let gestureZoom = false;
   map?.on('pitchstart', (e) => { if ((e as { originalEvent?: Event }).originalEvent) pitchedByHand = true; });
@@ -722,8 +720,9 @@ async function main() {
     // 24 px: a pin's touch target reaches 22 px either side of its point. The map controls stand
     // down the right side: the campus keeps clear of them (only where they are, below their top)
     const ctl = r($('.controls'));
-    const right = ctl?.width && ctl.top < bottom ? Math.min(W - 24, ctl.left - 6) : W - 24;
-    return { l: 16, r: right, t: $('#chips').getBoundingClientRect().bottom + 30, b: Math.min(bottom, H) - 10 };
+    // (the column of buttons only stands in the lower part: above it the campus may reach the edge)
+    const notch = ctl?.width && ctl.top < bottom ? { top: ctl.top - 12, right: ctl.left - 6 } : undefined;
+    return { l: 16, r: W - 16, t: $('#chips').getBoundingClientRect().bottom + 30, b: Math.min(bottom, H) - 10, notch };
   }
   // The home view is worked out once per screen size and then reused, so the ⛶ button brings back
   // exactly the opening view (closing the welcome card doesn't move the map either).
@@ -1010,7 +1009,7 @@ async function main() {
    * Fit points into the free part of the screen. Projects them at the target tilt, so tilted 3D
    * views fit too (fitBounds ignores the tilt, which pushed routes behind the panel on phones).
    */
-  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number }; duration?: number; side?: number } = {}) {
+  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number; notch?: { top: number; right: number } }; duration?: number; side?: number } = {}) {
     if (!map || !points.length) return null;
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
     const a = freeArea();
@@ -1030,15 +1029,25 @@ async function main() {
         const xy = points.map((p) => map!.project(p));
         const xs = xy.map((q) => q.x), ys = xy.map((q) => q.y);
         const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-        const dx = (minX + maxX) / 2 - (box.l + box.r) / 2, dy = (minY + maxY) / 2 - (box.t + box.b) / 2;
+        let dx = (minX + maxX) / 2 - (box.l + box.r) / 2;
+        const dy = (minY + maxY) / 2 - (box.t + box.b) / 2;
         fits = maxX - minX <= box.r - box.l && maxY - minY <= box.b - box.t;
+        // a notch (the buttons in the bottom right): what would stand beside it moves left, if there's room
+        const n = box.notch;
+        if (n) {
+          const over = Math.max(0, ...xy.filter((q) => q.y - dy >= n.top).map((q) => q.x - dx - n.right));
+          const room = minX - dx - box.l;
+          dx += Math.min(over, Math.max(0, room));
+          if (over > room) fits = false;
+        }
         if (Math.abs(dx) < 1 && Math.abs(dy) < 1) break;
         map!.jumpTo({ center: map!.unproject([W / 2 + dx, H / 2 + dy]) });
       }
       // the camera may not reach the centre (it's kept near campus): then check where the points
       // really landed, so a point never ends up off the screen
       const xy = points.map((p) => map!.project(p));
-      return fits && xy.every((q) => q.x >= box.l - 2 && q.x <= box.r + 2 && q.y >= box.t - 2 && q.y <= box.b + 2);
+      const n = box.notch;
+      return fits && xy.every((q) => q.x >= box.l - 2 && q.x <= box.r + 2 && q.y >= box.t - 2 && q.y <= box.b + 2 && !(n && q.y >= n.top && q.x > n.right + 2));
     };
     // the closest zoom that still fits, to about 1%
     let lo = map.getMinZoom(), hi = opts.maxZoom ?? 18;

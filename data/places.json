@@ -4793,8 +4793,8 @@
       "lastVerified": "2026-11-09",
       "status": "confirmed",
       "position": [
-        -0.241733,
-        51.455572
+        -0.242202,
+        51.455592
       ],
       "positionSource": "osm-footprint-centroid",
       "positionAccuracyM": 20,
@@ -4844,6 +4844,46 @@
           "name": "Main entrance (south side)",
           "verified": false,
           "source": "https://www.openstreetmap.org/node/1207440442",
+          "checked": "2026-11-09"
+        }
+      ]
+    },
+    {
+      "id": "queen-marys-hospital-car-park",
+      "code": "",
+      "name": "Queen Mary's Hospital car park",
+      "aliases": [
+        "Hospital car park",
+        "Hospital parking",
+        "Queen Marys Hospital parking"
+      ],
+      "roomCodePrefixes": [],
+      "category": "nearby",
+      "kind": "parking",
+      "college": null,
+      "description": "The hospital's surface car park, on the south side of its main building, reached from Roehampton Lane. Part of Queen Mary's Hospital, not the university: check parking rules and charges with the hospital.",
+      "lastVerified": "2026-11-09",
+      "status": "confirmed",
+      "position": [
+        -0.24244,
+        51.454738
+      ],
+      "positionSource": "osm-footprint-centroid",
+      "positionAccuracyM": 20,
+      "entrance": null,
+      "footprintId": null,
+      "photo": null,
+      "services": [],
+      "tags": [
+        "parking"
+      ],
+      "offCampus": true,
+      "officialUrl": null,
+      "accessibility": null,
+      "sources": [
+        {
+          "url": "https://www.openstreetmap.org/way/104678854",
+          "title": "OpenStreetMap way 104678854 (amenity=parking, on the hospital site way/35781504); the bays and parked cars are drawn for illustration",
           "checked": "2026-11-09"
         }
       ]

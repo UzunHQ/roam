@@ -22,7 +22,18 @@ import { existsSync } from 'node:fs';
 const CONTEXT_BUFFER_M = 50; // corridor half-width, each side of a road's centre line
 const FRONT_M = 25; // "first row": the building's nearest corner is this close to the centre line
 const LANE_Y = [-350, 560]; // Roehampton Lane, metres north of ORIGIN: Chadwick Hall's south end to Southlands' north wall
-const CLARENCE_X = [-243, 175]; // Clarence Lane, metres east of ORIGIN: south of Froebel (the Alton estate, further west, stays out)
+const CLARENCE_X = [-395, 175]; // Clarence Lane, metres east of ORIGIN: south of Froebel, to the campus's south-west corner
+const LONG_BLOCK_M = 45; // west of CLARENCE_WEST_X, a block of flats longer than this is the Alton estate's: left out
+const CLARENCE_WEST_X = -243;
+const NORTH_LINE = [[-177, 497], [166, 559]]; // the campus's north edge (build-campus MAP_EDGE), run on east: nothing north of it
+const HOSPITAL_MAX_X = 300; // Queen Mary's Hospital: only its part facing Roehampton Lane (metres east of ORIGIN)
+const LOW_HEIGHT = { 'relation/13124867': 4.5 }; // single-storey buildings OSM gives no height for (Eastwood Nursery School): a guess, not verified
+// a row of plain low houses where a road's first row is empty (decoration, `generated: true`)
+const HOUSE = { front: 7.5, depth: 9, gap: 13, setback: 17, height: [4.8, 6.4] };
+const HOUSE_ROWS = [
+  { road: 'clarence', side: 'south', from: -235, to: 150 }, // Clarence Lane's south side, below Froebel
+  { road: 'lane', side: 'east', from: -350, to: -170 }, // Roehampton Lane's east side, across from Chadwick Hall
+];
 const PLOT_PAD_M = 10; // round Chadwick Hall's plot (its trees stand just outside the wall)
 const GRID_M = 4; // the zone's outline is traced on a grid this fine, then smoothed
 const TREE_GAP_M = 11; // open ground in the zone gets a tree about this far apart (some gaps left)
@@ -136,10 +147,11 @@ const southOfClarence = (p) => {
   const y = a[0] === b[0] ? a[1] : a[1] + ((b[1] - a[1]) * (p[0] - a[0])) / (b[0] - a[0]);
   return p[1] < y;
 };
+const northOfCampus = (p) => { const [a, b] = NORTH_LINE; return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]) > 0; };
 const inCampus = (p) => pointInRing(p, EDGE) && westOfLane(p) && !southOfClarence(p);
 const inPlot = (p) => PLOT.length > 0 && (pointInRing(p, PLOT) || distToSegs(p, plotSegs) <= PLOT_PAD_M);
-const inSite = (p) => SITE.length > 0 && pointInRing(p, SITE);
-const inCorridor = (p) => distToSegs(p, laneSegs) <= CONTEXT_BUFFER_M || distToSegs(p, clarenceSegs) <= CONTEXT_BUFFER_M;
+const inSite = (p) => SITE.length > 0 && p[0] <= HOSPITAL_MAX_X && pointInRing(p, SITE);
+const inCorridor = (p) => !northOfCampus(p) && (distToSegs(p, laneSegs) <= CONTEXT_BUFFER_M || distToSegs(p, clarenceSegs) <= CONTEXT_BUFFER_M);
 // places on buildings outside all that (Eastwood Nursery School): their building and a little round it
 const outerOf = (e) => {
   if (e.type === 'way') return e.geometry?.length > 3 ? e.geometry.map(ll) : null;
@@ -188,9 +200,21 @@ fc.features = features;
 // ---------- Queen Mary's Hospital: one clean block ----------
 // OSM draws the main building as a multipolygon with four light wells; Roam draws its outline only
 // (no courtyards), with the hospital's own look (src/map.ts: light walls, red roof edge)
+// keep the part of a ring west of x = X (Sutherland-Hodgman against one line)
+const clipWest = (ring, X) => {
+  const pts = ring.slice(0, -1), out = [];
+  pts.forEach((p, k) => {
+    const q = pts[(k + 1) % pts.length], pin = p[0] <= X, qin = q[0] <= X;
+    if (pin) out.push(p);
+    if (pin !== qin) { const t = (X - p[0]) / (q[0] - p[0]); out.push([X, p[1] + (q[1] - p[1]) * t]); }
+  });
+  return out.length >= 3 ? [...out, out[0]] : null;
+};
 for (const f of features) {
   if (f.properties.osmId !== 'relation/1481954') continue;
-  f.geometry.coordinates = [f.geometry.coordinates[0]];
+  // and only its front, along Roehampton Lane: the wings behind it go
+  const front = clipWest(f.geometry.coordinates[0].map(toM), HOSPITAL_MAX_X);
+  f.geometry.coordinates = [front ? front.map(fromM) : f.geometry.coordinates[0]];
   f.properties.hospital = true;
   delete f.properties.courtyards;
 }
@@ -216,8 +240,13 @@ for (const e of osm.elements) {
     if (!PITCHED.has(e.tags.building) && e.tags.building !== 'apartments') why = 'hospital';
   } else if (a < 15) continue; // sheds and bin stores
   else if (inCampus(c) && m.every(inZone)) why = 'campus'; // inside the campus but not the university's (Ibstock Place School)
+  else if (northOfCampus(c)) continue;
   else if (c[1] >= LANE_Y[0] && c[1] <= LANE_Y[1] && firstRow(m, c, laneSegs)) why = 'lane';
-  else if (firstRow(m, c, clarenceSegs)) why = 'clarence';
+  else if (firstRow(m, c, clarenceSegs)) {
+    const xs = m.map((q) => q[0]), ys = m.map((q) => q[1]);
+    if (c[0] < CLARENCE_WEST_X && e.tags.building === 'apartments' && Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) > LONG_BLOCK_M) continue;
+    why = 'clarence';
+  }
   if (!why) continue;
   counts[why]++;
   have.add(id);
@@ -225,19 +254,141 @@ for (const e of osm.elements) {
   const pitched = PITCHED.has(e.tags.building) && e.tags['roof:shape'] !== 'flat' && ring.length <= 12;
   features.push({
     type: 'Feature', id,
-    properties: { layer: 'building', osmId: id, name: e.tags.name ?? null, building: e.tags.building, height: heightOf(e.tags), campus: false, college: null, context: true, ...(pitched ? { roof: 'tile' } : {}), ...(why === 'hospital' ? { hospital: true } : {}) },
+    properties: { layer: 'building', osmId: id, name: e.tags.name ?? null, building: e.tags.building, height: LOW_HEIGHT[id] ?? heightOf(e.tags), campus: false, college: null, context: true, ...(pitched ? { roof: 'tile' } : {}), ...(why === 'hospital' ? { hospital: true } : {}) },
     geometry: { type: 'Polygon', coordinates: [ring.map((p) => [round(p[0]), round(p[1])])] },
   });
 }
 
-// ---------- the hospital's car park ----------
-let parks = 0;
+const FOOT_SET = new Set(['footway', 'path', 'steps', 'pedestrian', 'cycleway', 'bridleway', 'track']);
+// ---------- OSM's roads and footpaths in the zone that campus.geojson doesn't have yet ----------
+const ROADISH = new Set(['footway', 'path', 'pedestrian', 'steps', 'cycleway', 'track', 'service', 'living_street', 'residential', 'unclassified', 'tertiary', 'secondary', 'primary', 'trunk']);
+const kindOf = (h) => (['footway', 'path', 'pedestrian', 'steps', 'cycleway', 'track'].includes(h) ? 'footpath' : ['service', 'living_street'].includes(h) ? 'service' : 'road');
+let newPaths = 0;
+for (const h of highways) {
+  const id = `way/${h.id}`;
+  if (have.has(id) || !ROADISH.has(h.tags.highway) || h.tags.access === 'private' && !h.pts.some(inSite)) continue;
+  if (h.pts.some(northOfCampus) && !h.pts.some(inCampus)) continue;
+  // only the part inside the zone (and the hospital's site: its front only)
+  const runs = [];
+  let run = [];
+  for (const q of h.pts) {
+    if (inZone(q) && !inCampus(q) && !(q[0] > HOSPITAL_MAX_X && pointInRing(q, SITE))) run.push(q);
+    else { if (run.length > 1) runs.push(run); run = []; }
+  }
+  if (run.length > 1) runs.push(run);
+  runs.forEach((r, k) => {
+    features.push({ type: 'Feature', id: runs.length > 1 ? `${id}#${k + 1}` : id, properties: { layer: 'path', kind: kindOf(h.tags.highway), highway: h.tags.highway, name: h.tags.name ?? null, context: true }, geometry: { type: 'LineString', coordinates: r.map(fromM) } });
+    newPaths++;
+  });
+  have.add(id);
+}
+
+// ---------- the hospital's car park: OSM's, its front part, with bays and a few parked cars ----------
+const CAR = { long: 4.3, wide: 1.8, pitch: 2.6, aisleHalf: 3, colours: 6, taken: 0.35 };
+const hash = (...n) => { const v = Math.sin(n.reduce((a, b, i) => a + b * (12.9898 + i * 78.233), 0)) * 43758.5453; return v - Math.floor(v); };
+const overlap = (a, b) => [a, b].every((poly) => poly.every((p, i) => {
+  const q = poly[(i + 1) % poly.length], ax = [q[1] - p[1], p[0] - q[0]];
+  const proj = (pts) => pts.map((r) => r[0] * ax[0] + r[1] * ax[1]);
+  const pa = proj(a), pb = proj(b);
+  return Math.max(...pa) > Math.min(...pb) + 1e-6 && Math.max(...pb) > Math.min(...pa) + 1e-6;
+}));
+let parks = 0, bayCount = 0, carCount = 0;
+const bayLines = [];
+const HOSPITAL_PARK = 'way/104678854';
 for (const e of osm.elements) {
   if (e.type !== 'way' || e.tags?.amenity !== 'parking' || !e.geometry || !SITE.length) continue;
-  const m = e.geometry.map((p) => toM(ll(p)));
-  if (!inSite(centre(m))) continue;
-  features.push({ type: 'Feature', id: `way/${e.id}`, properties: { layer: 'parking', context: true, osmId: `way/${e.id}` }, geometry: { type: 'Polygon', coordinates: [e.geometry.map((p) => [round(p.lon), round(p.lat)])] } });
+  const full = e.geometry.map((p) => toM(ll(p)));
+  const m = clipWest(full, HOSPITAL_MAX_X);
+  if (!m || !inSite(centre(m)) && !m.some(inSite)) continue;
+  features.push({ type: 'Feature', id: `way/${e.id}`, properties: { layer: 'parking', context: true, osmId: `way/${e.id}`, ...(`way/${e.id}` === HOSPITAL_PARK ? { place: 'queen-marys-hospital-car-park' } : {}) }, geometry: { type: 'Polygon', coordinates: [m.map(fromM)] } });
   parks++;
+  // bays: square to OSM's parking aisles, both sides, wholly inside the lot and off every other way
+  const aisles = highways.filter((h) => h.tags.service === 'parking_aisle' && h.pts.some((q) => pointInRing(q, full)));
+  const others = highways.filter((h) => h.tags.service !== 'parking_aisle').flatMap((h) => segsOf(h.pts));
+  const bays = [];
+  for (const h of aisles) for (const [a, b] of segsOf(h.pts)) {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (len < CAR.pitch) continue;
+    const u = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+    for (let d = CAR.pitch; d < len - CAR.pitch / 2; d += CAR.pitch) for (const side of [1, -1]) {
+      const nrm = [-u[1] * side, u[0] * side], off = CAR.aisleHalf + CAR.long / 2;
+      const c = [a[0] + u[0] * d + nrm[0] * off, a[1] + u[1] * d + nrm[1] * off];
+      const corners = [[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([i, j]) => [c[0] + nrm[0] * (CAR.long / 2) * i + u[0] * (CAR.pitch / 2) * j, c[1] + nrm[1] * (CAR.long / 2) * i + u[1] * (CAR.pitch / 2) * j]);
+      if (!corners.every((q) => pointInRing(q, m))) continue;
+      if (bays.some((bb) => overlap(bb, corners)) || corners.some((q) => distToSegs(q, others) < 1.5)) continue;
+      bays.push(corners);
+      const k = bays.length;
+      // the bay's two side lines (a thin painted line; shared sides drawn twice, unseen)
+      for (const j of [1, -1]) {
+        const s0 = [c[0] - nrm[0] * (CAR.long / 2) + u[0] * (CAR.pitch / 2) * j, c[1] - nrm[1] * (CAR.long / 2) + u[1] * (CAR.pitch / 2) * j];
+        const s1 = [c[0] + nrm[0] * (CAR.long / 2) + u[0] * (CAR.pitch / 2) * j, c[1] + nrm[1] * (CAR.long / 2) + u[1] * (CAR.pitch / 2) * j];
+        bayLines.push([fromM(s0), fromM(s1)]);
+      }
+      if (hash(e.id % 997, k, 1) > CAR.taken) continue;
+      const ang = Math.round((Math.atan2(nrm[1], nrm[0]) + (hash(e.id % 997, k, 2) - 0.5) * 0.08) * 1000) / 1000;
+      features.push({ type: 'Feature', properties: { layer: 'car', context: true, a: ang, c: Math.floor(hash(e.id % 997, k, 3) * CAR.colours) }, geometry: { type: 'Point', coordinates: fromM(c) } });
+      carCount++;
+    }
+  }
+  bayCount += bays.length;
+  // one feature for all the painted lines (small file)
+  if (bayLines.length) features.push({ type: 'Feature', properties: { layer: 'courtline', context: true, bay: true }, geometry: { type: 'MultiLineString', coordinates: bayLines.splice(0) } });
+  if (`way/${e.id}` === HOSPITAL_PARK) console.log(`hospital car park centre ${JSON.stringify(fromM(centre(m)))}`);
+}
+
+// ---------- low houses where a road's first row is empty (decoration) ----------
+const houseRings = [];
+const roadSegsAll = highways.filter((h) => !FOOT_SET.has(h.tags.highway)).flatMap((h) => segsOf(h.pts));
+const footSegsAll = highways.filter((h) => FOOT_SET.has(h.tags.highway)).flatMap((h) => segsOf(h.pts));
+const stopPts = places.filter((p) => p.kind === 'bus-stop' || p.category === 'entrance').map((p) => toM(p.position));
+const parkRingsNow = features.filter((f) => f.properties.layer === 'parking' && f.geometry.type === 'Polygon').map((f) => f.geometry.coordinates[0].map(toM));
+const greenOSM = osm.elements.filter((e) => e.type === 'way' && e.geometry && /grass|park|recreation_ground|playground|pitch/.test(`${e.tags?.landuse} ${e.tags?.leisure}`)).map((e) => e.geometry.map((p) => toM(ll(p))));
+let gen = 0;
+for (const row of HOUSE_ROWS) {
+  // the road's centre line, as [a, b] segments, ordered along x (Clarence) or y (the lane)
+  const axis = row.road === 'clarence' ? 0 : 1;
+  const segs = row.road === 'clarence' ? clarenceSegs : laneSegs;
+  for (let t = row.from; t <= row.to; t += HOUSE.gap) {
+    const seg = segs.find(([a, b]) => (t - a[axis]) * (t - b[axis]) <= 0);
+    if (!seg) continue;
+    const [a, b] = seg, k = (t - a[axis]) / (b[axis] - a[axis] || 1);
+    const q = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+    let u = [b[0] - a[0], b[1] - a[1]];
+    const L = Math.hypot(...u); u = [u[0] / L, u[1] / L];
+    let n = [-u[1], u[0]]; // left of the road's direction
+    const want = row.side === 'south' ? [0, -1] : row.side === 'north' ? [0, 1] : row.side === 'east' ? [1, 0] : [-1, 0];
+    if (n[0] * want[0] + n[1] * want[1] < 0) n = [-n[0], -n[1]];
+    const c = [q[0] + n[0] * (HOUSE.setback + HOUSE.depth / 2), q[1] + n[1] * (HOUSE.setback + HOUSE.depth / 2)];
+    const ring = [[1, 1], [1, -1], [-1, -1], [-1, 1], [1, 1]].map(([i, j]) => [c[0] + n[0] * (HOUSE.depth / 2) * i + u[0] * (HOUSE.front / 2) * j, c[1] + n[1] * (HOUSE.depth / 2) * i + u[1] * (HOUSE.front / 2) * j]);
+    const near = (p, d) => bRings.some((r) => pointInRing(p, r) || segsOf(r).some(([s, e2]) => segDist(p, s, e2) < d));
+    const pts = [...ring.slice(0, 4), c];
+    if (!pts.every((p) => inZone(p) && !inCampus(p) && !inPlot(p) && !inSite(p))) continue;
+    if (pts.some((p) => near(p, 4)) || bRings.some((r) => ring.some((p) => pointInRing(p, r)) || r.some((p) => pointInRing(p, ring)))) continue;
+    if (pts.some((p) => distToSegs(p, roadSegsAll) < 6 || distToSegs(p, footSegsAll) < 1.5)) continue;
+    if (pts.some((p) => parkRingsNow.some((r) => pointInRing(p, r)) || stopPts.some((s) => Math.hypot(s[0] - p[0], s[1] - p[1]) < 10))) continue;
+    if (greenOSM.some((r) => pointInRing(c, r))) continue; // a green, not a garden
+    gen++;
+    bRings.push(ring);
+    houseRings.push(ring);
+    const h = HOUSE.height[0] + rand() * (HOUSE.height[1] - HOUSE.height[0]);
+    features.push({ type: 'Feature', id: `gen/house/${gen}`, properties: { layer: 'building', name: null, building: 'house', height: Math.round(h * 10) / 10, campus: false, college: null, context: true, generated: true, roof: 'tile' }, geometry: { type: 'Polygon', coordinates: [ring.map(fromM)] } });
+  }
+}
+
+// ---------- OSM's grass and small parks in the zone, outside the campus (the estates' greens) ----------
+let greens = 0;
+for (const e of osm.elements) {
+  if (e.type !== 'way' || !e.geometry || !/^(grass|village_green|recreation_ground)$/.test(e.tags?.landuse ?? '') && !/^(park|garden)$/.test(e.tags?.leisure ?? '')) continue;
+  const m = e.geometry.map((p) => toM(ll(p)));
+  if (m.length < 4 || area(m) < 40) continue;
+  // the part in the zone: kept when most of it is (the zone's frame covers the rest)
+  const inside = m.filter((p) => inZone(p) && !inCampus(p) && !inPlot(p)).length / m.length;
+  const c = centre(m);
+  if (inside < 0.6 || !inZone(c) || inCampus(c) || inPlot(c) || have.has(`way/${e.id}`)) continue;
+  if (c[0] < CLARENCE_WEST_X && southOfClarence(c) && area(m) > 2500) continue; // the Alton estate's big lawns
+  have.add(`way/${e.id}`);
+  features.push({ type: 'Feature', id: `way/${e.id}`, properties: { layer: 'green', wooded: false, context: true, osmId: `way/${e.id}` }, geometry: { type: 'Polygon', coordinates: [m.map(fromM)] } });
+  greens++;
 }
 
 // ---------- the running track on the Playing Field ----------
@@ -269,6 +420,7 @@ const clear = (p) =>
   && !parkingRings.some((r) => pointInRing(p, r))
   && !trees.some((t) => Math.hypot(t[0] - p[0], t[1] - p[1]) < 5.5);
 const added = { osm: 0, lane: 0, chadwick: 0, open: 0 };
+// generated houses get a small front garden tree now and then (planted after the rows below)
 const plant = (p, kind, s = 0.85 + rand() * 0.45) => {
   trees.push(p);
   features.push({ type: 'Feature', properties: { layer: 'tree', context: true, ...(kind === 'osm' ? {} : { generated: true }), s: Math.round(s * 100) / 100 }, geometry: { type: 'Point', coordinates: fromM(p) } });
@@ -384,5 +536,6 @@ await writeFile(OUT, JSON.stringify(fc));
 console.log(`context zone (buffer ${CONTEXT_BUFFER_M} m, first row within ${FRONT_M} m): ${outers.length} part(s), ${holes.length} hole(s)`);
 console.log(`  removed outside it: ${JSON.stringify(removed)}`);
 console.log(`  buildings added: ${JSON.stringify(counts)}; hospital car parks: ${parks}; running track: ${track ? 'yes' : 'no'}`);
+console.log(`  generated houses: ${gen}; greens: ${greens}; roads and paths: ${newPaths}; car-park bays: ${bayCount}, cars: ${carCount}`);
 console.log(`  trees added: ${JSON.stringify(added)}`);
 console.log(`  campus.geojson ${Math.round(sizeBefore / 1024)} KB -> ${Math.round(JSON.stringify(fc).length / 1024)} KB (before slim-geojson)`);
