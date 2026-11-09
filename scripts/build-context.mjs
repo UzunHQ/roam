@@ -22,7 +22,7 @@ import { existsSync } from 'node:fs';
 const CONTEXT_BUFFER_M = 50; // corridor half-width, each side of a road's centre line
 const FRONT_M = 25; // "first row": the building's nearest corner is this close to the centre line
 const LANE_Y = [-350, 560]; // Roehampton Lane, metres north of ORIGIN: Chadwick Hall's south end to Southlands' north wall
-const CLARENCE_X = [-395, 175]; // Clarence Lane, metres east of ORIGIN: south of Froebel, to the campus's south-west corner
+const CLARENCE_X = [-243, 175]; // Clarence Lane, metres east of ORIGIN: south of Froebel (west of it, south of the lane, is the Alton estate: left out)
 const LONG_BLOCK_M = 45; // west of CLARENCE_WEST_X, a block of flats longer than this is the Alton estate's: left out
 const CLARENCE_WEST_X = -243;
 const NORTH_LINE = [[-177, 497], [166, 559]]; // the campus's north edge (build-campus MAP_EDGE), run on east: nothing north of it
@@ -32,8 +32,16 @@ const LOW_HEIGHT = { 'relation/13124867': 4.5 }; // single-storey buildings OSM 
 const HOUSE = { front: 7.5, depth: 9, gap: 13, setback: 17, height: [4.8, 6.4] };
 const HOUSE_ROWS = [
   { road: 'clarence', side: 'south', from: -235, to: 150 }, // Clarence Lane's south side, below Froebel
-  { road: 'lane', side: 'east', from: -350, to: -170 }, // Roehampton Lane's east side, across from Chadwick Hall
 ];
+// plots across the roads, drawn whole (their OSM outline, cut straight at `maxX` where they run on
+// far behind): the ground, every building wholly inside, their roads, grass and trees
+const PARCELS = [
+  { osm: 'way/385820703', name: null, maxX: 300 }, // Roehampton House's estate, east of Roehampton Lane (landuse=residential), as far as Mendez Way
+  { osm: 'way/393563929', name: 'Eastwood Nursery School and Children\'s Centre' }, // south of Chadwick Hall
+  { osm: 'way/393563927', name: 'Mosaic Jewish Primary School' }, // south of that
+];
+const PARCEL_MAX_HEIGHT = 7; // their buildings stay low (context)
+const HOSPITAL_NORTH_CLEAR = [55, 200]; // east of the lane, just north of the hospital: no buildings (y, metres)
 const PLOT_PAD_M = 10; // round Chadwick Hall's plot (its trees stand just outside the wall)
 const GRID_M = 4; // the zone's outline is traced on a grid this fine, then smoothed
 const TREE_GAP_M = 11; // open ground in the zone gets a tree about this far apart (some gaps left)
@@ -52,6 +60,8 @@ const query = `[out:json][timeout:110];
   way["highway"](${BOX});
   node["entrance"](${BOX});
   relation["leisure"="track"](${BOX});
+  way(id:385820703,393563929,393563927);
+  way["landuse"~"^(grass|village_green|recreation_ground)$"](${BOX});
 );
 out body geom;`;
 
@@ -80,6 +90,16 @@ const segDist = (p, a, b) => {
   const t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)) : 0;
   return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
 };
+// keep the part of a ring west of x = X (Sutherland-Hodgman against one line)
+function clipWest(ring, X) {
+  const pts = ring.slice(0, -1), out = [];
+  pts.forEach((p, k) => {
+    const q = pts[(k + 1) % pts.length], pin = p[0] <= X, qin = q[0] <= X;
+    if (pin) out.push(p);
+    if (pin !== qin) { const t = (X - p[0]) / (q[0] - p[0]); out.push([X, p[1] + (q[1] - p[1]) * t]); }
+  });
+  return out.length >= 3 ? [...out, out[0]] : null;
+}
 const segsOf = (line) => line.slice(1).map((b, i) => [line[i], b]);
 const distToSegs = (p, segs) => segs.reduce((d, [a, b]) => Math.min(d, segDist(p, a, b)), Infinity);
 const pointInRing = (p, r) => {
@@ -160,9 +180,21 @@ const outerOf = (e) => {
   return outers.sort((a, b) => area(b.map(toM)) - area(a.map(toM)))[0] ?? null;
 };
 const footprints = new Set(places.map((p) => p.footprintId).filter(Boolean));
-const placeRings = osm.elements.filter((e) => footprints.has(`${e.type}/${e.id}`) && e.tags?.building).map(outerOf).filter(Boolean).map((r) => r.map(toM));
+// (the hospital's: its front part only)
+const placeRings = osm.elements.filter((e) => footprints.has(`${e.type}/${e.id}`) && e.tags?.building)
+  .map((e) => { const r = outerOf(e)?.map(toM); return r && e.id === 1481954 ? clipWest(r, HOSPITAL_MAX_X) : r; }).filter(Boolean);
 const nearPlace = (p) => placeRings.some((r) => pointInRing(p, r) || distToSegs(p, segsOf(r)) <= 6);
-const inZone = (p) => inCampus(p) || inPlot(p) || inSite(p) || inCorridor(p) || nearPlace(p);
+const parcelRings = PARCELS.map((pc) => {
+  const [type, id] = pc.osm.split('/');
+  const e = [...osm.elements, ...mainOsm.elements].find((x) => x.type === type && String(x.id) === id && x.geometry);
+  if (!e) { console.warn(`parcel ${pc.osm} not in the download`); return null; }
+  const r = e.geometry.map((p) => toM(ll(p)));
+  return { ...pc, ring: pc.maxX ? clipWest(r, pc.maxX) : r };
+}).filter((x) => x?.ring);
+const inParcel = (p, pad = 0) => parcelRings.some(({ ring }) => pointInRing(p, ring) || (pad > 0 && distToSegs(p, segsOf(ring)) <= pad));
+// nothing south of Clarence Lane west of Froebel's south-west corner (the Alton estate)
+const swCut = (p) => p[0] < CLARENCE_WEST_X && southOfClarence(p);
+const inZone = (p) => inCampus(p) || inPlot(p) || inSite(p) || inParcel(p) || (inCorridor(p) && !swCut(p)) || nearPlace(p);
 
 // ---------- what was there, outside the zone, goes ----------
 const removed = { building: 0, tree: 0, path: 0, other: 0 };
@@ -200,16 +232,6 @@ fc.features = features;
 // ---------- Queen Mary's Hospital: one clean block ----------
 // OSM draws the main building as a multipolygon with four light wells; Roam draws its outline only
 // (no courtyards), with the hospital's own look (src/map.ts: light walls, red roof edge)
-// keep the part of a ring west of x = X (Sutherland-Hodgman against one line)
-const clipWest = (ring, X) => {
-  const pts = ring.slice(0, -1), out = [];
-  pts.forEach((p, k) => {
-    const q = pts[(k + 1) % pts.length], pin = p[0] <= X, qin = q[0] <= X;
-    if (pin) out.push(p);
-    if (pin !== qin) { const t = (X - p[0]) / (q[0] - p[0]); out.push([X, p[1] + (q[1] - p[1]) * t]); }
-  });
-  return out.length >= 3 ? [...out, out[0]] : null;
-};
 for (const f of features) {
   if (f.properties.osmId !== 'relation/1481954') continue;
   // and only its front, along Roehampton Lane: the wings behind it go
@@ -223,7 +245,7 @@ for (const f of features) {
 const have = new Set(features.map((f) => f.properties.osmId ?? f.id).filter(Boolean));
 const heightOf = (t) => (t.height ? parseFloat(t.height) || null : t['building:levels'] ? (parseFloat(t['building:levels']) || 2) * 3.2 : null);
 const PITCHED = new Set(['house', 'detached', 'semidetached_house', 'terrace', 'bungalow']);
-const counts = { lane: 0, clarence: 0, campus: 0, hospital: 0, place: 0 };
+const counts = { lane: 0, clarence: 0, campus: 0, hospital: 0, place: 0, parcel: 0 };
 const bRings = features.filter((f) => f.properties.layer === 'building').map((f) => f.geometry.coordinates[0].map(toM));
 const firstRow = (m, c, segs) => segs.length > 0 && distToSegs(c, segs) <= CONTEXT_BUFFER_M && ringDist(m, segs) <= FRONT_M;
 for (const e of osm.elements) {
@@ -239,9 +261,12 @@ for (const e of osm.elements) {
     // the hospital's own buildings (not the houses along the site's edge)
     if (!PITCHED.has(e.tags.building) && e.tags.building !== 'apartments') why = 'hospital';
   } else if (a < 15) continue; // sheds and bin stores
+  else if (inParcel(c)) { if (m.every((q) => inParcel(q, 2))) why = 'parcel'; else continue; } // whole buildings only
   else if (inCampus(c) && m.every(inZone)) why = 'campus'; // inside the campus but not the university's (Ibstock Place School)
   else if (northOfCampus(c)) continue;
+  else if (!westOfLane(c) && c[1] >= HOSPITAL_NORTH_CLEAR[0] && c[1] <= HOSPITAL_NORTH_CLEAR[1]) continue;
   else if (c[1] >= LANE_Y[0] && c[1] <= LANE_Y[1] && firstRow(m, c, laneSegs)) why = 'lane';
+  else if (swCut(c)) continue;
   else if (firstRow(m, c, clarenceSegs)) {
     const xs = m.map((q) => q[0]), ys = m.map((q) => q[1]);
     if (c[0] < CLARENCE_WEST_X && e.tags.building === 'apartments' && Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) > LONG_BLOCK_M) continue;
@@ -254,7 +279,7 @@ for (const e of osm.elements) {
   const pitched = PITCHED.has(e.tags.building) && e.tags['roof:shape'] !== 'flat' && ring.length <= 12;
   features.push({
     type: 'Feature', id,
-    properties: { layer: 'building', osmId: id, name: e.tags.name ?? null, building: e.tags.building, height: LOW_HEIGHT[id] ?? heightOf(e.tags), campus: false, college: null, context: true, ...(pitched ? { roof: 'tile' } : {}), ...(why === 'hospital' ? { hospital: true } : {}) },
+    properties: { layer: 'building', osmId: id, name: e.tags.name ?? null, building: e.tags.building, height: LOW_HEIGHT[id] ?? (why === 'parcel' ? Math.min(PARCEL_MAX_HEIGHT, heightOf(e.tags) ?? 9) : heightOf(e.tags)), campus: false, college: null, context: true, ...(pitched ? { roof: 'tile' } : {}), ...(why === 'hospital' ? { hospital: true } : {}) },
     geometry: { type: 'Polygon', coordinates: [ring.map((p) => [round(p[0]), round(p[1])])] },
   });
 }
@@ -389,6 +414,11 @@ for (const e of osm.elements) {
   have.add(`way/${e.id}`);
   features.push({ type: 'Feature', id: `way/${e.id}`, properties: { layer: 'green', wooded: false, context: true, osmId: `way/${e.id}` }, geometry: { type: 'Polygon', coordinates: [m.map(fromM)] } });
   greens++;
+}
+
+// ---------- the plots' ground ----------
+for (const pc of parcelRings) {
+  features.push({ type: 'Feature', id: `lot/${pc.osm}`, properties: { layer: 'lot', context: true, osmId: pc.osm, name: pc.name }, geometry: { type: 'Polygon', coordinates: [pc.ring.map(fromM)] } });
 }
 
 // ---------- the running track on the Playing Field ----------

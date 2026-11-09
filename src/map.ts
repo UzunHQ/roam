@@ -109,6 +109,8 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     'zone-fade': { 'line-color': p.outside },
     // every lawn, meadow and wood in one green, so neighbouring OSM areas don't show as patches; sports fields stand out
     green: { 'fill-color': ['case', ['coalesce', ['get', 'field'], false], p.pitch, p.wood] },
+    // the plots across the roads (an estate, a school's grounds): lawn, with a thin edge
+    lot: { 'fill-color': p.green, 'fill-outline-color': p.wood },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
     parking: { 'fill-color': p.road }, // the same asphalt as the roads
     golf: { 'fill-color': ['match', ['get', 'kind'], 'fairway', p.golf.fairway, 'tee', p.golf.tee, 'green', p.golf.green, 'bunker', p.golf.bunker, 'water', p.golf.water, p.golf.rough] },
@@ -986,6 +988,7 @@ export function createMap(opts: {
     },
     layers: [
       { id: 'background', type: 'background', paint: {} },
+      { id: 'lot', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'lot'], paint: {} },
       { id: 'green', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'green'], paint: {} },
       // the golf course west of campus: rough, fairways, tees, greens and bunkers, flat on the grass
       { id: 'golf', type: 'fill', source: 'campus', filter: ['==', ['get', 'layer'], 'golf'], paint: { 'fill-antialias': true } },

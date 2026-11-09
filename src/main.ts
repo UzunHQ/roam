@@ -278,13 +278,13 @@ async function main() {
     const pts = places.filter(onCampus).map((p) => p.position);
     return [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
   })();
-  const HOME_BEARING_WIDE = -10;
+  const HOME_BEARING_WIDE = -15;
   const homeZoom = () => (innerWidth < 500 ? 16.1 : 16.7);
   // The home view: the four parts of campus filling the screen, clearly tilted (like a 3D city view
   // in Apple or Google Maps): facing north, Southlands at the top, Froebel in the middle, Chadwick
   // Hall bottom right. The tilt also squeezes the far (northern) half, so the long campus fits a wide
   // screen closer than a flat view would.
-  const HOME = { get bearing() { return isDesktop() ? HOME_BEARING_WIDE : 0; }, get pitch() { return isDesktop() ? 58 : 56; } };
+  const HOME = { get bearing() { return isDesktop() ? HOME_BEARING_WIDE : -10; }, get pitch() { return isDesktop() ? 57 : 56; } };
   map?.jumpTo({ center: campusCenter, zoom: homeZoom(), bearing: HOME.bearing, pitch: HOME.pitch });
   // Every deliberate camera move goes through here: live GPS following waits for it to finish
   // instead of cutting it short (MapLibre's easeTo stops whatever move is running).
@@ -297,10 +297,13 @@ async function main() {
     map?.flyTo({ ...opts, curve: 1.2, essential: true });
   };
   // the home view frames the campus itself: its places and every campus building (its footprint's
-  // corners). The wall's far corners (by the park and the golf course) and the houses across the road
-  // are left out, so the view comes in closer.
+  // corners), plus the hospital and the plots across the road. The wall's far corners (by the park and
+  // the golf course) are left out, so the view comes in closer.
   const campusPoints: LngLat[] = places.filter(onCampus).map((p) => p.position);
   for (const f of campus.features) {
+    // the plots across the road (Roehampton House's estate, the schools south of Chadwick Hall) and
+    // the hospital belong to the map's island too: framed whole
+    if ((f.properties?.layer === 'lot' || f.properties?.hospital) && f.geometry.type === 'Polygon') { campusPoints.push(...(f.geometry.coordinates[0] as LngLat[])); continue; }
     if (f.properties?.layer !== 'building' || f.properties?.campus === false || f.geometry.type !== 'Polygon') continue;
     const ring = f.geometry.coordinates[0] as LngLat[];
     const xs = ring.map((c) => c[0]), ys = ring.map((c) => c[1]);
