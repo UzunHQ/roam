@@ -557,7 +557,9 @@ async function main() {
       const dx = Math.round(pt.x + w > right ? right - (pt.x + w) : pt.x - w < 8 ? 8 - (pt.x - w) : 0);
       a.marker.setOffset([dx, 0]);
       const hh = near ? 16 : 20;
-      const box: Box = [pt.x + dx - w, pt.y - hh, pt.x + dx + w, pt.y + hh];
+      // (4 px each side between two names is room enough: 8 hid Froebel's next to Digby Stuart's on a phone)
+      const bw = w - 4;
+      const box: Box = [pt.x + dx - bw, pt.y - hh, pt.x + dx + bw, pt.y + hh];
       // a route's start and end pins (and their names) come first; and two names never overlap
       if (routePinBoxes.some((r) => box[0] < r.right && box[2] > r.left && box[1] < r.bottom && box[3] > r.top) || areaBoxes.some(over(box))) { a.el.classList.add('hidden'); continue; }
       areaBoxes.push(box);
