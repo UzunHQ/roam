@@ -1296,8 +1296,22 @@ export function bounceBuilding(map: MLMap, osmId: string) {
   requestAnimationFrame(tick);
 }
 
+/**
+ * Runs a change to the map's style now, or, if the style hasn't finished loading (a place chosen
+ * from the search in the first seconds on a slow phone), once the map has loaded.
+ */
+function whenLoaded(map: MLMap, change: () => void) {
+  try { change(); } catch (e) {
+    if (!/not done loading/i.test(String((e as Error)?.message))) throw e;
+    map.once('load', change);
+  }
+}
+
 let selectedId: string | null = null;
 export function selectBuilding(map: MLMap, osmId: string | null) {
+  whenLoaded(map, () => selectBuildingNow(map, osmId));
+}
+function selectBuildingNow(map: MLMap, osmId: string | null) {
   if (selectedId) for (const source of ['buildings', 'roofparts']) map.setFeatureState({ source, id: selectedId }, { selected: false });
   selectedId = osmId;
   // half of a split block: only that half lights up, drawn over the block
@@ -1312,12 +1326,14 @@ export function selectBuilding(map: MLMap, osmId: string | null) {
  */
 let xray = '';
 export function setXray(map: MLMap, ids: string[]) {
+  whenLoaded(map, () => setXrayNow(map, ids));
+}
+function setXrayNow(map: MLMap, ids: string[]) {
   // a split block is one building on the map: see through all of it
   const blocks = new Set(halves.filter((h) => ids.includes(h.id)).map((h) => h.block));
   const sorted = [...new Set([...ids, ...halves.filter((h) => blocks.has(h.block)).map((h) => h.id)])].sort();
   const key = sorted.join(',');
   if (key === xray || !map.getLayer('building-ghost')) return;
-  xray = key;
   const out: Expr = ['!', inIds(sorted)];
   const any = sorted.length > 0;
   map.setFilter('building-walls', any ? out : null);
@@ -1326,6 +1342,8 @@ export function setXray(map: MLMap, ids: string[]) {
   map.setFilter('roof-solar', any ? ['all', SOLAR_FILTER, out] : SOLAR_FILTER);
   map.setFilter('roof-solar-far', any ? ['all', SOLAR_FAR_FILTER, out] : SOLAR_FAR_FILTER);
   map.setFilter('building-ghost', inIds(sorted));
+  // only once every filter took: a retry after the map loads must not think it's already done
+  xray = key;
 }
 
 export function setGeoJSON(map: MLMap, source: 'user' | 'route' | 'hop', data: GeoJSON.Feature | GeoJSON.FeatureCollection) {
@@ -1336,6 +1354,9 @@ export const lineFeature = (coords: LngLat[]): GeoJSON.Feature => ({ type: 'Feat
 
 /** Trees standing on or right beside a route are hidden while it shows, so the line stays readable. */
 export function clearTreesAlong(map: MLMap, line: LngLat[] | null, metres = 7) {
+  whenLoaded(map, () => clearTreesAlongNow(map, line, metres));
+}
+function clearTreesAlongNow(map: MLMap, line: LngLat[] | null, metres: number) {
   const hide: number[] = [];
   if (line && line.length > 1) {
     const k = 111320, cos = Math.cos((line[0][1] * Math.PI) / 180);

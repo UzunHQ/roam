@@ -111,6 +111,40 @@ const layout = () => {
   await ctx.close();
 }
 
+// ---------- a place chosen from the search before the map has loaded ----------
+// (on a slow phone the search works while "Loading the campus map…" still shows: choosing a place
+// then used to throw "Style is not done loading")
+{
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  await ctx.addInitScript(() => { try { localStorage.setItem('roam.welcomed', '1'); } catch { /* */ } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  // a slow phone (or a tab in the background): the first frames come late, and MapLibre finishes
+  // loading the style only in a frame, so the search is ready a few seconds before the map is
+  await page.addInitScript(() => {
+    const raf = window.requestAnimationFrame.bind(window), t0 = performance.now();
+    window.requestAnimationFrame = (cb) => (performance.now() - t0 < 8000 ? setTimeout(() => raf(cb), 4000) : raf(cb));
+  });
+  await page.goto(BASE + '/?notrack', { waitUntil: 'domcontentloaded' });
+  // type as soon as the search answers (before the data arrives, typing does nothing yet)
+  for (let i = 0; i < 120; i++) {
+    await page.fill('#q', '');
+    await page.fill('#q', 'Ma101');
+    if (await page.waitForSelector('#results:not([hidden]) button[data-i]', { timeout: 500 }).then(() => true, () => false)) break;
+  }
+  const stillLoading = await page.locator('#loading').isVisible();
+  await page.locator('#results button[data-i]').first().click({ noWaitAfter: true });
+  await page.waitForSelector('#loading', { state: 'hidden', timeout: 90_000 });
+  await page.waitForTimeout(2500);
+  const name = await page.locator('#panel-name').innerText().catch(() => '');
+  check('early choice: chosen while the map was still loading', stillLoading);
+  check('early choice: its card shows the Mandela Building once the map is up', name === 'Mandela Building', name);
+  check('early choice: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+
 // ---------- a link, and directions, on a laptop ----------
 {
   const { page, ctx, errors } = await open([1440, 900], '/?place=library');
