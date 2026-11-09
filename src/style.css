@@ -264,6 +264,9 @@ svg { display: block; flex: none; }
   transition: transform 0.12s;
 }
 .ctl:active { transform: scale(0.93); }
+.ctl:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+.ctl.ctl-off { display: none; }
+.controls.no-room { opacity: 0; pointer-events: none; }
 .ctl svg { width: 20px; height: 20px; transition: transform 0.2s; }
 #zoom-in { border-radius: 14px 14px 4px 4px; }
 #zoom-out { border-radius: 4px 4px 14px 14px; margin-top: -4px; }
@@ -300,8 +303,8 @@ svg { display: block; flex: none; }
 @media (max-width: 899px) {
   .controls { transition: bottom 0.18s var(--ease), opacity 0.15s; }
   body.panel-open .controls { bottom: calc(var(--sheet-h, 0px) + 10px); }
-  body.panel-open #zoom-in, body.panel-open #zoom-out, body.panel-open #dim { display: none; }
-  body.panel-open.sheet-tall .controls, body.panel-open .key-btn, body.panel-open .key { opacity: 0; pointer-events: none; }
+  /* which controls fit above the sheet is worked out in fitControls() (main.ts) */
+  body.panel-open .key-btn, body.panel-open .key { opacity: 0; pointer-events: none; }
 }
 .ctl.dim { font: 800 13px/1 system-ui, sans-serif; letter-spacing: 0.02em; }
 .ctl.locate.following { background: var(--primary); color: var(--primary-ink); }

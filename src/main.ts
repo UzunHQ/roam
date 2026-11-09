@@ -604,8 +604,48 @@ async function main() {
   keyBtn.addEventListener('click', () => toggleKey());
 
   // ---------- map controls ----------
-  $('#zoom-in').addEventListener('click', () => map && camMove({ zoom: Math.min(map.getMaxZoom(), map.getZoom() + 1), duration: ms(250) }));
-  $('#zoom-out').addEventListener('click', () => map && camMove({ zoom: Math.max(map.getMinZoom(), map.getZoom() - 1), duration: ms(250) }));
+  // Zoom about the middle of the part of the map you can see (not the screen's centre, which on a
+  // phone sits behind the card), so the place you're looking at stays in view.
+  const zoomInBtn = $<HTMLButtonElement>('#zoom-in'), zoomOutBtn = $<HTMLButtonElement>('#zoom-out');
+  const zoomBy = (dz: number) => {
+    if (!map) return;
+    const a = freeArea();
+    const around = map.unproject([(a.left + Math.min(a.right, innerWidth)) / 2, (a.top + a.bottom) / 2]);
+    const target = Math.max(lowestZoom(), Math.min(map.getMaxZoom(), map.getZoom() + dz));
+    camMove({ zoom: target, around, duration: ms(250) });
+  };
+  zoomInBtn.addEventListener('click', () => zoomBy(1));
+  zoomOutBtn.addEventListener('click', () => zoomBy(-1));
+  /**
+   * How far out the camera can go: minZoom, or less far when the screen would show more than the
+   * map's maxBounds (MapLibre stops there). Same sum as MapLibre's: the bounds' Web Mercator width
+   * and height against the canvas, in 512 px tiles.
+   */
+  function lowestZoom(): number {
+    if (!map) return 0;
+    const b = map.getMaxBounds();
+    if (!b) return map.getMinZoom();
+    const mx = (lng: number) => (lng + 180) / 360;
+    const my = (lat: number) => (1 - Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) / Math.PI) / 2;
+    const c = map.getCanvas();
+    const need = Math.max(c.clientWidth / ((mx(b.getEast()) - mx(b.getWest())) * 512), c.clientHeight / ((my(b.getSouth()) - my(b.getNorth())) * 512));
+    return Math.max(map.getMinZoom(), Math.log2(need));
+  }
+  /** + and − turn off at the limits (and say so to screen readers) */
+  let zoomRaf = 0;
+  function updateZoomButtons() {
+    cancelAnimationFrame(zoomRaf);
+    zoomRaf = requestAnimationFrame(() => {
+      if (!map) return;
+      const z = map.getZoom();
+      const set = (b: HTMLButtonElement, off: boolean) => { if (b.disabled !== off) { b.disabled = off; b.setAttribute('aria-disabled', String(off)); } };
+      set(zoomInBtn, z >= map.getMaxZoom() - 0.02);
+      set(zoomOutBtn, z <= lowestZoom() + 0.02);
+    });
+  }
+  map?.on('zoom', updateZoomButtons);
+  map?.on('resize', updateZoomButtons);
+  map?.once('load', updateZoomButtons);
   let flat = false; // 2D: looking straight down
   const tilt = (pitch: number) => (flat ? 0 : pitch);
   $('#north').addEventListener('click', () => camMove({ bearing: 0, pitch: tilt(55), duration: ms(400) }));
@@ -1171,8 +1211,27 @@ async function main() {
     const h = panel.hidden ? 0 : panel.offsetHeight;
     document.documentElement.style.setProperty('--sheet-h', `${h}px`);
     document.body.classList.toggle('sheet-tall', h > innerHeight * 0.55);
-    setTimeout(layoutMarkers, 220); // after the controls have slid
+    fitControls();
+    setTimeout(() => { fitControls(); layoutMarkers(); }, 220); // after the controls have slid
   }).observe(panel);
+  /**
+   * Phones: above a card or the list there may not be room for every control. Keep as many as fit
+   * between the chips and the sheet, most useful first: zoom in and out, find me, north, whole
+   * campus, 2D/3D. With no room even for the zoom pair, the controls fade out.
+   */
+  function fitControls() {
+    const ctls = $('.controls');
+    const all = ['zoom-in', 'zoom-out', 'findme', 'north', 'whole', 'dim'].map((id) => document.getElementById(id)!);
+    all.forEach((b) => b.classList.remove('ctl-off'));
+    ctls.classList.remove('no-room');
+    if (isDesktop() || document.body.classList.contains('no-map')) return;
+    const bottom = innerHeight - parseFloat(getComputedStyle(ctls).bottom);
+    const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--top-b')) || 160;
+    const fit = Math.floor((bottom - top - 8 + 6) / 50);
+    if (fit < 2) { ctls.classList.add('no-room'); return; }
+    all.slice(fit).forEach((b) => b.classList.add('ctl-off'));
+  }
+  addEventListener('resize', fitControls);
 
   // the selected place's door, when its entrance has been mapped
   const doorEl = document.createElement('div');
@@ -1992,6 +2051,7 @@ async function main() {
     if (note) n.textContent = note;
     $('#list').hidden = false;
     document.body.classList.add('list-open');
+    setTimeout(fitControls, 220);
     listBtn.setAttribute('aria-pressed', 'true');
     listBtn.setAttribute('aria-label', 'Show map');
     listBtn.innerHTML = icons.map;
@@ -2001,6 +2061,7 @@ async function main() {
     const hadFocus = $('#list').contains(document.activeElement);
     $('#list').hidden = true;
     document.body.classList.remove('list-open');
+    setTimeout(fitControls, 220);
     setListFull(false);
     if (hadFocus) listBtn.focus(); // focus goes back to the button that opened it
     listBtn.setAttribute('aria-pressed', 'false');
