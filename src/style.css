@@ -177,8 +177,19 @@ svg { display: block; flex: none; }
 .bus-routes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; padding: 0; list-style: none; }
 .bus-routes li { min-width: 40px; padding: 3px 8px; border-radius: 8px; background: #c8312b; color: #fff; font-weight: 800; text-align: center; }
 .bus-routes li.night { background: #1d3557; }
-.bus-info .tfl { width: 100%; }
-.bus-info .tfl svg:last-child { width: 16px; height: 16px; }
+.bus-all { margin: 10px 0 6px; font-size: 13px; color: var(--muted); }
+/* live times: one row a route, the next bus in bold, the ones after it lighter */
+.bus-live { min-height: 44px; }
+.bus-state { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); font-size: 14px; }
+.bus-next { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.bus-next li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border-radius: 12px; background: var(--surface-2); }
+.bus-line { min-width: 44px; padding: 3px 8px; border-radius: 8px; background: #c8312b; color: #fff; font-weight: 800; text-align: center; }
+.bus-line.night { background: #1d3557; }
+.bus-to { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bus-mins { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bus-mins span { color: var(--muted); }
+.bus-credit { margin: 6px 0 0; }
+.panel:not(.expanded) .bus-info.live-ok :is(.bus-all, .bus-routes, .bus-routes + .small) { display: none; }
 .room-line { display: flex; flex-direction: column; gap: 2px; margin: 0 0 10px; padding: 10px 12px; border-radius: 14px; background: var(--unknown-bg); font-size: 14px; }
 .room-line b { font-size: 15px; }
 .room-line small { color: var(--muted); }
@@ -799,6 +810,18 @@ html[data-motion="off"] .ripple, html[data-motion="off"] .avatar .halo { display
   pointer-events: none;
 }
 .door-pin svg { width: 14px; height: 14px; }
+/* a meeting point: dropped by a press and hold, or opened from a shared link */
+.meet-pin { width: 40px; height: 48px; pointer-events: none; animation: meet-drop 0.28s var(--ease); }
+.meet-pin span {
+  width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50% 50% 50% 6px; rotate: -45deg;
+  background: var(--route); color: #fff; border: 3px solid #fff; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+.meet-pin svg { width: 20px; height: 20px; rotate: 45deg; }
+@keyframes meet-drop { from { translate: 0 -18px; opacity: 0; } }
+html[data-motion="reduced"] .meet-pin, html[data-motion="off"] .meet-pin { animation: none; }
+.cat-icon.g-meet { background: var(--route); color: #fff; }
+.key-meet { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--route); color: #fff; }
+.key-meet svg { width: 12px; height: 12px; }
 
 /* Animations setting (About) */
 .motion-set { margin: 14px 0 6px; padding: 0; border: 0; }

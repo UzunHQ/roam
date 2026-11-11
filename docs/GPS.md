@@ -77,20 +77,20 @@ campus paths (`data/paths.json`) with made-up noise (seeded Gaussian, independen
 
 | Case (synthetic) | Before | After | Pass mark |
 |---|---|---|---|
-| Walking, ±8 m noise: median distance to the path walked | 4.0 m | 0 m | < 3 m |
-| … 90th percentile, no speed from the phone | 9.3 m | 2.5 m | – |
-| … median distance from the true position, no speed / with speed | 6.8 / 6.5 m | 2.5 / 1.0 m | – |
-| Walking a shown route: median distance to the route | 4.0 m | 0 m | < 3 m |
-| Standing 2 min, ±10 m noise: total movement, worst of 50 (on a path / on a lawn) | 1,669 / 1,730 m | 0 / 0 m | < 2 m |
-| One reading 200 m off: worst distance from the truth around it | 200 m | 3.4 m | dropped, < 15 m |
-| Inside a building, accuracy 35 m: wandering inside | 1,213 m | 0 m ("Inside Library") | < 2 m |
-| First reading 40 m, a 8 m one 1.5 s later | 36 m off | 5.3 m | waits, < 10 m |
-| Only 40 m readings for 4 s, then 8 m ones | 36 m off | 0.4 m after 4 s | < 10 m |
-| Waiting 40 m before a route's end, ±10 m noise, 2 min: false arrivals | 32 | 0 | 0 |
+| Walking, ±8 m noise: median distance to the path walked | 3.9 m | 0 m | < 3 m |
+| … 90th percentile, no speed from the phone | 9.4 m | 6 m | – |
+| … median distance from the true position, no speed / with speed | 6.8 / 6.8 m | 2.9 / 1.1 m | – |
+| Walking a shown route: median distance to the route | 3.9 m | 0 m | < 3 m |
+| Standing 2 min, ±10 m noise: total movement, worst of 50 (on a path / on a lawn) | 1,664 / 1,698 m | 0 / 0 m | < 2 m |
+| One reading 200 m off: worst distance from the truth around it | 200 m | 1.5 m | dropped, < 15 m |
+| Inside a building, accuracy 35 m: wandering inside | 1,304 m | 0 m ("Inside Library") | < 2 m |
+| First reading 40 m, a 8 m one 1.5 s later | 36 m off | 3.2 m | waits, < 10 m |
+| Only 40 m readings for 4 s, then 8 m ones | 36 m off | 2 m after 4 s | < 10 m |
+| Waiting 40 m (in a straight line) from a route's end, ±10 m noise, 2 min: false arrivals | 6 | 0 | 0 |
 | Walking all the way in: arrival | yes | yes | yes |
 
 **The price** (also synthetic): after standing, the character sets off again after a median of
-**3 s** when the phone reports its speed (most phones do outdoors). It takes **17 s** when the
+**2 s** when the phone reports its speed (most phones do outdoors). It takes **17 s** when the
 phone doesn't and the readings are scattered ±8 m. Real logs will show which phones fall in the
 second group.
 
@@ -99,6 +99,14 @@ using Playwright's geolocation:
 - no step of the character is over 15 m;
 - it stands on the route line;
 - no errors.
+
+Numbers as of 11 Nov 2026, after the routes began to end at the doors the owner marked: the test
+walks now leave the mapped path for the last few metres to a door, which is why the 90th percentile
+without the phone's speed is 6 m (it was 2.5 m when routes ended on the path).
+
+- A route that doubles back by a door can put two positions a step apart much further apart on
+  the line. The character then goes one step (12 m) towards the spot and stands on the line
+  there (`noLeap`), so it still never leaps.
 
 ### Real measurements
 

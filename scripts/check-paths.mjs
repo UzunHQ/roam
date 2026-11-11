@@ -4,7 +4,9 @@
 //    data/paths-known.json with its OSM tag);
 // 3. dead ends on the campus grounds lead somewhere (a door, a building, a place, the map's edge);
 //    the ones left are listed in data/paths-known.json with a reason, or the check fails;
-// 4. every campus entrance and every place's door is on the graph (a node within 25 m);
+// 4. every campus entrance is on the graph (a node within 25 m), and every place's door joins a
+//    path the way the router joins it (src/route.ts): within 40 m, by a line clear of buildings.
+//    A door no mapped path reaches (a courtyard) is listed in data/paths-known.json;
 // 5. between the Library, the Students' Union, Chadwick Hall South, Whitelands and the Main
 //    entrance, every pair has a route, no longer than 2.2 times the straight line.
 // usage: node scripts/check-paths.mjs [--list]   (--list prints every finding, known or not)
@@ -94,16 +96,23 @@ const report = (name, problems, knownKeys = new Set()) => {
 // 4. entrances and doors on the graph
 {
   const problems = [];
+  const router = new Router(g);
+  const fps = new Map(world.buildings.map((b) => [b.id, b.ring]));
   const nearest = (ll) => { const p = M.xy(ll); let bd = Infinity; for (const q of N) bd = Math.min(bd, Math.hypot(q[0] - p[0], q[1] - p[1])); return bd; };
   for (const p of world.places) {
+    if (p.category === 'entrance') {
+      const d = nearest(p.position);
+      if (d > 25) problems.push({ key: `${p.id}@${key(p.position)}`, text: `${p.name}: the entrance is ${d.toFixed(0)} m from the nearest path node` });
+      continue;
+    }
     const doors = [...(p.entrances ?? []).filter((e) => e.type !== 'closed').map((e) => e.pos), ...(p.entrance ? [p.entrance] : [])];
-    const pts = p.category === 'entrance' ? [p.position] : doors;
-    for (const q of pts) {
-      const d = nearest(q);
-      if (d > 25) problems.push({ key: `${p.id}@${key(q)}`, text: `${p.name}: ${p.category === 'entrance' ? 'the entrance' : 'a door'} is ${d.toFixed(0)} m from the nearest path node` });
+    for (const q of doors) {
+      const j = router.joinOf(q, fps);
+      if (j.hop > 40) problems.push({ key: `${p.id}@${key(q)}`, text: `${p.name}: a door is ${j.hop.toFixed(0)} m from the nearest path` });
+      else if (!j.clear) problems.push({ key: `${p.id}@${key(q)}`, text: `${p.name}: no mapped path reaches a door (${j.hop.toFixed(0)} m from the nearest, through a building): the route shows that stretch dotted` });
     }
   }
-  report('every entrance and door is on the graph (within 25 m)', problems, new Set(Object.keys(known.offGraph ?? {})));
+  report('every entrance is on the graph, every door joins a path (within 40 m, clear of buildings)', problems, new Set(Object.keys(known.offGraph ?? {})));
 }
 
 // 5. routes between the main spots, and how direct they are

@@ -27,7 +27,9 @@ New students at Roehampton get lost, and the tools they have don't help much:
 
 - **Tap a building** to see what's inside, its opening hours and a link to the official page. Each fact shows the date it was last checked.
 - **Search by name or room code.** Type `Ma101` from your timetable and Roam opens the right building.
-- **Walking directions** along real campus paths, with a walking time.
+- **Walking directions** along real campus paths, with a walking time. Routes end at the building's door where it has been marked (82 doors so far, marked by a student and not yet checked on site).
+- **Live bus times** at the nine stops around campus, from TfL's open data.
+- **Meet me here:** press and hold the map (or right-click) to drop a pin, then share the link. Whoever opens it gets the spot and a walking route to it.
 - **Live library hours** from the university's LibCal feed, plus an "Open now" filter for food and study spaces.
 - **Find me:** a small avatar shows where you are.
 - **Works like an app:** add it to your home screen, use it offline, switch to dark mode.
@@ -89,7 +91,7 @@ Editing places, opening hours, photos and deploying: see the [developer notes](d
 
 ### Checks
 
-Every push and pull request runs [CI](.github/workflows/ci.yml): types, the build, `npm run check:hours`, `npm run check:data` (only places chosen on purpose, all on the map) and `npm run test:smoke` (search, links, categories, directions, and pins whose names never overlap and don't hop about as you pan, in a real browser). **If CI is red, don't merge.**
+Every push and pull request runs [CI](.github/workflows/ci.yml): types, the build, `npm run check:hours`, `npm run check:data` (only places chosen on purpose, all on the map), `npm run check:paths` (the walking graph, and every door joined to a path), `npm run check:gps`, `npm run check:bus` and `npm run test:smoke` (search, links, categories, directions, and pins whose names never overlap and don't hop about as you pan, in a real browser). **If CI is red, don't merge.**
 
 ```bash
 npx playwright-core install chromium   # once

@@ -22,6 +22,7 @@ jobs:
       - run: npm run check:data
       - run: npm run check:gps
       - run: npm run check:paths
+      - run: npm run check:bus
       - run: npx playwright-core install --with-deps chromium
       - name: Smoke tests
         run: |

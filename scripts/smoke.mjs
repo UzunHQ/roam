@@ -16,10 +16,12 @@ const check = (name, ok, detail = '') => {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}${detail ? ` (${detail})` : ''}`);
 };
 
-async function open(size, path = '/', { welcomed = true } = {}) {
+async function open(size, path = '/', { welcomed = true, tfl = null } = {}) {
   const [w, h] = size;
   const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, ...(w < 600 ? { isMobile: true, hasTouch: true } : {}) });
   if (welcomed) await ctx.addInitScript(() => { try { localStorage.setItem('roam.welcomed', '1'); } catch { /* */ } });
+  // TfL's live bus times, stood in for: a function gives the answer for each request, 'down' fails it
+  if (tfl) await ctx.route('https://api.tfl.gov.uk/**', (route) => (tfl === 'down' ? route.abort() : route.fulfill({ json: tfl() })));
   const page = await ctx.newPage();
   const errors = [];
   // the live library hours come from the university's site: a test machine may not reach it (the app falls back)
@@ -208,6 +210,95 @@ const layout = () => {
     check('gps walk: with the route shown, the character stands on its line', onLine >= shown.length * 0.9, `${onLine}/${shown.length} on the line`);
   } else console.log('skip gps walk (no window.roamDebug: run against the dev server)');
   check('gps walk: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+
+// ---------- a bus stop's live times (TfL stood in for) ----------
+{
+  const bus = (line, to, secs) => ({ lineName: line, destinationName: to, timeToStation: secs, expectedArrival: new Date(Date.now() + secs * 1000).toISOString(), modeName: 'bus' });
+  const { page, ctx, errors } = await open([375, 812], '/?place=bus-main-entrance-x', { tfl: () => [bus('265', 'Putney Bridge', 200), bus('493', 'Richmond', 20), bus('265', 'Putney Bridge', 900), bus('419', 'Hammersmith', 500)] });
+  await page.waitForSelector('#panel:not([hidden]) .bus-next li', { timeout: 15_000 }).catch(() => {});
+  const rows = await page.locator('.bus-next li').allInnerTexts();
+  check('bus stop: the next buses, soonest route first', rows.length === 3 && /^493/.test(rows[0]) && /due/.test(rows[0]), rows.join(' | ').replace(/\s+/g, ' '));
+  check('bus stop: a route shows its next bus and the one after', /265/.test(rows[1] ?? '') && /3 min/.test(rows[1] ?? '') && /14|15/.test(rows[1] ?? ''), (rows[1] ?? '').replace(/\s+/g, ' '));
+  check('bus stop: TfL is credited', /Powered by TfL Open Data/.test(await page.locator('.bus-credit').innerText().catch(() => '')));
+  check('bus stop: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+{
+  const { page, ctx, errors } = await open([375, 812], '/?place=bus-main-entrance-x', { tfl: 'down' });
+  await page.waitForFunction(() => /aren’t available/.test(document.querySelector('.bus-live')?.textContent ?? ''), null, { timeout: 15_000 }).catch(() => {});
+  check('bus stop: TfL unreachable, the card says so and still links to TfL', /aren’t available/.test(await page.locator('.bus-live').innerText()) && (await page.locator('.bus-info a[href*="tfl.gov.uk/bus/stop"]').count()) === 1);
+  check('bus stop (TfL down): no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+
+// ---------- a meeting point: a shared link, a press and hold, a right-click ----------
+{
+  const { page, ctx, errors } = await open([390, 844], '/?meet=51.45790,-0.24430', { welcomed: false });
+  await page.waitForSelector('#panel:not([hidden])', { timeout: 15_000 }).catch(() => {});
+  check('meeting link: its card opens (no welcome in the way)', (await page.locator('#panel-name').innerText().catch(() => '')) === 'Meeting point' && !(await page.locator('#welcome').isVisible()));
+  check('meeting link: says where it is', /Elm Grove|Library/.test(await page.locator('#panel .meta').innerText().catch(() => '')), await page.locator('#panel .meta').innerText().catch(() => ''));
+  check('meeting link: the pin is on the map', (await page.locator('.meet-pin').count()) === 1);
+  await page.click('#panel .dir');
+  await page.fill('#from-input', 'Froebel Gate');
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => /min/.test(document.querySelector('#route-result')?.textContent ?? ''), null, { timeout: 15_000 }).catch(() => {});
+  const res = (await page.locator('#route-result').innerText()).replace(/\s+/g, ' ');
+  check('meeting link: a walking route to it', /min/.test(res) && /nearest the pin/.test(res), res.slice(0, 80));
+  await page.click('#panel .close');
+  await page.waitForTimeout(400);
+  check('meeting link: closing takes the pin and the link away', (await page.locator('.meet-pin').count()) === 0 && !/meet=/.test(page.url()));
+  // press and hold an empty spot (real touch events): a pin, and the finger lifting doesn't close it
+  const cdp = await ctx.newCDPSession(page);
+  const box = await page.locator('#map canvas').boundingBox();
+  const x = Math.round(box.x + box.width * 0.5), y = Math.round(box.y + box.height * 0.45);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  await page.waitForTimeout(900);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.waitForTimeout(900);
+  check('press and hold: drops a meeting pin with a link', (await page.locator('.meet-pin').count()) === 1 && /\?meet=51\.\d{5},-0\.\d{5}$/.test(page.url()) && (await page.locator('#panel-name').innerText().catch(() => '')) === 'Meeting point', page.url().split('/').pop());
+  check('meeting point: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+{
+  const { page, ctx, errors } = await open([1280, 800], '/?meet=48.85000,2.35000');
+  check('meeting link far from campus: the whole campus, and it says so', !/meet=/.test(page.url()) && !(await page.locator('#panel').isVisible()) && /isn't on the campus map/.test(await page.locator('body').innerText()));
+  await page.mouse.click(760, 420, { button: 'right' });
+  await page.waitForTimeout(900);
+  check('right-click: drops a meeting pin', (await page.locator('#panel-name').innerText().catch(() => '')) === 'Meeting point' && /meet=/.test(page.url()));
+  check('meeting point (laptop): no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+
+// ---------- doors: a route ends at the door, and says how sure that is ----------
+{
+  const { page, ctx, errors } = await open([1280, 860], '/?place=library');
+  await page.waitForSelector('#panel:not([hidden])');
+  await page.waitForTimeout(600);
+  check('doors: the Library shows a pin on each of its two doors', (await page.locator('.door-pin').count()) === 2);
+  const plan = async (from) => {
+    await page.click('#panel .dir');
+    await page.fill('#from-input', from);
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => /min/.test(document.querySelector('#route-result')?.textContent ?? ''), null, { timeout: 15_000 }).catch(() => {});
+    return (await page.locator('#route-result').innerText()).replace(/\s+/g, ' ');
+  };
+  const lib = await plan('Main entrance');
+  check('doors: the route to the Library ends at a door, not yet checked on site', /Ends at the door, marked by a student/.test(lib), lib.slice(0, 90));
+  if (await page.evaluate(() => !!window.roamDebug)) {
+    const end = await page.evaluate(() => { const r = window.roamDebug.route(); return { last: r.coordinates[r.coordinates.length - 1], door: r.door?.pos, kind: r.endsAt, hop: r.endHop.length }; });
+    check('doors: the line itself reaches the door', end.kind === 'entrance-unverified' && end.hop === 0 && end.last[0] === end.door[0] && end.last[1] === end.door[1], JSON.stringify(end));
+  }
+  // a door in a courtyard no mapped path reaches: the route says so, and the last stretch is its own (dotted) line
+  await page.goto(BASE + '/?place=fincham-building&notrack');
+  await page.waitForSelector('#panel:not([hidden])');
+  await page.waitForTimeout(600);
+  const fin = await plan('Main entrance');
+  check("doors: where no path reaches the door, the route says so", /aren’t on a mapped path/.test(fin), fin.slice(0, 110));
+  check('doors: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
   await ctx.close();
 }
 

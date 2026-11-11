@@ -57,6 +57,18 @@
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.24496,
+            51.459675
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -108,6 +120,28 @@
           "title": "AccessAble: Wesley Court",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244301,
+            51.459843
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244745,
+            51.459815
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -150,6 +184,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244986,
+            51.459258
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -199,6 +245,18 @@
           "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
           "title": "Digby Stuart College",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.245238,
+            51.458805
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -252,6 +310,28 @@
           "title": "AccessAble: Elm Grove Hall",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244288,
+            51.457346
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.243957,
+            51.457906
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -303,6 +383,18 @@
           "title": "AccessAble: Bede House",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243536,
+            51.456973
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -350,6 +442,28 @@
           "url": "https://www.roehampton.ac.uk/student-life/colleges/digby-stuart-college/",
           "title": "Digby Stuart College",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244045,
+            51.456277
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244254,
+            51.456385
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -411,6 +525,18 @@
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243587,
+            51.455803
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -453,6 +579,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.250097,
+            51.455112
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -497,6 +635,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.249856,
+            51.45509
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -545,6 +695,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.250021,
+            51.454903
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -607,6 +769,18 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.245284,
+            51.458251
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -659,6 +833,18 @@
           "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
           "title": "Facilities on campus",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.245281,
+            51.458078
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -723,6 +909,18 @@
           "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/fincham-building",
           "title": "AccessAble: Fincham Building",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.245025,
+            51.457664
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -804,6 +1002,18 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244586,
+            51.457277
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -859,6 +1069,28 @@
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.24464,
+            51.456602
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244638,
+            51.456776
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -912,6 +1144,29 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244326,
+            51.456421
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244318,
+            51.456266
+          ],
+          "type": "main",
+          "name": "The Shop entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -966,6 +1221,18 @@
           "title": "AccessAble: Michaelis Building",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.247446,
+            51.455997
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -1008,6 +1275,18 @@
           "url": "https://www.accessable.co.uk/university-of-roehampton/access-guides/by-003",
           "title": "AccessAble: BY.003",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.246458,
+            51.455507
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -1069,6 +1348,18 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.246863,
+            51.455816
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -1134,6 +1425,38 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.247326,
+            51.454649
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.24793,
+            51.454667
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.248517,
+            51.454866
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -1170,6 +1493,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.247066,
+            51.454674
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -1241,6 +1576,18 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.245636,
+            51.455048
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -1408,6 +1755,18 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.249957,
+            51.455189
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -1499,6 +1858,38 @@
         "accessible toilet (floor 1)",
         "bicycle shelters (in front)",
         "lecture halls"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243838,
+            51.459164
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244101,
+            51.459223
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.2442,
+            51.459766
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -1543,6 +1934,38 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243838,
+            51.459164
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244101,
+            51.459223
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.2442,
+            51.459766
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -1633,6 +2056,28 @@
       "tags": [
         "gender-neutral toilets",
         "printers (ground and first floor)"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244561,
+            51.457915
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244935,
+            51.457915
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -1719,6 +2164,28 @@
       "tags": [
         "gender-neutral toilets",
         "covered bike storage between Lee House and Elm Grove (ID card, 100 bikes)"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244288,
+            51.45734
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.243962,
+            51.457906
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -1824,6 +2291,18 @@
           "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
           "title": "Facilities on campus",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243264,
+            51.456994
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -2043,6 +2522,18 @@
           "title": "Digby Stuart College",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244121,
+            51.456925
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -2082,6 +2573,18 @@
           "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
           "title": "Facilities on campus",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244121,
+            51.456925
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -2152,6 +2655,18 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243643,
+            51.455348
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -2220,6 +2735,28 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.246623,
+            51.455417
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.246742,
+            51.455414
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -2277,6 +2814,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.247507,
+            51.455814
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -2609,6 +3158,18 @@
           "title": "Sport and Active Communities",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.247636,
+            51.455816
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -2653,6 +3214,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.247636,
+            51.455816
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -2705,6 +3278,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244186,
+            51.459061
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -2765,6 +3350,18 @@
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243804,
+            51.459101
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -2823,6 +3420,28 @@
           "url": "https://www.accessable.co.uk/venues/digby-chapel",
           "title": "AccessAble: Digby Chapel",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.24331,
+            51.456398
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.243494,
+            51.456394
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -2935,6 +3554,18 @@
           "title": "AccessAble: Fincham Building",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.245025,
+            51.457664
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -2984,6 +3615,18 @@
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243643,
+            51.455348
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -3028,6 +3671,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
           "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.243643,
+            51.455348
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -3089,6 +3744,18 @@
       ],
       "tags": [
         "college kitchen with microwaves and a hot water tap"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244445,
+            51.459046
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -3190,6 +3857,28 @@
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244045,
+            51.456277
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244254,
+            51.456385
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -3245,6 +3934,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244013,
+            51.456158
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -3385,6 +4086,41 @@
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.246582,
+            51.455063
+          ],
+          "type": "main",
+          "name": "Costa entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.24662,
+            51.455217
+          ],
+          "type": "main",
+          "name": "Union Bar entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.246716,
+            51.455263
+          ],
+          "type": "main",
+          "name": "Union Bar entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -3423,6 +4159,18 @@
           "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
           "title": "Cafés, bars and social spaces",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244194,
+            51.459186
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -3465,6 +4213,28 @@
           "url": "https://www.roehampton.ac.uk/student-support/our-facilities/",
           "title": "Facilities on campus",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244561,
+            51.457915
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.244935,
+            51.457915
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -3513,6 +4283,19 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.246582,
+            51.455063
+          ],
+          "type": "main",
+          "name": "Costa entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -3563,6 +4346,30 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.24662,
+            51.455217
+          ],
+          "type": "main",
+          "name": "Union Bar entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.246716,
+            51.455263
+          ],
+          "type": "main",
+          "name": "Union Bar entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -3623,6 +4430,41 @@
       ],
       "tags": [
         "gender-neutral toilets"
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.246582,
+            51.455063
+          ],
+          "type": "main",
+          "name": "Costa entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.24662,
+            51.455217
+          ],
+          "type": "main",
+          "name": "Union Bar entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.246716,
+            51.455263
+          ],
+          "type": "main",
+          "name": "Union Bar entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -3663,6 +4505,30 @@
           "url": "https://www.roehampton.ac.uk/student-life/our-campus/cafes-bars-and-social-spaces/",
           "title": "Cafés, bars and social spaces",
           "checked": "2026-10-23"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.24662,
+            51.455217
+          ],
+          "type": "main",
+          "name": "Union Bar entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        },
+        {
+          "pos": [
+            -0.246716,
+            51.455263
+          ],
+          "type": "main",
+          "name": "Union Bar entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -3718,6 +4584,19 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244318,
+            51.456266
+          ],
+          "type": "main",
+          "name": "The Shop entrance",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -4026,6 +4905,18 @@
           "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
           "title": "Campus map (September 2025), University of Roehampton",
           "checked": "2026-10-20"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.245025,
+            51.457664
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -4625,6 +5516,18 @@
           "title": "OpenStreetMap: building outline (name corrected on site)",
           "checked": "2026-11-08"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244514,
+            51.453371
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -4681,6 +5584,18 @@
           "title": "OpenStreetMap: building outline (name corrected on site)",
           "checked": "2026-11-08"
         }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244178,
+            51.453323
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
+        }
       ]
     },
     {
@@ -4730,6 +5645,18 @@
           "url": "https://www.openstreetmap.org/way/451250762",
           "title": "OpenStreetMap: Downshire House (footprint)",
           "checked": "2026-11-09"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.244352,
+            51.452777
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -4903,6 +5830,18 @@
           "url": "https://www.openstreetmap.org/way/639760368",
           "title": "OpenStreetMap way 639760368: footprint and name",
           "checked": "2026-11-09"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.242985,
+            51.448555
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     },
@@ -5547,6 +6486,18 @@
           "url": "https://www.openstreetmap.org/way/1049455201",
           "title": "OpenStreetMap way 1049455201: Danebury Avenue Car Park",
           "checked": "2026-11-09"
+        }
+      ],
+      "entrances": [
+        {
+          "pos": [
+            -0.242201,
+            51.449726
+          ],
+          "type": "main",
+          "verified": false,
+          "source": "Marked on the map by the owner, from memory",
+          "checked": "2026-11-11"
         }
       ]
     }

@@ -21,7 +21,6 @@
     "-0.24521,51.46008": "Parking aisle (OSM way/662927333) by Wesley Court: an aisle's end.",
     "-0.24442,51.46013": "Parking aisle (OSM way/662927333) by Wesley Court: its other end.",
     "-0.24495,51.45677": "OSM way/704464404 (service, 46 m) ends by Dorothy Buchanan: a service road to the building.",
-    "-0.24498,51.45917": "OSM footway way/944888333 (8 m) by Aldersgate Court: a short spur, probably to a door not mapped. Check on site.",
     "-0.24519,51.45966": "OSM footway way/944888338 (3 m) by Epworth Court: a short spur, probably to a door not mapped. Check on site.",
     "-0.24756,51.45544": "OSM path way/986473964 (8 m) by South Car Park: a short spur. Check on site.",
     "-0.24367,51.45976": "Parking aisle (OSM way/1216692136) in Southlands Car Park: an aisle's end.",
@@ -29,5 +28,10 @@
     "-0.24234,51.44862": "Parking aisle (OSM way/921118304) at Whitelands: an aisle's end.",
     "-0.24376,51.44900": "OSM footway way/921118306 (129 m) at Whitelands ends near Parkstead House. Check on site whether it reaches a door."
   },
-  "offGraph": {}
+  "offGraph": {
+    "fincham-building@-0.24502,51.45766": "Fincham's door (marked by the owner, 11 Nov 2026) is in the courtyard between Fincham and the Sir David Bell Building. OSM has no path into that courtyard, so the route shows the last 16 m dotted. Needs the walkway traced (owner, on site) or added to OSM.",
+    "fincham-prayer-rooms@-0.24502,51.45766": "Uses the Fincham Building's door: see fincham-building.",
+    "coexist-cafe@-0.24502,51.45766": "Uses the Fincham Building's door: see fincham-building.",
+    "michaelis-building@-0.24745,51.45600": "Michaelis's door (marked by the owner, 11 Nov 2026) is on its south-west side, where OSM has no path within 37 m that isn't behind a building. The route shows that stretch dotted. Needs the walkway traced (owner, on site) or added to OSM."
+  }
 }

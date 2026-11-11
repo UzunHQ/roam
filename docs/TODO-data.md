@@ -97,3 +97,13 @@ Findings checked and accepted are in `data/paths-known.json`, each with its reas
 - [ ] Dead ends to check on site: three short spurs (by Aldersgate Court, Epworth Court and South Car Park), and the 129 m Whitelands footway ending near Parkstead House (way/921118306). They may lead to doors not mapped. Listed in `data/paths-known.json`.
 - [ ] Gate positions: Southlands, Stuart Lodge and Clarence Lane gates in `places.json` (from the University's map) are 11–21 m from OSM's gate nodes. Which is right is unknown: check on site (`docs/osm-fixes.md`).
 
+## Doors (marked 11 Nov 2026)
+
+The owner marked the doors of 45 buildings on a top-down view of each (`docs/doors/2026-11-11-owner-marks.json`, applied with `node scripts/apply-doors.mjs`): 82 doors on 59 places, all main doors, `verified: false` (from memory, not checked on site). Routes now end at the door; the card lists them and shows a small door pin for each.
+
+- [ ] Check the doors on site, then set `verified: true` (the route note changes from "marked by a student" to "Ends at the … entrance").
+- [ ] **Fincham Building** (also the Fincham prayer rooms and The Coexist Café) and **Michaelis Building**: no mapped path reaches the door (a courtyard; 16 m and 37 m from the nearest path, behind a building). The route shows that last stretch dotted. Needs the walkway traced on site, or added to OpenStreetMap (`data/paths-known.json`, `offGraph`).
+- [ ] Not marked (owner didn't know, or skipped): Campus Safety and Security, Erasmus House (and The Base inside it), the four Whitelands halls, Whitelands Chapel.
+- [ ] **Lee House**: the owner noted "kapalı bina" (a closed building). Nothing changed in its record: ask whether it should say so, or come off the map.
+- [ ] Froebel Diner uses all three Montefiore doors (the owner said "same door" without saying which); Pub & Grub uses the Union Bar's two (its description puts it next to the bar). Confirm.
+

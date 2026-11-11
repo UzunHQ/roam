@@ -9,12 +9,13 @@ import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompa
 import { GpsFilter, nearEnd, pickHeading, type GpsStep, type GpsView } from './gps';
 import { clearGpsLog, gpsLogOn, logGps, readGpsLog, toGpx } from './gpslog';
 import { avatarSvg } from './avatar';
+import { byLine, fetchArrivals, minutesUntil, type Arrival } from './bus';
 import { Router, type Route } from './route';
 import { routeSteps } from './steps';
 import { isOpenNow, openState, refreshLiveHours, resolveHours, weekRows, type OpenState } from './hours';
 import { initAnalytics, track } from './analytics';
 import { FILTERS, GROUPS, PRIORITY, chipOf, filterLabel, groupLabel, groupOf, passesFilter, type Filter, type GroupId } from './categories';
-import type { LngLat, Place } from './types';
+import type { Entrance, LngLat, Place } from './types';
 
 // ---------- small helpers ----------
 const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
@@ -56,7 +57,11 @@ const ms = (d: number) => (motion() === 'full' ? d : 0);
 const isDesktop = () => innerWidth >= 900;
 /** a place's name inside a sentence: "the Library", "the Main entrance", but "Shaw House", "Froebel Gate" */
 const PROPER = /(House|Building|Hall|Court|Centre|Auditorium|Mausoleum|Chapel|Gate|Grove|Square|Diner|Costa)( (North|South|East|West))?$/;
-const theName = (name: string) => (/^The /.test(name) ? name.replace(/^The /, 'the ') : PROPER.test(name) ? name : `the ${name}`);
+const theName = (name: string) => (name === MEET_NAME ? 'the meeting point' : /^The /.test(name) ? name.replace(/^The /, 'the ') : PROPER.test(name) ? name : `the ${name}`);
+/** a meeting point: a spot picked on the map (press and hold), shared as /?meet=lat,lng. Not in places.json: a stand-in place. */
+const MEET_ID = 'meet';
+const MEET_NAME = 'Meeting point';
+const isMeet = (p: Place | null | undefined) => p?.id === MEET_ID;
 const fmtDate = (iso: string) => new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 /** a few kinds keep their own look whatever their group: the hospital's red H sign */
 // key surroundings (the hospital, its car park, bus stops, shops) keep a clear pin; every other
@@ -127,6 +132,12 @@ const MOVED: Record<string, string> = { 'chadwick-hall': 'chadwick-hall-south' }
 const movedId = (id: string) => MOVED[id] ?? id;
 const linkedId = ((id) => id && movedId(id))(new URLSearchParams(location.search).get('place'));
 const linkedRoom = new URLSearchParams(location.search).get('room');
+/** /?meet=51.45822,-0.24476 (latitude, longitude): a point, 'bad' when it doesn't read as one, null without the parameter */
+const linkedMeet = ((v): LngLat | 'bad' | null => {
+  if (v == null) return null;
+  const m = /^(-?\d{1,2}\.\d{3,7}),(-?\d{1,3}\.\d{3,7})$/.exec(v);
+  return m ? [Number(m[2]), Number(m[1])] : 'bad';
+})(new URLSearchParams(location.search).get('meet'));
 const welcome = $('#welcome');
 // The welcome card shows until you close it (X, Esc, Find me or Explore), then never again on this
 // device. Direct links to a building skip it. While it's open the mascot waves now and then.
@@ -161,7 +172,7 @@ function showWelcome() {
   document.body.classList.add('hello-open');
   waveLater(4, 1200);
 }
-if (!linkedId && store.get('roam.welcomed') !== '1') showWelcome();
+if (!linkedId && !linkedMeet && store.get('roam.welcomed') !== '1') showWelcome();
 $('#welcome-go').addEventListener('click', dismissWelcome);
 $('.hello-close').addEventListener('click', dismissWelcome);
 // "Find me" on the card does what the locate button does
@@ -843,7 +854,8 @@ async function main() {
     </ul>
     <ul><li><span class="swatch line-path"></span>Footpath</li><li><span class="swatch line-road"></span>Road</li><li><span class="swatch line-route"></span>Walking route</li>
       <li><span class="swatch sel-roof"></span>Selected building</li>
-      <li><span class="key-me">${avatarSvg.replace('width="48" height="63"', 'width="18" height="24"')}</span>You (after you share your location)</li></ul>`;
+      <li><span class="key-me">${avatarSvg.replace('width="48" height="63"', 'width="18" height="24"')}</span>You (after you share your location)</li>
+      <li><span class="key-meet">${icons.meet}</span>Meeting point: press and hold the map (or right-click), then share the link</li></ul>`;
   const keyBtn = $('#key-btn');
   const toggleKey = (open = key.hidden) => { key.hidden = !open; keyBtn.setAttribute('aria-expanded', String(open)); };
   keyBtn.addEventListener('click', () => toggleKey());
@@ -999,7 +1011,7 @@ async function main() {
     if (!flat) homes[kind] = { size, center, zoom };
   }
   // (opened on a shared place instead: the opening view is still worked out, for the near level's zoom)
-  map?.once('load', () => { if (!linkedId) showWholeCampus(0, 'main'); else homeView('main'); });
+  map?.once('load', () => { if (!linkedId && !linkedMeet) showWholeCampus(0, 'main'); else homeView('main'); });
   const northIcon = $('#north svg');
   map?.on('rotate', () => { northIcon.style.transform = `rotate(${-map!.getBearing()}deg)`; drawHeading(); });
 
@@ -1322,6 +1334,8 @@ async function main() {
     document.body.classList.add('panel-open');
   }
   function closePanel() {
+    stopBusWatch?.();
+    stopBusWatch = null;
     leaveNavMode();
     current = null;
     currentRoom = null;
@@ -1333,6 +1347,7 @@ async function main() {
     $$('.pin.selected').forEach((el) => el.classList.remove('selected'));
     if (map) selectBuilding(map, null);
     showDoor(null);
+    meetMarker.remove();
     history.replaceState(null, '', location.pathname);
     layoutMarkers();
     if (panelOpener && document.contains(panelOpener)) panelOpener.focus();
@@ -1355,13 +1370,13 @@ async function main() {
    * Fit points into the free part of the screen. Projects them at the target tilt, so tilted 3D
    * views fit too (fitBounds ignores the tilt, which pushed routes behind the panel on phones).
    */
-  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number; notch?: { top: number; right: number } }; duration?: number; side?: number; move?: boolean } = {}) {
+  function fitPoints(points: LngLat[], opts: { pitch?: number; bearing?: number; maxZoom?: number; box?: { l: number; r: number; t: number; b: number; notch?: { top: number; right: number } }; duration?: number; side?: number; top?: number; move?: boolean } = {}) {
     if (!map || !points.length) return null;
     const W = map.getCanvas().clientWidth, H = map.getCanvas().clientHeight;
     const a = freeArea();
     // pins stand about 20 px either side of their point and 40 px above it
     const side = opts.side ?? 20; // pins stand about 20 px either side of their point; their names reach further
-    const box = opts.box ?? { l: a.left + side, r: Math.min(a.right, W) - side, t: a.top + 30, b: Math.min(a.bottom, H) - 8 };
+    const box = opts.box ?? { l: a.left + side, r: Math.min(a.right, W) - side, t: a.top + (opts.top ?? 30), b: Math.min(a.bottom, H) - 8 };
     const zero = { top: 0, bottom: 0, left: 0, right: 0 };
     const before = { center: map.getCenter(), zoom: map.getZoom(), pitch: map.getPitch(), bearing: map.getBearing(), padding: map.getPadding() };
     const b = new mapMod!.maplibregl.LngLatBounds(points[0], points[0]);
@@ -1482,19 +1497,75 @@ async function main() {
     const TYPE = { main: 'Main entrance', accessible: 'Step-free entrance', 'card-required': 'Card access', closed: 'Closed entrance' } as const;
     const doors = [...(p.entrances ?? [])];
     if (!doors.length) return p.footprintId && p.category !== 'entrance' ? '<p class="small entrances">Entrances: not verified yet. Directions end on the path nearest the building.</p>' : '';
-    return `<ul class="entrances small">${doors.map((d) => `<li>${TYPE[d.type]}${d.name ? `: ${esc(d.name)}` : ''} · ${d.verified ? `checked${d.checked ? ` ${fmtDate(d.checked)}` : ''}` : 'not verified'}</li>`).join('')}</ul>`;
+    const state = (d: Entrance) => (d.verified ? `checked${d.checked ? ` ${fmtDate(d.checked)}` : ''}` : 'not checked on site yet');
+    // doors with a name (or a special kind) get a line each; plain main doors share one
+    const plain = doors.filter((d) => d.type === 'main' && !d.name);
+    const rows = doors.filter((d) => !plain.includes(d)).map((d) => `${d.name ? `${esc(d.name)}${d.type !== 'main' ? ` (${TYPE[d.type].toLowerCase()})` : ''}` : TYPE[d.type]} · ${state(d)}`);
+    if (plain.length) rows.unshift(`${plain.length === 1 ? (rows.length ? 'Entrance' : 'Main entrance') : `${plain.length} entrances`} · ${plain.every((d) => d.verified) ? state(plain[0]) : 'not checked on site yet'}`);
+    return `<ul class="entrances small" aria-label="Entrances (the small door pins on the map)">${rows.map((r) => `<li>${r}</li>`).join('')}</ul>`;
   }
 
-  /** a bus stop: which way its buses go, which routes stop there, and TfL's page for live times */
+  /** a bus stop: which way its buses go, the next buses (live, filled in by watchBus), and which routes stop there */
   function busBlock(p: Place): string {
     const b = p.bus;
     if (!b) return '';
     return `<div class="bus-info">
         <p class="bus-dir"><b>${esc(b.direction[0].toUpperCase() + b.direction.slice(1))}bound</b> · towards ${esc(b.towards)}</p>
-        <ul class="bus-routes" aria-label="Bus routes">${b.routes.map((r) => `<li${/^N/.test(r) ? ' class="night" title="Night bus"' : ''}>${esc(r)}</li>`).join('')}</ul>
-        <a class="btn ghost tfl" href="https://tfl.gov.uk/bus/stop/${encodeURIComponent(b.atco)}/" target="_blank" rel="noopener">${icons.bus}<span>Live times on TfL</span>${icons.external}</a>
-        <p class="small">Routes and direction from TfL, checked ${fmtDate(b.checked)}. Night buses start with N.</p>
+        <div class="bus-live"><p class="bus-state">Getting live times…</p></div>
+        <p class="bus-all"><span>All routes here:</span></p>
+        <ul class="bus-routes" aria-label="Bus routes that stop here">${b.routes.map((r) => `<li${/^N/.test(r) ? ' class="night" title="Night bus"' : ''}>${esc(r)}</li>`).join('')}</ul>
+        <p class="small">Routes and direction from TfL, checked ${fmtDate(b.checked)}. Night buses start with N. <a href="https://tfl.gov.uk/bus/stop/${encodeURIComponent(b.atco)}/" target="_blank" rel="noopener">This stop on TfL</a></p>
       </div>`;
+  }
+
+  /**
+   * Live times for the bus stop whose card is open: asked from TfL now and every 30 s, counted
+   * down in between, and only while the card is on screen and the page in front. One stop at a time.
+   */
+  let stopBusWatch: (() => void) | null = null;
+  const clock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  function watchBus(p: Place) {
+    stopBusWatch?.();
+    stopBusWatch = null;
+    const box = panelBody.querySelector<HTMLElement>('.bus-live');
+    if (!box || !p.bus) return;
+    const atco = p.bus.atco;
+    let buses: Arrival[] | null = null, fetched = 0, failed = false, asking = false, alive = true;
+    const draw = () => {
+      const now = Date.now();
+      // times older than two minutes aren't shown as live
+      const fresh = buses && now - fetched < 120_000 ? byLine(buses, now) : null;
+      // with live times showing, the list of every route here waits under "View details"
+      box.parentElement?.classList.toggle('live-ok', !!fresh);
+      if (!fresh) {
+        box.innerHTML = `<p class="bus-state">${failed ? 'Live times aren’t available right now.' : 'Getting live times…'}</p>`;
+        return;
+      }
+      const mins = (t: number) => { const m = minutesUntil(t, now); return m < 1 ? 'due' : `${m} min`; };
+      box.innerHTML = (fresh.length
+        ? `<ul class="bus-next" aria-label="Next buses">${fresh.map((g) => `<li><span class="bus-line${/^N/i.test(g.line) ? ' night' : ''}">${esc(g.line)}</span><span class="bus-to">${esc(g.to || 'See the bus')}</span><span class="bus-mins"><b>${mins(g.due[0])}</b>${g.due.length > 1 ? `<span> · ${g.due.slice(1).map((t) => minutesUntil(t, now)).join(' · ')}</span>` : ''}</span></li>`).join('')}</ul>`
+        : '<p class="bus-state">No buses expected in the next half hour.</p>')
+        + `<p class="small bus-credit">Live at ${clock.format(fetched)} · Powered by TfL Open Data</p>`;
+    };
+    const ask = async () => {
+      if (asking || !alive) return;
+      asking = true;
+      try { buses = await fetchArrivals(atco); fetched = Date.now(); failed = false; }
+      catch { failed = true; }
+      asking = false;
+      if (alive && box.isConnected) draw();
+    };
+    const tick = () => {
+      if (!box.isConnected) { stopBusWatch?.(); stopBusWatch = null; return; } // the card was replaced (directions, another place)
+      if (document.hidden) return;
+      if (Date.now() - fetched >= 29_000) void ask();
+      else draw();
+    };
+    const timer = window.setInterval(tick, 10_000);
+    const onShow = () => { if (!document.hidden) tick(); };
+    document.addEventListener('visibilitychange', onShow);
+    stopBusWatch = () => { alive = false; clearInterval(timer); document.removeEventListener('visibilitychange', onShow); };
+    void ask();
   }
   /**
    * The report form (or inbox) with the place filled in, its id included so the report can be matched
@@ -1510,6 +1581,7 @@ async function main() {
         : '';
   }
   function renderCard(p: Place, expanded = false) {
+    if (isMeet(p)) { stopBusWatch?.(); stopBusWatch = null; renderMeetCard(p); return; }
     const g = groupOf(p);
     const report = reportUrl(p);
     const src = p.sources?.[0];
@@ -1566,6 +1638,7 @@ async function main() {
     });
     // a missing photo simply disappears
     panelBody.querySelector<HTMLImageElement>('.photo')?.addEventListener('error', (e) => (e.target as HTMLElement).remove());
+    watchBus(p); // (stops any earlier stop's watch; does nothing for a place that isn't a bus stop)
   }
 
   function toggleSaved(p: Place, btn: HTMLElement) {
@@ -1658,16 +1731,79 @@ async function main() {
   }
   addEventListener('resize', fitControls);
 
-  // the selected place's door, when its entrance has been mapped
-  const doorEl = document.createElement('div');
-  doorEl.className = 'door-pin';
-  doorEl.setAttribute('aria-hidden', 'true');
-  doorEl.innerHTML = icons.entrance;
-  const doorMarker = new Marker({ element: doorEl, anchor: 'bottom' });
-  const showDoor = (p: Place | null) => { if (map && p?.entrance) doorMarker.setLngLat(p.entrance).addTo(map); else doorMarker.remove(); };
+  // the selected place's doors, where they have been mapped: a small pin on each
+  let doorMarkers: MLMarker[] = [];
+  const showDoor = (p: Place | null) => {
+    doorMarkers.forEach((m) => m.remove());
+    doorMarkers = [];
+    if (!map || !p) return;
+    for (const e of Router.doors(p)) {
+      const el = document.createElement('div');
+      el.className = 'door-pin';
+      el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = icons.entrance;
+      doorMarkers.push(new Marker({ element: el, anchor: 'bottom' }).setLngLat(e.pos).addTo(map));
+    }
+  };
 
   /** ?place=…, plus &room=… when a room was searched for */
-  const placeQuery = (p: Place) => `?place=${encodeURIComponent(p.id)}${currentRoom && current?.id === p.id ? `&room=${encodeURIComponent(currentRoom)}` : ''}`;
+  const placeQuery = (p: Place) => (isMeet(p) ? `?meet=${p.position[1].toFixed(5)},${p.position[0].toFixed(5)}` : `?place=${encodeURIComponent(p.id)}${currentRoom && current?.id === p.id ? `&room=${encodeURIComponent(currentRoom)}` : ''}`);
+
+  // ---------- a meeting point: press and hold the map (or right-click), then share the link ----------
+  const meetEl = document.createElement('div');
+  meetEl.className = 'meet-pin';
+  meetEl.setAttribute('aria-hidden', 'true');
+  meetEl.innerHTML = `<span>${icons.meet}</span>`; // (the drop shape is turned 45°: on a child, so MapLibre's own transform on the marker stays as it is)
+  const meetMarker = new Marker({ element: meetEl, anchor: 'bottom' });
+  /** where a point is, in words: by (or so far from) the nearest place with a pin */
+  function whereIs(at: LngLat): string {
+    let best: Place | null = null, d = Infinity;
+    for (const q of places) {
+      if (q.noPin || q.category === 'nearby') continue;
+      const dq = distanceM(at, q.position);
+      if (dq < d) { d = dq; best = q; }
+    }
+    if (!best || d > 400) return 'on the campus map';
+    return d < 15 ? `by ${theName(best.name)}` : `about ${formatDistance(d)} from ${theName(best.name)}`;
+  }
+  /** puts the meeting pin at a point on the map and opens its card; false when the point is off the map (or you're mid-walk) */
+  function dropMeet(at: LngLat, via: 'marker' | 'link'): boolean {
+    if (navigating) return false; // while walking, a stray press shouldn't replace the route
+    if (distanceToBounds(at, doc.bounds) > 0) return false;
+    const spot: Place = {
+      id: MEET_ID, code: '', name: MEET_NAME, aliases: [], roomCodePrefixes: [], category: 'building', kind: 'meet', college: null,
+      description: '', position: [Number(at[0].toFixed(5)), Number(at[1].toFixed(5))], positionSource: 'picked on the map', positionAccuracyM: 2,
+      entrance: null, footprintId: null, photo: null, lastVerified: null, status: 'confirmed',
+    };
+    clearRoute();
+    select(spot, { source: via });
+    if (map) meetMarker.setLngLat(spot.position).addTo(map);
+    return true;
+  }
+  function renderMeetCard(p: Place) {
+    const where = whereIs(p.position);
+    panelBody.innerHTML = `
+      <div class="p-head">
+        <span class="cat-icon g-meet">${icons.meet}</span>
+        <div class="titles">
+          <h2 id="panel-name" tabindex="-1">${MEET_NAME}</h2>
+          <p class="meta">${esc(where[0].toUpperCase() + where.slice(1))}</p>
+        </div>
+        <button class="icon-btn close" aria-label="Close">${icons.close}</button>
+      </div>
+      <p class="desc">Share this spot so friends can find it, or walk here yourself.</p>
+      <div class="actions">
+        <button class="btn primary dir">${icons.directions}<span>Take me there</span></button>
+        <button class="btn ghost share" aria-label="Share a link to this meeting point">${icons.share}<span>Share this spot</span></button>
+      </div>`;
+    panelBody.classList.remove('panel-body-in');
+    void panelBody.offsetWidth;
+    panelBody.classList.add('panel-body-in');
+    setExpanded(false);
+    panelBody.querySelector('.close')!.addEventListener('click', closePanel);
+    panelBody.querySelector('.dir')!.addEventListener('click', () => openDirections(p));
+    panelBody.querySelector('.share')!.addEventListener('click', () => share(p));
+  }
   /** "Ma101, Mandela Building" or just the building */
   const destName = (p: Place) => (currentRoom && current?.id === p.id ? `${currentRoom}, ${p.name}` : p.name);
   /** the same inside a sentence: "the Library", "Ma101, Mandela Building" */
@@ -1689,6 +1825,7 @@ async function main() {
     if (current?.id !== p.id) clearRoute();
     // a room stays with its building; picking any other way starts afresh
     currentRoom = opts.room ?? (current?.id === p.id && (opts.source === 'marker' || opts.source === 'building') ? currentRoom : null);
+    if (!isMeet(p)) meetMarker.remove();
     current = p;
     directionsOpen = false;
     renderCard(p);
@@ -1710,7 +1847,8 @@ async function main() {
   async function share(p: Place) {
     const url = `${location.origin}/${placeQuery(p)}`;
     if (navigator.share) {
-      try { await navigator.share({ title: `${destName(p)} · Roam`, text: currentRoom ? `Room ${currentRoom} is in the ${p.name}, on the Roehampton campus map` : `${p.name} on the Roehampton campus map`, url }); } catch { /* cancelled */ }
+      const text = isMeet(p) ? `Meet me here: ${whereIs(p.position)}, on the Roehampton campus map` : currentRoom ? `Room ${currentRoom} is in the ${p.name}, on the Roehampton campus map` : `${p.name} on the Roehampton campus map`;
+      try { await navigator.share({ title: `${destName(p)} · Roam`, text, url }); } catch { /* cancelled */ }
       return;
     }
     try {
@@ -1881,8 +2019,10 @@ async function main() {
 
   /** what we can honestly say about where the route ends */
   function endNote(r: Route, to: Place): string {
+    if (isMeet(to)) return 'The route ends on the path nearest the pin.';
     if (r.endsAt === 'entrance-verified') return `Ends at the ${esc(r.door?.name ?? `${to.name} entrance`)}${r.door?.type === 'card-required' ? ' (needs a university card)' : r.door?.type === 'accessible' ? ' (step-free entrance)' : ''}.`;
-    if (r.endsAt === 'entrance-unverified') return 'Ends at an entrance that hasn\'t been checked on site yet.';
+    if (r.endHop.length) return `The last ${formatDistance(distanceM(r.endHop[0], r.endHop[1]))} to the door ${r.door?.name ? `(${esc(r.door.name)}) ` : ''}aren’t on a mapped path: head for the door pin (dotted line).`;
+    if (r.endsAt === 'entrance-unverified') return `Ends at ${r.door?.name ? `the ${esc(r.door.name)}` : 'the door'}, marked by a student and not yet checked on site.`;
     const link = reportUrl(to, 'entrance');
     return 'Entrance not mapped yet – the route ends on the nearest path. Look for the door from there.'
       + (link ? ` <a class="btn ghost small-btn report-entrance" href="${esc(link)}"${link.startsWith('http') ? ' target="_blank" rel="noopener"' : ''}>Report the entrance</a>` : '');
@@ -2000,7 +2140,7 @@ async function main() {
       from: fromName ?? (picked ? 'the spot you picked' : null),
       startHopM: r.startHop.length === 2 ? distanceM(r.startHop[0], r.startHop[1]) : 0,
       dest: destInText(to),
-      arrive: offNote && rTo !== to ? `Arrive at ${theName(rTo.name)}; ${to.name} is about ${formatDistance(distanceM(rTo.position, to.position))} away, off campus.` : r.endsAt === 'nearest-path' ? `You're by ${destInText(to)}. ${to.footprintId ? 'Its entrance isn\'t verified yet.' : ''}`.trim() : `Arrive at ${destInText(to)}.`,
+      arrive: offNote && rTo !== to ? `Arrive at ${theName(rTo.name)}; ${to.name} is about ${formatDistance(distanceM(rTo.position, to.position))} away, off campus.` : r.endsAt === 'nearest-path' ? `You're by ${destInText(to)}. ${to.footprintId ? 'Its entrance isn\'t verified yet.' : ''}`.trim() : r.endHop.length ? `The path ends here. The door of ${destInText(to)} is about ${formatDistance(distanceM(r.endHop[0], r.endHop[1]))} further: head for the door pin.` : `Arrive at ${destInText(to)}${r.door?.name ? `: the ${r.door.name}` : ''}.`,
       landmark: (pt) => landmarkAt(pt, new Set([to.id, routeFrom?.id ?? ''])),
     });
     const notes = [
@@ -2067,7 +2207,7 @@ async function main() {
     routeShown = true;
     lastRoute = r;
     routeLine = [...r.startHop, ...r.coordinates];
-    routeEnd = r.coordinates[r.coordinates.length - 1];
+    routeEnd = r.door?.pos ?? r.coordinates[r.coordinates.length - 1]; // (the door itself, also where no mapped path reaches it)
     gps?.setRoute(routeLine); // the character walks on the route line while it shows
     arriveRun = 0;
     if (!quiet) {
@@ -2078,7 +2218,7 @@ async function main() {
       cancelAnimationFrame(drawAnim);
       setGeoJSON(map, 'route', lineFeature(r.coordinates));
     }
-    setGeoJSON(map, 'hop', lineFeature(r.startHop));
+    setGeoJSON(map, 'hop', { type: 'FeatureCollection', features: [r.startHop, r.endHop].filter((l) => l.length > 1).map(lineFeature) });
     clearTreesAlong(map, routeLine);
     // from your own position the character already marks the start
     // from your own position the character marks the start; a picked spot gets its A
@@ -2089,9 +2229,11 @@ async function main() {
     if (destPin && distanceM(routeEnd, destPin) < 30) endMarker.remove(); else endMarker.setLngLat(routeEnd).addTo(map);
     xrayKey = '';
     if (quiet) { scheduleXray(); return; }
-    const all = [...r.coordinates, ...r.startHop, Array.isArray(from) ? from : from.position];
+    const all = [...r.coordinates, ...r.startHop, ...r.endHop, Array.isArray(from) ? from : from.position];
     // a lower tilt for the overview, so the far end of a long route stays readable
-    requestAnimationFrame(() => fitPoints(all, { pitch: tilt(40), maxZoom: 18, side: 48 }));
+    // a meeting pin stands at its own spot (the route ends on the path beside it), and taller than a route pin
+    const meetAt = isMeet(current) ? current!.position : null;
+    requestAnimationFrame(() => fitPoints(meetAt ? [...all, meetAt] : all, { pitch: tilt(40), maxZoom: 18, side: 48, ...(meetAt ? { top: 58 } : {}) }));
   }
   function clearRoute() {
     panel.classList.remove('route-peek');
@@ -2282,7 +2424,42 @@ async function main() {
   }
 
   // tap a building footprint (footprintToPlace picks the building, so a café doesn't take it over)
+  // Press and hold (or right-click) an empty spot: a meeting pin. A hold is one finger, still, for 0.6 s.
+  let holdTimer = 0, holdFrom: { x: number; y: number } | null = null, heldDrop = false, noClickUntil = 0;
+  const cancelHold = () => { clearTimeout(holdTimer); holdTimer = 0; };
+  const meetHere = (at: MLLngLat) => {
+    if (pickingStart || !welcome.hidden) return false;
+    const ok = dropMeet([at.lng, at.lat], 'marker');
+    if (!ok && !navigating) toast('That spot is outside the campus map.', 4000);
+    return ok;
+  };
+  map?.on('touchstart', (e) => {
+    cancelHold();
+    if (e.originalEvent.touches.length !== 1 || !(e.originalEvent.target instanceof HTMLCanvasElement)) return;
+    const at = e.lngLat;
+    holdFrom = { x: e.point.x, y: e.point.y };
+    holdTimer = window.setTimeout(() => {
+      holdTimer = 0;
+      if (meetHere(at)) { heldDrop = true; noClickUntil = Date.now() + 900; try { navigator.vibrate?.(12); } catch { /* no haptics */ } }
+    }, 600);
+  });
+  map?.on('touchmove', (e) => { if (holdTimer && (e.originalEvent.touches.length !== 1 || !holdFrom || Math.hypot(e.point.x - holdFrom.x, e.point.y - holdFrom.y) > 8)) cancelHold(); });
+  const holdEnd = () => { cancelHold(); if (heldDrop) { heldDrop = false; noClickUntil = Date.now() + 500; } };
+  map?.on('touchend', holdEnd);
+  map?.on('touchcancel', holdEnd);
+  map?.on('contextmenu', (e) => {
+    e.preventDefault();
+    if (heldDrop || Date.now() < noClickUntil) return; // (Android sends this for a long press too: the pin is already there)
+    // a right-drag turns the map: only a right-click that stays put drops the pin
+    const at = e.lngLat;
+    let turned = false;
+    const onTurn = () => { turned = true; };
+    map!.once('rotatestart', onTurn);
+    map!.once('pitchstart', onTurn);
+    setTimeout(() => { map!.off('rotatestart', onTurn); map!.off('pitchstart', onTurn); if (!turned) meetHere(at); }, 300);
+  });
   map?.on('click', (e) => {
+    if (heldDrop || Date.now() < noClickUntil) return; // the finger lifting after a hold isn't a tap
     hideResults();
     if (pickingStart && current && directionsOpen) {
       // "Pick on the map": this tap is the start
@@ -2560,6 +2737,18 @@ async function main() {
       const room = linkedRoom && p ? parseRoom(linkedRoom, [p]) : null;
       if (p) select(p, { source: 'link', room: room?.code });
       else { history.replaceState(null, '', location.pathname); showWholeCampus(0, 'main'); toast("Sorry, we couldn't find that place. Here's the whole campus.", 6000); }
+    };
+    if (map && !map.loaded()) map.once('load', open);
+    else open();
+  }
+
+  // ---------- deep link: /?meet=<lat>,<lng> (a shared meeting point) ----------
+  if (linkedMeet) {
+    const open = () => {
+      if (linkedMeet !== 'bad' && dropMeet(linkedMeet, 'link')) return;
+      history.replaceState(null, '', location.pathname);
+      showWholeCampus(0, 'main');
+      toast("Sorry, that meeting point isn't on the campus map. Here's the whole campus.", 6000);
     };
     if (map && !map.loaded()) map.once('load', open);
     else open();

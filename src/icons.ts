@@ -39,6 +39,7 @@ export const icons = {
   plus: svg('<path d="M12 5v14M5 12h14"/>'),
   minus: svg('<path d="M5 12h14"/>'),
   expand: svg('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),
+  meet: svg('<path d="M12 21s-6.5-5.6-6.5-10.4A6.5 6.5 0 0 1 12 4a6.5 6.5 0 0 1 6.5 6.6C18.500 15.4 12 21 12 21Z"/><circle cx="12" cy="10.5" r="2.3"/>'),
   share: svg('<path d="M12 15V3M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v6.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V12"/>'),
   external: svg('<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>'),
   directions: svg('<path d="M12 2.8 21.2 12 12 21.2 2.8 12z"/><path d="M9 14v-2.5a1.5 1.5 0 0 1 1.5-1.5H15M13 8l2 2-2 2"/>'),

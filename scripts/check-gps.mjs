@@ -191,9 +191,10 @@ for (const phone of [false, true]) {
 // 6. standing 40 m before the end of a route, noisy: arrival must not fire; walking in, it must
 {
   const line = route('gate-main', 'library'), end = line[line.length - 1];
-  // the point 40 m before the end along the route
-  let back = 40, i = line.length - 1, spot = end;
-  while (i > 0) { const d = dist(line[i - 1], line[i]); if (d >= back) { const t = back / d; spot = [line[i][0] + (line[i - 1][0] - line[i][0]) * t, line[i][1] + (line[i - 1][1] - line[i][1]) * t]; break; } back -= d; i--; }
+  // the point on the route 40 m from its end in a straight line (a route can double back by a door:
+  // 40 m along it may be much nearer)
+  let spot = end;
+  for (const p of walkLine([...line].reverse())) { spot = p; if (dist(p, end) >= 40) break; }
   const readings = Array.from({ length: 120 }, (_, k) => ({ pos: jitter(spot, 10), accuracy: 20 + rnd() * 10, heading: null, speed: null, time: k * 1000 }));
   // before: one raw reading within max(12 m, its accuracy) of the end, accuracy 30 m or better
   const oldRule = (r) => r.accuracy <= 30 && dist(r.pos, end) <= Math.max(12, r.accuracy);

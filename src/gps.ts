@@ -359,14 +359,28 @@ export class GpsFilter {
       if (this.route.length) {
         const lim = Math.min(Math.max(r.accuracy, GPS.routeMinM), GPS.routeMaxM) + slack('route');
         const q = this.snap(base, this.route, lim, -1);
-        if (q) { this.onPath = -1; return this.out(q.q, fix, 'route', null, moving); }
+        if (q) { this.onPath = -1; return this.out(this.noLeap(q.q, this.route), fix, 'route', null, moving); }
       }
       const lim = Math.min(Math.max(r.accuracy, GPS.snapMinM), GPS.snapMaxM) + slack('path');
       const q = this.snap(base, this.segs, lim, this.onPath);
-      if (q) { this.onPath = q.i; return this.out(q.q, fix, 'path', null, moving); }
+      if (q) { this.onPath = q.i; return this.out(this.noLeap(q.q, this.segs), fix, 'path', null, moving); }
     }
     this.onPath = -1;
     return this.out(base, fix, null, null, moving);
+  }
+
+  /**
+   * The step limit again, for the spot on a line: two positions a step apart can land further
+   * apart on the line (either side of a corner, or of a route that doubles back by a door). Then
+   * the character goes one step towards the spot and stands on the line there.
+   */
+  private noLeap(q: XY, segs: Seg[]): XY {
+    const from = this.lastShown;
+    if (!from) return q;
+    const d = Math.hypot(q[0] - from[0], q[1] - from[1]);
+    if (d <= GPS.maxStepM) return q;
+    const part: XY = [from[0] + ((q[0] - from[0]) * GPS.maxStepM) / d, from[1] + ((q[1] - from[1]) * GPS.maxStepM) / d];
+    return this.snap(part, segs, GPS.maxStepM, -1)?.q ?? part;
   }
 
   private out(at: XY, fix: GpsReading, on: GpsView['on'], inside: string | null, moving: boolean): GpsView {

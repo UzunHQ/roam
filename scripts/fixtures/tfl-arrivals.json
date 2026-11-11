@@ -1,0 +1,14 @@
+[
+  { "$type": "Tfl.Api.Presentation.Entities.Prediction, Tfl.Api.Presentation.Entities", "id": "-100001", "operationType": 1, "vehicleId": "LX00AAA", "naptanId": "490006083N", "stationName": "Roehampton University Main Entrance", "lineId": "265", "lineName": "265", "platformName": "X", "direction": "inbound", "bearing": "20", "destinationNaptanId": "", "destinationName": "Putney Bridge", "timestamp": "2026-11-11T07:00:00Z", "timeToStation": 190, "currentLocation": "", "towards": "Putney, Sheen Or Hammersmith Bridge", "expectedArrival": "2026-11-11T07:03:10Z", "timeToLive": "2026-11-11T07:03:40Z", "modeName": "bus" },
+  { "id": "-100002", "naptanId": "490006083N", "lineId": "493", "lineName": "493", "platformName": "X", "destinationName": "Richmond", "timeToStation": 30, "expectedArrival": "2026-11-11T07:00:30Z", "modeName": "bus" },
+  { "id": "-100003", "naptanId": "490006083N", "lineId": "265", "lineName": "265", "platformName": "X", "destinationName": "Putney Bridge", "timeToStation": 910, "expectedArrival": "2026-11-11T07:15:10Z", "modeName": "bus" },
+  { "id": "-100004", "naptanId": "490006083N", "lineId": "419", "lineName": "419", "platformName": "X", "destinationName": "Hammersmith", "timeToStation": 480, "expectedArrival": "2026-11-11T07:08:00Z", "modeName": "bus" },
+  { "id": "-100005", "naptanId": "490006083N", "lineId": "265", "lineName": "265", "platformName": "X", "destinationName": "Putney Bridge", "timeToStation": 1650, "expectedArrival": "2026-11-11T07:27:30Z", "modeName": "bus" },
+  { "id": "-100006", "naptanId": "490006083N", "lineId": "265", "lineName": "265", "platformName": "X", "destinationName": "Putney Bridge", "timeToStation": 2400, "expectedArrival": "2026-11-11T07:40:00Z", "modeName": "bus" },
+  { "id": "-100007", "naptanId": "490006083N", "lineId": "n74", "lineName": "N74", "platformName": "X", "destinationName": "Baker Street", "timeToStation": 700, "modeName": "bus" },
+  { "id": "-100008", "lineName": "969", "destinationName": "Whitton", "expectedArrival": "2026-11-11T06:55:00Z" },
+  { "id": "-100009", "lineName": "", "destinationName": "Nowhere", "expectedArrival": "2026-11-11T07:05:00Z" },
+  { "id": "-100010", "lineName": "430", "destinationName": "South Kensington", "expectedArrival": "not a date" },
+  null,
+  "junk"
+]
