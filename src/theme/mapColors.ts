@@ -47,7 +47,7 @@ const DARK_ROOFS = Object.fromEntries(Object.entries(ROOFS).map(([k, v]) => [k, 
 
 const light = {
   // the focus: campus ground, trees, paths
-  bg: CTX.light.ground, ground: '#cfe3be', green: '#c1dcab', wood: '#a6cd8f', pitch: '#b6d99b', pitchLine: '#eef8e4',
+  bg: CTX.light.ground, ground: '#cfe3be', green: '#c1dcab', wood: '#a6cd8f', pitch: '#b6d99b', pitchLine: '#eef8e4', bayLine: '#f4f6f6', parking: '#c8cdcd',
   water: '#86d4cf', shore: '#c6efea', road: '#d4d8d8', roadEdge: '#b9bfbf', footpath: '#fcf3dc', footpathEdge: '#d8c08b',
   wall: '#fcf6ea', wallOff: CTX.light.wall,
   digbyRoof: ROOFS.digby, froebelRoof: ROOFS.froebel, southlandsRoof: ROOFS.southlands, whitelandsRoof: ROOFS.whitelands, otherRoof: ROOFS.other, offRoof: CTX.light.roof,
@@ -68,7 +68,7 @@ const light = {
 };
 
 const dark: typeof light = {
-  bg: CTX.dark.ground, ground: '#22392c', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f',
+  bg: CTX.dark.ground, ground: '#22392c', green: '#27402f', wood: '#2b4a37', pitch: '#2a4934', pitchLine: '#46664f', bayLine: '#69727a', parking: '#41484e',
   water: '#2a6466', shore: '#3f8384', road: '#4a5157', roadEdge: '#2c3237', footpath: '#6d6450', footpathEdge: '#4d4636',
   wall: '#6f757c', wallOff: CTX.dark.wall,
   digbyRoof: DARK_ROOFS.digby, froebelRoof: DARK_ROOFS.froebel, southlandsRoof: DARK_ROOFS.southlands, whitelandsRoof: DARK_ROOFS.whitelands, otherRoof: DARK_ROOFS.other, offRoof: CTX.dark.roof,

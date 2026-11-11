@@ -77,10 +77,11 @@ function themedPaint(p: Pal): Record<string, Record<string, unknown>> {
     // the plots across the roads (an estate, a school's grounds): plain, with a thin edge
     lot: { 'fill-color': p.ctx.lot, 'fill-outline-color': p.ctx.lotEdge },
     pitch: { 'fill-color': p.pitch, 'fill-outline-color': p.pitchLine },
-    parking: { 'fill-color': ['case', CTX, p.ctx.parking, p.road] }, // on campus the same asphalt as the roads
+    parking: { 'fill-color': ['case', CTX, p.ctx.parking, p.parking] }, // on campus a shade darker than the roads, so the aisles read (as at the hospital)
     // the golf course beside the campus isn't the university's: its own soft, grey-green tones
     golf: { 'fill-color': ['match', ['get', 'kind'], 'fairway', p.ctx.golf.fairway, 'tee', p.ctx.golf.tee, 'green', p.ctx.golf.green, 'bunker', p.ctx.golf.bunker, 'water', p.ctx.golf.water, p.ctx.golf.rough] },
-    courtline: { 'line-color': p.pitchLine },
+    // painted lines: the courts' and pitches', and the campus car parks' bays in road paint (the hospital's stay as they were)
+    courtline: { 'line-color': ['case', ['all', ['coalesce', ['get', 'bay'], false], ['!', CTX]], p.bayLine, p.pitchLine] },
     'fence-mesh': { 'fill-extrusion-color': p.fenceMesh },
     monument: { 'fill-extrusion-color': ['match', ['get', 'part'], 'roof', p.stoneRoof, 'base', p.stoneDark, 'band', p.stoneDark, p.stone] },
     water: { 'fill-color': ['case', CTX, p.ctx.water, p.water] },

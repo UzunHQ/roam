@@ -464,13 +464,24 @@ const segDist = (p, a, b) => {
 };
 const onPath = (corners) => pathSegs.some(({ road, pts }) => pts.some((a, i) => i < pts.length - 1 && corners.some((c) => segDist(c, a, pts[i + 1]) < (road ? 2.9 : 1.6))));
 const noTrees = golfFeatures.filter((f) => f.properties.kind !== 'rough').map((f) => f.geometry.coordinates[0]); // rings (lng/lat) where no decorative tree should stand
-let cars = 0;
+// a bay's painted side line, kept on the lot's own asphalt: cut back to the part inside the lot
+// (in 0.1 m steps), and left out when less than 1.5 m of it is
+const lineInLot = (s0, s1, area) => {
+  const len = Math.hypot(s1[0] - s0[0], s1[1] - s0[1]), n = Math.max(1, Math.round(len / 0.1));
+  const at = (k) => [s0[0] + ((s1[0] - s0[0]) * k) / n, s0[1] + ((s1[1] - s0[1]) * k) / n];
+  let a = 0, b = n;
+  while (a <= n && !pointInRing(at(a), area)) a++;
+  while (b >= a && !pointInRing(at(b), area)) b--;
+  return ((b - a) * len) / n >= 1.5 ? [at(a), at(b)] : null;
+};
+let cars = 0, bayLineCount = 0;
 PARKING.forEach((lot, i) => {
   const li = lot.seed ?? i;
   const area = ringLL(lot.area);
   noTrees.push(area);
   features.push({ type: 'Feature', properties: { layer: 'parking', place: lot.place }, geometry: { type: 'Polygon', coordinates: [area] } });
   const bays = [];
+  const bayLines = new Map(); // a side two bays share is painted once
   for (const pts of [...lot.aisles.map((id) => (wayGeom.get(id) ?? []).map(toM)), ...(lot.drive ? [lot.drive] : []), ...(lot.rows ?? [])]) {
     for (let i = 0; i < pts.length - 1; i++) {
       const [ax, ay] = pts[i], [bx, by] = pts[i + 1], len = Math.hypot(bx - ax, by - ay);
@@ -489,6 +500,13 @@ PARKING.forEach((lot, i) => {
           if (bays.some((b) => overlap(b, corners)) || onPath(corners)) continue; // aisle bends, rows meeting, roads
           bays.push(corners);
           const k = bays.length;
+          // the bay's two painted side lines, from the aisle's edge to the back (like the hospital's car park)
+          for (const j of [1, -1]) {
+            const side0 = [c[0] - nrm[0] * (CAR.long / 2) + u[0] * (CAR.pitch / 2) * j, c[1] - nrm[1] * (CAR.long / 2) + u[1] * (CAR.pitch / 2) * j];
+            const side1 = [c[0] + nrm[0] * (CAR.long / 2) + u[0] * (CAR.pitch / 2) * j, c[1] + nrm[1] * (CAR.long / 2) + u[1] * (CAR.pitch / 2) * j];
+            const line = lineInLot(side0, side1, lot.area);
+            if (line) bayLines.set(line.flat().map((v) => v.toFixed(1)).join(','), line.map(fromM));
+          }
           if (hash(li, k, 1) > 0.6) continue;
           const a = Math.round((Math.atan2(nrm[1], nrm[0]) + (hash(li, k, 2) - 0.5) * 0.08) * 1000) / 1000;
           features.push({ type: 'Feature', properties: { layer: 'car', a, c: Math.floor(hash(li, k, 3) * CAR.colours) }, geometry: { type: 'Point', coordinates: fromM(c) } });
@@ -497,10 +515,13 @@ PARKING.forEach((lot, i) => {
       }
     }
   }
+  // one feature for the lot's painted lines (small file); drawn like the courts' lines, in the bays' own colour
+  if (bayLines.size) features.push({ type: 'Feature', properties: { layer: 'courtline', bay: true }, geometry: { type: 'MultiLineString', coordinates: [...bayLines.values()] } });
+  bayLineCount += bayLines.size;
   const [cx, cy] = lot.area.reduce(([x, y], p) => [x + p[0] / lot.area.length, y + p[1] / lot.area.length], [0, 0]);
   console.log(`${lot.place}: ${bays.length} bays, centre ${JSON.stringify(fromM([cx, cy]))}`);
 });
-console.log(`parked ${cars} cars`);
+console.log(`parked ${cars} cars; ${bayLineCount} painted bay lines`);
 // a lot's own drive is drawn like the campus service roads (after the cars, so they don't shy away from it)
 for (const lot of PARKING) if (lot.drive) features.push({ type: 'Feature', properties: { layer: 'path', kind: 'service', drive: true }, geometry: { type: 'LineString', coordinates: lot.drive.map(fromM) } });
 
