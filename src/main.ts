@@ -337,7 +337,7 @@ async function main() {
   const doneLoading = () => { loading.hidden = true; loading.textContent = ''; };
   if (map) {
     const slow = setTimeout(() => { loading.textContent = 'The map is taking a while. You can use the list view in the meantime.'; }, 10000);
-    map.once('load', () => { clearTimeout(slow); doneLoading(); });
+    map.once('load', () => { clearTimeout(slow); doneLoading(); document.body.classList.add('map-up'); }); // (map-up: the map fades in over the placeholder, style.css)
     document.addEventListener('roam-theme', () => applyTheme(map!, theme()));
     if (import.meta.env.DEV) Object.assign(window, { map, roamDebug: { route: () => lastRoute, routeLine: () => routeLine,
       // where the character is headed (not mid-glide), and the filtered fix
@@ -1593,7 +1593,7 @@ async function main() {
         <span class="cat-icon g-${g}${kindClass(p)}">${placeIcon(p.category, p.kind)}</span>
         <div class="titles">
           <h2 id="panel-name" tabindex="-1">${esc(p.name)}</h2>
-          <p class="meta">${[p.code && `<span class="code">${esc(p.code)}</span>`, esc(groupLabel(g)), p.college && collegeBadge(p.college), p.offCampus && '<span class="off-campus">Off campus</span>', p.outsideMap && '<span class="off-campus">Just outside the map</span>'].filter(Boolean).join(' · ')}</p>
+          <p class="meta tags">${[p.code && `<span class="code">${esc(p.code)}</span>`, `<span>${esc(groupLabel(g))}</span>`, p.college && collegeBadge(p.college), p.offCampus && '<span class="off-campus">Off campus</span>', p.outsideMap && '<span class="off-campus">Just outside the map</span>'].filter(Boolean).join('')}</p>
         </div>
         <button class="icon-btn save" aria-pressed="${saved.has(p.id)}" aria-label="Save ${esc(p.name)}">${icons.bookmark}</button>
         <button class="icon-btn close" aria-label="Close">${icons.close}</button>
@@ -2530,8 +2530,9 @@ async function main() {
             <span><b>Show all: ${esc(groupLabel(o.group))}</b><small>${plural(groupCount.get(o.group) ?? 0, 'place')}</small></span></button></li>`
         : `<li role="presentation"><button role="option" data-i="${i}">
             <span class="cat-icon small g-${groupOf(o.place)}${kindClass(o.place)}">${placeIcon(o.place.category, o.place.kind)}</span>
-            <span><b>${esc(o.place.name)}</b>${o.place.code ? ` <span class="code">${esc(o.place.code)}</span>` : ''}
-            <small>${esc([...new Set([groupOf(o.place) === 'nearby' ? 'Nearby' : via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]])].filter(Boolean).join(' · '))}</small></span></button></li>`)).join('');
+            <span class="row-main"><b>${esc(o.place.name)}</b>${o.place.code ? ` <span class="code">${esc(o.place.code)}</span>` : ''}
+            <small>${esc([...new Set([groupOf(o.place) === 'nearby' ? 'Nearby' : via.get(o.place.id) ?? groupLabel(groupOf(o.place)), o.place.college && COLLEGE[o.place.college]])].filter(Boolean).join(' · '))}</small></span>
+            ${knownStatus(o.place)}</button></li>`)).join('');
     }
     results.hidden = false;
     input.setAttribute('aria-expanded', 'true');
@@ -2601,12 +2602,19 @@ async function main() {
   }
   const openRank = (p: Place) => { const h = resolveHours(p.id); const k = h ? openState(h).kind : 'none'; return k === 'open' ? 0 : k === 'closed' ? 1 : 2; };
   /** a row: name and code, category and college, then open/closed and distance; the description waits for the card */
-  function listRow(p: Place): string {
+  /** open, closed or closing soon, for a row of search results: nothing where the hours aren't known */
+  function knownStatus(p: Place): string {
+    const b = statusBadge(p);
+    return b && !b.includes('unknown') ? `<span class="row-side">${b}</span>` : '';
+  }
+  function listRow(p: Place, underHeading = false): string {
     const g = groupOf(p);
     const d = distanceTo(p);
+    // under its group's heading a row doesn't say the group again
+    const sub = [!underHeading && groupLabel(g), p.college && COLLEGE[p.college], p.offCampus && 'Off campus'].filter(Boolean).join(' · ');
     return `<li><button data-id="${p.id}"><span class="cat-icon small g-${g}${kindClass(p)}">${placeIcon(p.category, p.kind)}</span>
       <span class="row-main"><b>${esc(p.name)}</b>${p.code ? ` <span class="code">${esc(p.code)}</span>` : ''}
-      <small>${esc([groupLabel(g), p.college && COLLEGE[p.college], p.offCampus && 'Off campus'].filter(Boolean).join(' · '))}</small></span>
+      ${sub ? `<small>${esc(sub)}</small>` : ''}</span>
       <span class="row-side">${statusBadge(p)}${d != null ? `<small>${formatDistance(d)}</small>` : ''}</span></button></li>`;
   }
   function renderList() {
@@ -2631,14 +2639,14 @@ async function main() {
     if (listSort === 'az' && !q) {
       body.innerHTML = GROUPS.filter((g) => pool.some((p) => groupOf(p) === g.id)).map((g) => `
         <h3>${g.label}</h3>
-        <ul>${pool.filter((p) => groupOf(p) === g.id).sort((a, b) => a.name.localeCompare(b.name)).map(listRow).join('')}</ul>`).join('');
+        <ul>${pool.filter((p) => groupOf(p) === g.id).sort((a, b) => a.name.localeCompare(b.name)).map((p) => listRow(p, true)).join('')}</ul>`).join('');
       return;
     }
     // a search keeps its best-first order under A–Z; Nearest and Open now first make one list
     const sorted = listSort === 'near' ? [...pool].sort((a, b) => (distanceTo(a) ?? Infinity) - (distanceTo(b) ?? Infinity))
       : listSort === 'open' ? [...pool].sort((a, b) => openRank(a) - openRank(b) || a.name.localeCompare(b.name))
       : pool;
-    body.innerHTML = `<ul>${sorted.map(listRow).join('')}</ul>`;
+    body.innerHTML = `<ul>${sorted.map((p) => listRow(p)).join('')}</ul>`;
   }
   $('.list-sort').addEventListener('click', (e) => {
     const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-sort]');
@@ -2730,28 +2738,28 @@ async function main() {
   });
 
   // ---------- deep link: /?place=<id> ----------
+  // The card comes first: it is what the link is for, and it doesn't need the map (on a slow phone
+  // the map can take seconds). Once the map is up, the camera goes to the place.
+  const afterLoad = (run: () => void) => { if (map && !map.loaded()) map.once('load', run); else run(); };
+  const showLinked = (p: Place) => afterLoad(() => { if (current === p) requestAnimationFrame(() => { ensureVisible(p, true); layoutMarkers(); }); });
   if (linkedId) {
     const p = byId.get(linkedId);
-    const open = () => {
+    if (p) {
       // a room code only counts if it really belongs to that building
-      const room = linkedRoom && p ? parseRoom(linkedRoom, [p]) : null;
-      if (p) select(p, { source: 'link', room: room?.code });
-      else { history.replaceState(null, '', location.pathname); showWholeCampus(0, 'main'); toast("Sorry, we couldn't find that place. Here's the whole campus.", 6000); }
-    };
-    if (map && !map.loaded()) map.once('load', open);
-    else open();
+      const room = linkedRoom ? parseRoom(linkedRoom, [p]) : null;
+      select(p, { source: 'link', room: room?.code });
+      showLinked(p);
+    } else afterLoad(() => { history.replaceState(null, '', location.pathname); showWholeCampus(0, 'main'); toast("Sorry, we couldn't find that place. Here's the whole campus.", 6000); });
   }
 
   // ---------- deep link: /?meet=<lat>,<lng> (a shared meeting point) ----------
   if (linkedMeet) {
-    const open = () => {
-      if (linkedMeet !== 'bad' && dropMeet(linkedMeet, 'link')) return;
+    if (linkedMeet !== 'bad' && dropMeet(linkedMeet, 'link')) showLinked(current!);
+    else afterLoad(() => {
       history.replaceState(null, '', location.pathname);
       showWholeCampus(0, 'main');
       toast("Sorry, that meeting point isn't on the campus map. Here's the whole campus.", 6000);
-    };
-    if (map && !map.loaded()) map.once('load', open);
-    else open();
+    });
   }
 
   // ---------- offline (installable PWA, from the original brief) ----------

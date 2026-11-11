@@ -272,6 +272,23 @@ const layout = () => {
   await ctx.close();
 }
 
+// ---------- a link shows its card first: it doesn't wait for the map ----------
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(BASE + '/?place=library&notrack', { waitUntil: 'commit' });
+  await page.waitForSelector('#panel:not([hidden]) #panel-name', { timeout: 60_000 }).catch(() => {});
+  const early = await page.evaluate(() => ({ loading: !document.querySelector('#loading').hidden, name: document.querySelector('#panel-name')?.textContent }));
+  check('link: the card opens while the map is still loading', early.loading && early.name === 'Library', JSON.stringify(early));
+  await page.waitForSelector('#loading', { state: 'hidden', timeout: 90_000 });
+  await page.waitForTimeout(2500);
+  check('link: once the map is up, the place is chosen on it', (await page.locator('.pin.selected').count()) === 1 && (await page.locator('#panel-name').innerText()) === 'Library');
+  check('link: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+
 // ---------- doors: a route ends at the door, and says how sure that is ----------
 {
   const { page, ctx, errors } = await open([1280, 860], '/?place=library');

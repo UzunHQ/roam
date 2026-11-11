@@ -22,7 +22,8 @@
     "check:paths": "node scripts/check-paths.mjs",
     "check:bus": "node scripts/check-bus.mjs",
     "gps:report": "node scripts/gps-report.mjs",
-    "test:smoke": "node scripts/smoke.mjs http://localhost:5173"
+    "test:smoke": "node scripts/smoke.mjs http://localhost:5173",
+    "test:webkit": "BROWSER=webkit node scripts/smoke-engine.mjs http://localhost:4173"
   },
   "dependencies": {
     "maplibre-gl": "^6.15.0"

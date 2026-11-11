@@ -31,3 +31,27 @@ jobs:
           npm run test:smoke
       - if: failure()
         run: cat dev.log || true
+
+  # Safari's engine (every iPhone): the built app comes up, searches, opens cards and plans a walk
+  # with no errors (scripts/smoke-engine.mjs). New, so it reports without blocking for now.
+  webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright-core install --with-deps webkit
+      - name: WebKit smoke test
+        run: |
+          npm run preview -- --port 4173 --strictPort > preview.log 2>&1 &
+          for i in $(seq 60); do curl -sf http://localhost:4173/ > /dev/null && break; sleep 1; done
+          npm run test:webkit
+      - if: failure()
+        run: cat preview.log || true
+
