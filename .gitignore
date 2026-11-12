@@ -8,3 +8,6 @@ photos-src
 .env*
 scripts/.overpass-context-cache.json
 scripts/.overpass-paths-now.json
+# Real GPS walks show where the owner lives and walks: they stay on the Mac, never in this public repo
+docs/gps-logs/*.json
+docs/gps-logs/*.gpx

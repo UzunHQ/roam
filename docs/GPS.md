@@ -44,6 +44,9 @@ twice running.
    - `?gpslog` is remembered until the tab is closed.
 4. Put both files in `docs/gps-logs/` as `YYYY-MM-DD-<route>.json`/`.gpx`. Then run
    `npm run gps:report docs/gps-logs/<file>.json`.
+   - **These files stay on your Mac.** `.gitignore` keeps every `.json` and `.gpx` in
+     `docs/gps-logs/` out of git, because this repo is public: a real walk shows where you
+     live and the way you walk each day. Share the report's numbers, never the log.
 
 What the report says:
 - (a) how far the readings, and the character, were from the nearest footpath (median, 90th
