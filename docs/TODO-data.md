@@ -27,7 +27,7 @@ Mark `type` (`main`, `accessible`, `card-required`, `closed`) and `verified: tru
 
 ## Opening hours (no verified source yet)
 
-Food and services with no hours: Quad Café, Library Café, The Shop, The Coexist Café, Digby Den and Diner (card says "check on Nest"),
+Food and services with no hours: Quad Café, Library Café, The Shop, Digby Den and Diner (card says "check on Nest"),
 Post Room, Students' Union, Laundry, The Base, The Reef, Davies Sports Hall, Sport and Active Communities, MUGA, playing field, 5-a-side pitch.
 Check: Nest (staff screenshot), roehamptonstudent.com, signs on site. Add exceptions (bank holidays, Christmas) when published:
 LibCal shows no hours from 20 Dec 2026 yet, and no 2026 festive notice was found.
@@ -102,8 +102,9 @@ Findings checked and accepted are in `data/paths-known.json`, each with its reas
 The owner marked the doors of 45 buildings on a top-down view of each (`docs/doors/2026-11-11-owner-marks.json`, applied with `node scripts/apply-doors.mjs`): 82 doors on 59 places, all main doors, `verified: false` (from memory, not checked on site). Routes now end at the door; the card lists them and shows a small door pin for each.
 
 - [ ] Check the doors on site, then set `verified: true` (the route note changes from "marked by a student" to "Ends at the … entrance").
-- [ ] **Fincham Building** (also the Fincham prayer rooms and The Coexist Café) and **Michaelis Building**: no mapped path reaches the door (a courtyard; 16 m and 37 m from the nearest path, behind a building). The route shows that last stretch dotted. Needs the walkway traced on site, or added to OpenStreetMap (`data/paths-known.json`, `offGraph`).
+- [ ] **Fincham Building** (also the Fincham prayer rooms) and **Michaelis Building**: no mapped path reaches the door (a courtyard; 16 m and 37 m from the nearest path, behind a building). The route shows that last stretch dotted. Needs the walkway traced on site, or added to OpenStreetMap (`data/paths-known.json`, `offGraph`).
 - [ ] Not marked (owner didn't know, or skipped): Campus Safety and Security, Erasmus House (and The Base inside it), the four Whitelands halls, Whitelands Chapel.
-- [x] **Lee House**: the owner noted "kapalı bina" (a closed building). Its description now says "Closed at the moment (a student's note, November 2026)". Still to find out: why and until when (then update or remove the note).
-- [ ] Froebel Diner uses all three Montefiore doors (the owner said "same door" without saying which); Pub & Grub uses the Union Bar's two (its description puts it next to the bar). Confirm.
+- [x] **Lee House**: the owner noted "kapalı bina" (a closed building). Its description now says "Closed at the moment (a student's note, November 2026)". The owner confirmed on 12 Nov 2026 that it is closed. Still to find out: why and until when (then update or remove the note).
+- [x] Froebel Diner uses all three Montefiore doors; Pub & Grub uses the Union Bar's two. Confirmed by the owner on 12 Nov 2026.
+- [x] **The Coexist Café** (Fincham Building, Fi009): taken off the site on 12 Nov 2026 at the owner's request, because it is closed. Its record, its mention on the Fincham Building's card and its line in `data/paths-known.json` are gone. Add it back only if the owner asks.
 

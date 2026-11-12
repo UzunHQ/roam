@@ -862,7 +862,7 @@
       "category": "building",
       "kind": "academic",
       "college": "digby-stuart",
-      "description": "Digby Stuart College building with ground-floor Islamic prayer rooms and the Coexist Café social space.",
+      "description": "Digby Stuart College building with ground-floor Islamic prayer rooms.",
       "lastVerified": null,
       "status": "confirmed",
       "position": [
@@ -876,7 +876,6 @@
       "photo": null,
       "services": [
         "Islamic prayer rooms Fi006 (sisters) and Fi007 (brothers)",
-        "The Coexist Cafe (Fi009)",
         "Teaching room Fi001"
       ],
       "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
@@ -4856,67 +4855,6 @@
           "url": "https://www.openstreetmap.org/way/393563937",
           "title": "OpenStreetMap: Chadwick Hall's plot (the position is an estimate from a resident's sketch over it, not checked on site)",
           "checked": "2026-11-09"
-        }
-      ]
-    },
-    {
-      "id": "coexist-cafe",
-      "code": "",
-      "name": "The Coexist Café",
-      "aliases": [
-        "Coexist",
-        "D3",
-        "Fincham"
-      ],
-      "roomCodePrefixes": [],
-      "category": "food",
-      "kind": "cafe",
-      "college": "digby-stuart",
-      "description": "A chaplaincy social space in Fincham Building room Fi009, open to all for relaxing, heating food, making a drink and meeting people.",
-      "lastVerified": null,
-      "status": "confirmed",
-      "position": [
-        -0.244962,
-        51.457632
-      ],
-      "positionSource": "osm-footprint",
-      "positionAccuracyM": 10,
-      "entrance": null,
-      "footprintId": "way/1339072171",
-      "photo": null,
-      "services": [
-        "Space to heat food and make a drink",
-        "Social and community space"
-      ],
-      "officialUrl": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
-      "accessibility": null,
-      "sources": [
-        {
-          "url": "https://www.roehampton.ac.uk/student-support/non-academic-and-academic-support/chaplaincy/",
-          "title": "Chaplaincy and faith",
-          "checked": "2026-10-20"
-        },
-        {
-          "url": "https://www.roehampton.ac.uk/globalassets/documents/chaplaincy/chaplaincy-faith-spaces-map.pdf",
-          "title": "Chaplaincy: Faith Spaces on Campus map (PDF)",
-          "checked": "2026-10-20"
-        },
-        {
-          "url": "https://www.roehampton.ac.uk/globalassets/documents/campus/campus-map-september-2025.pdf",
-          "title": "Campus map (September 2025), University of Roehampton",
-          "checked": "2026-10-20"
-        }
-      ],
-      "entrances": [
-        {
-          "pos": [
-            -0.245025,
-            51.457664
-          ],
-          "type": "main",
-          "verified": false,
-          "source": "Marked on the map by the owner, from memory",
-          "checked": "2026-11-11"
         }
       ]
     },
