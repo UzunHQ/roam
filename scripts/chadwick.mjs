@@ -1,7 +1,8 @@
 // Chadwick Hall's grounds (Froebel College halls, OSM plot way/393563937): paths, gates, walls and
 // car parking, which OpenStreetMap doesn't have. Drawn from a resident's sketches on the map
-// (9 Nov 2026 over the aerial view; 12 Nov 2026 over Roam itself: the front wall, the two ways in
-// to the halls and the car park), so positions are about ±5 m and not checked on site
+// (9 Nov 2026 over the aerial view; 12 Nov 2026 over Roam itself: the front wall, the two gates in
+// to the halls, the car park, the shelter at the top of the lawn and the wall behind it, where an
+// opening had been drawn), so positions are about ±5 m and not checked on site
 // (docs/TODO-data.md). Shared by build-campus.mjs (drawing), build-paths.mjs (the walking graph)
 // and build-walls.mjs (the plot's wall).
 //
@@ -14,10 +15,11 @@ export const fromM = ([x, y]) => [round(ORIGIN[0] + x / KX), round(ORIGIN[1] + y
 // `lane: true` on a path's first point: it meets Roehampton Lane's pavement there (joined to the
 // nearest node of the walking graph by build-paths.mjs)
 const M = {
-  // the drive in from Roehampton Lane, through the car area to the top of the lawn
-  drive: [[157, -218], [146.5, -218], [122.35, -218], [113, -219]],
-  // down the lawn between West and North, past Downshire House, to the front of South
-  lawn: [[113, -219], [112, -245], [111.6, -264], [106, -276], [105.8, -279], [104.5, -303.7]],
+  // the drive in from Roehampton Lane to the car area (the plot's wall is shut behind it)
+  drive: [[157, -218], [146.5, -218], [125.5, -218]],
+  // from the shelter at the top of the lawn, down between West and North, past Downshire House,
+  // to the front of South
+  lawn: [[112.95, -220.4], [112, -245], [111.6, -264], [106, -276], [105.8, -279], [104.5, -303.7]],
   // along South's north face, past its door
   southFront: [[90, -301.5], [104.5, -303.7], [122, -306.3], [130, -307.5]],
   // from the pedestrian gate by bus stop S, under North, to the lawn
@@ -41,9 +43,9 @@ export const CHADWICK_PATHS = [
   { id: 'chadwick/garden', kind: 'footpath', coords: M.garden },
 ].map((p) => ({ ...p, ll: p.coords.map(fromM) }));
 
-// openings in the plot's wall: where the drive and the car gate pass it
+// openings in the plot's wall: where the car gate passes it. (An opening at the top of the lawn,
+// from the car area, was drawn here until 12 Nov 2026: the resident says it is wall.)
 export const CHADWICK_GATES = [
-  { name: 'top of the lawn, from the car area', at: fromM([122.35, -218]), width: 4.6 },
   { name: 'car gate', at: fromM([134.1, -320]), width: 5 },
 ];
 
@@ -51,16 +53,17 @@ export const CHADWICK_GATES = [
 // House is open to Roehampton Lane: the plot's wall stops on its east side at `open.north` and
 // `open.south` and turns in to the buildings there (North's south-east corner, South's north-east
 // corner). A wall between North and Downshire House closes the gardens behind. The two ways in to
-// the halls: where the path from bus stop S passes that wall, and the gap between Downshire House
-// and South (two posts).
+// the halls are iron gates, like garden gates, that open with a resident's card: one where the
+// path from bus stop S passes that wall, one in the gap between Downshire House and South.
 export const CHADWICK_WALL = {
   open: { north: fromM([143, -261]), south: fromM([135.6, -310.6]) },
   toNorth: fromM([135.1, -261.2]),
   toSouth: fromM([127.6, -309.7]),
   inner: [[127.4, -261], [126.1, -277]].map(fromM),
   entrances: [
-    { name: 'way in between North and Downshire House', at: fromM([127.1, -264.5]), width: 3 },
-    { name: 'way in between Downshire House and South', posts: [[121.75, -304.7], [121.9, -308.4]].map(fromM) },
+    { name: 'card gate between North and Downshire House', at: fromM([127.1, -264.5]), width: 4, gate: true },
+    // (its posts stand against the two buildings: Downshire House's corner, South's north face)
+    { name: 'card gate between Downshire House and South', posts: [[121.7, -304.3], [121.95, -308.85]].map(fromM), gate: true },
   ],
 };
 
@@ -77,6 +80,11 @@ export const CHADWICK_CAR_PARK = {
   kerb: [[99.15, -323.84], [115.15, -326.3]],
   bays: 3,
 };
+
+// A small shelter to sit in, at the top of the lawn in front of the north wall (the resident's
+// cross on the map, 12 Nov 2026: "a tiny building, like a place to sit, not really a building").
+// Its size and the way it faces aren't known: drawn about 3.8 m by 2.6 m, open to the lawn.
+export const CHADWICK_SHELTER = { at: fromM([112.9, -218.9]), a: -Math.PI / 2 };
 
 // South's door: on its north face, near the east end (the resident's arrow)
 export const SOUTH_DOOR = fromM([121, -308.7]);

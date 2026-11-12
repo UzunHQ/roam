@@ -692,6 +692,33 @@ function benchParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
 }
 
 /**
+ * A garden shelter (layer "shelter"): a small roof on four wooden posts with a bench under it,
+ * open towards `a`. About 3.8 m by 2.6 m; low-poly like the benches and the hen house.
+ */
+function shelterParts(points: GeoJSON.Feature[]): GeoJSON.Feature[] {
+  const out: GeoJSON.Feature[] = [];
+  for (const f of points) {
+    const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+    const a = Number(f.properties?.a) || 0, kx = 111320 * Math.cos((lat * Math.PI) / 180), ky = 111320;
+    const fwd = [Math.cos(a), Math.sin(a)], side = [-fwd[1], fwd[0]];
+    const box = (part: string, along: number, ahead: number, hs: number, hf: number, base: number, top: number) => out.push({
+      type: 'Feature', properties: { part, base, top },
+      geometry: { type: 'Polygon', coordinates: [[[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]].map(([i, j]) => {
+        const x = side[0] * (along + hs * i) + fwd[0] * (ahead + hf * j), y = side[1] * (along + hs * i) + fwd[1] * (ahead + hf * j);
+        return [lng + x / kx, lat + y / ky];
+      })] },
+    });
+    const L = 1.9, W = 1.3;
+    for (const s of [-L + 0.12, L - 0.12]) for (const t of [-W + 0.12, W - 0.12]) box('coopwall', s, t, 0.1, 0.1, 0, 2.2); // posts
+    box('coopwall', 0, -W + 0.08, L - 0.1, 0.05, 0.3, 1.1); // a low back
+    box('bench', 0, -W + 0.5, L - 0.5, 0.24, 0.42, 0.5); // the seat
+    // roof: the ridge runs along the shelter; four slabs narrowing upwards, eaves 0.3 m out
+    for (let k = 0; k < 4; k++) box('cooproof', 0, 0, L + 0.3, (W + 0.3) * (1 - k / 4), 2.2 + k * 0.18, 2.2 + (k + 1) * 0.18);
+  }
+  return out;
+}
+
+/**
  * Picnic tables (layer "picnic"): one wooden piece, a table top on two A-frame legs with a bench
  * along each side, 1.8 m long, turned by `a`.
  */
@@ -1067,7 +1094,7 @@ export function createMap(opts: {
       halves: { type: 'geojson', data: halfLayer, promoteId: 'osmId' },
       trees: { type: 'geojson', data: treePolygons(byLayer('tree').features) },
       wallparts: { type: 'geojson', data: wallParts(walls) },
-      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features), ...picnicParts(byLayer('picnic').features), ...busStopParts(opts.stops ?? [])] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
+      props: { type: 'geojson', data: { type: 'FeatureCollection', features: [...carParts(byLayer('car').features).features, ...fountainParts(byLayer('fountain').features).features, ...fences.posts, ...gardenParts(byLayer('statue').features, byLayer('flowerbed').features), ...goalParts(byLayer('goal').features), ...benchParts(byLayer('bench').features), ...coopParts(byLayer('monument').features, byLayer('hen').features), ...picnicParts(byLayer('picnic').features), ...shelterParts(byLayer('shelter').features), ...busStopParts(opts.stops ?? [])] }, tolerance: 0 }, // tiny parts: never simplified away at low zoom
       fence: { type: 'geojson', data: fences.mesh, tolerance: 0 },
       monument: { type: 'geojson', data: monumentParts(byLayer('monument').features) },
       flags: { type: 'geojson', data: { type: 'FeatureCollection', features: flagParts(byLayer('golfflag').features) }, tolerance: 0 },

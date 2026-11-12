@@ -292,12 +292,12 @@ for (let i = cuts.length - 1; i >= 0; i--) {
 const out = [];
 const point = (part, p, dir, extra = {}) => out.push({ type: 'Feature', properties: { part, angle: Math.round(Math.atan2(dir[1], dir[0]) * 1000) / 1000, ...extra }, geometry: { type: 'Point', coordinates: ll(p) } });
 /** the wall along M between the openings `cuts`, with its pillars and piers; returns its pieces */
-function wallPieces(M, cuts) {
+function wallPieces(M, cuts, minPiece = MIN_PIECE) {
 const edges = [0, ...cuts.flatMap((c) => [c.from, c.to]), M.L];
 const pieces = [];
 for (let i = 0; i < edges.length; i += 2) {
   const [d0, d1] = [Math.max(0, edges[i]), Math.min(M.L, edges[i + 1])];
-  if (d1 - d0 < MIN_PIECE) continue; // a stub at either end of the wall
+  if (d1 - d0 < minPiece) continue; // a stub at either end of the wall
   pieces.push([d0, d1, i === 0 ? null : cuts[i / 2 - 1], i / 2 < cuts.length ? cuts[i / 2] : null]);
 }
 for (const [d0, d1, before, after] of pieces) {
@@ -340,8 +340,9 @@ for (const c of cuts.filter((c) => c.named)) {
 // scripts/chadwick.mjs): open where its drive and its car gate pass. The forecourt in front of
 // Downshire House is open to Roehampton Lane, so the wall doesn't run along it: on either side it
 // turns in to the buildings (North's corner, South's corner). A wall between North and Downshire
-// House closes the gardens behind, with one of the two ways in to the halls where the path
-// passes; the other way in is the gap between Downshire House and South (two posts).
+// House closes the gardens behind. The two ways in to the halls are iron gates (they open with a
+// resident's card): one in that wall where the path passes, one across the gap between Downshire
+// House and South.
 const CAMPUS_CACHE = new URL('scripts/.overpass-cache.json', ROOT);
 let chadwick = null;
 if (existsSync(CAMPUS_CACHE)) {
@@ -370,15 +371,21 @@ if (existsSync(CAMPUS_CACHE)) {
       const pr = lines.map((L) => L.project(xy(g.at)));
       const n = pr.reduce((b, q, i) => (q.dist < pr[b].dist ? i : b), 0);
       if (pr[n].dist > 3) console.warn(`! Chadwick ${g.name} is ${r1(pr[n].dist)} m off the wall`);
-      cutsOf[n].push({ from: pr[n].along - g.width / 2, to: pr[n].along + g.width / 2, named: false, why: `Chadwick Hall: ${g.name}` });
+      cutsOf[n].push({ from: pr[n].along - g.width / 2, to: pr[n].along + g.width / 2, named: false, gate: !!g.gate, line: n, why: `Chadwick Hall: ${g.name}` });
     }
-    const cpieces = lines.flatMap((L, n) => wallPieces(L, cutsOf[n].sort((a, b) => a.from - b.from)));
-    // a way in between two buildings has no wall to end: a post on each side
+    // (the short wall between North and its gate is kept: a stub there is the gate's other side)
+    const cpieces = lines.flatMap((L, n) => wallPieces(L, cutsOf[n].sort((a, b) => a.from - b.from), n === 2 ? 1.2 : MIN_PIECE));
+    // an iron gate, shut, across each gated opening (like the plain gates of the main wall)
+    for (const c of cutsOf.flat().filter((c) => c.gate)) {
+      out.push({ type: 'Feature', properties: { part: 'railing' }, geometry: { type: 'LineString', coordinates: [ll(lines[c.line].at(c.from)), ll(lines[c.line].at(c.to))] } });
+    }
+    // a way in between two buildings has no wall to end: a post on each side, and its gate between
     const posts = W.entrances.filter((e) => e.posts);
     for (const e of posts) {
       const [a, b] = e.posts.map(xy), dir = unit(sub(b, a));
       point('pillar', a, dir);
       point('pillar', b, dir);
+      if (e.gate) out.push({ type: 'Feature', properties: { part: 'railing' }, geometry: { type: 'LineString', coordinates: [ll(add(a, mul(dir, 0.5))), ll(sub(b, mul(dir, 0.5)))] } });
     }
     chadwick = { L: lines.reduce((t, L) => t + L.L, 0), pieces: cpieces, cuts: cutsOf.flat(), posts };
   }
@@ -395,8 +402,8 @@ for (const p of places.places.filter((p) => p.category === 'entrance')) {
 }
 if (chadwick) {
   console.log(`Chadwick Hall wall: ${Math.round(chadwick.L)} m in three lines, ${chadwick.pieces.length} pieces; the forecourt is open to the lane`);
-  for (const c of chadwick.cuts) console.log(`  door  ${r1(c.to - c.from)} m wide  ${c.why}`);
-  for (const e of chadwick.posts) console.log(`  posts  Chadwick Hall: ${e.name}`);
+  for (const c of chadwick.cuts) console.log(`  ${c.gate ? 'gate ' : 'door '} ${r1(c.to - c.from)} m wide  ${c.why}`);
+  for (const e of chadwick.posts) console.log(`  ${e.gate ? 'gate ' : 'posts'}  Chadwick Hall: ${e.name}`);
 }
 const short = pieces.filter(([d0, d1]) => d1 - d0 < MIN_PIECE);
 if (short.length) console.warn(`! ${short.length} pieces shorter than ${MIN_PIECE} m`);

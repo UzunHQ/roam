@@ -4,7 +4,7 @@
 // Flags: --cache  reuse scripts/.overpass-cache.json instead of downloading
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { CHADWICK_PATHS, CHADWICK_CAR_AREA, CHADWICK_CAR_PARK, CHADWICK_EDGE_EXTRA } from './chadwick.mjs';
+import { CHADWICK_PATHS, CHADWICK_CAR_AREA, CHADWICK_CAR_PARK, CHADWICK_EDGE_EXTRA, CHADWICK_SHELTER } from './chadwick.mjs';
 
 const ROOT = new URL('..', import.meta.url);
 const PLACES = new URL('data/places.json', ROOT);
@@ -1101,6 +1101,8 @@ for (const r of LAWN_FILLS) features.push({ type: 'Feature', properties: { layer
     // its paths, gates and car area (scripts/chadwick.mjs: a resident's sketch, not in OSM)
     for (const p of CHADWICK_PATHS) features.push({ type: 'Feature', id: p.id, properties: { layer: 'path', kind: p.kind, drawn: true }, geometry: { type: 'LineString', coordinates: p.ll } });
     features.push({ type: 'Feature', id: 'chadwick/car-area', properties: { layer: 'parking', drawn: true }, geometry: { type: 'Polygon', coordinates: [CHADWICK_CAR_AREA] } });
+    // the little shelter at the top of the lawn (drawn in the app, like the benches)
+    features.push({ type: 'Feature', id: 'chadwick/shelter', properties: { layer: 'shelter', a: Math.round(CHADWICK_SHELTER.a * 1000) / 1000, drawn: true }, geometry: { type: 'Point', coordinates: CHADWICK_SHELTER.at } });
     let seed4 = 23, added = 0;
     const rand4 = () => ((seed4 = (seed4 * 1664525 + 1013904223) % 4294967296) / 4294967296);
     const pathsHere = features.filter((f) => f.properties.layer === 'path');
