@@ -11,3 +11,5 @@ scripts/.overpass-paths-now.json
 # Real GPS walks show where the owner lives and walks: they stay on the Mac, never in this public repo
 docs/gps-logs/*.json
 docs/gps-logs/*.gpx
+# Umami's current script, saved by `npm run check:security -- --live` to compare with the copy
+tmp

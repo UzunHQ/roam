@@ -35,13 +35,17 @@ twice running.
 ## Recording a walk
 
 1. Open `https://roam-roehampton.vercel.app/?gpslog&notrack` on the phone. Use the preview link
-   while testing a branch.
+   while testing a branch. Roam asks **Record a GPS log?**: tap **Record on this device**. (The
+   link alone records nothing, so nobody can be sent a link that logs them without knowing.)
+   A **GPS log on** pill stays under the search bar while it records.
 2. Tap **Find me**, allow location, and walk one of the routes below at a normal pace. Keep the
    phone in your hand, screen on: GPS stops when Roam isn't on screen.
-3. At the end, open **Settings** (the gear) → **Download GPS log (GPX + JSON)**. **Delete log**
-   before the next walk (it asks twice).
+3. At the end, open **Settings** (the gear, or tap the pill) → **Download GPS log (GPX + JSON)**.
+   **Delete log** before the next walk (it asks twice).
    - The log stays in the phone's browser storage (IndexedDB). It is never sent anywhere.
-   - `?gpslog` is remembered until the tab is closed.
+   - Recording lasts until the tab is closed, or **Stop recording** in Settings. The log itself
+     stays until it is deleted: Settings keeps offering Download and Delete for as long as there
+     is one, also on a later visit without `?gpslog`.
 4. Put both files in `docs/gps-logs/` as `YYYY-MM-DD-<route>.json`/`.gpx`. Then run
    `npm run gps:report docs/gps-logs/<file>.json`.
    - **These files stay on your Mac.** `.gitignore` keeps every `.json` and `.gpx` in

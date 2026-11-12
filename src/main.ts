@@ -7,7 +7,7 @@ import { icons, placeIcon } from './icons';
 import { matchingGroups, parseRoom, search } from './search';
 import { circle, distanceM, distanceToBounds, formatDistance, getFix, startCompass, watchFix, type Fix } from './geo';
 import { GpsFilter, nearEnd, pickHeading, type GpsStep, type GpsView } from './gps';
-import { clearGpsLog, gpsLogOn, logGps, readGpsLog, toGpx } from './gpslog';
+import { answerGpsLog, clearGpsLog, gpsLogAsks, gpsLogCount, gpsLogOn, logGps, readGpsLog, toGpx } from './gpslog';
 import { avatarSvg } from './avatar';
 import { byLine, fetchArrivals, minutesUntil, type Arrival } from './bus';
 import { Router, type Route } from './route';
@@ -188,43 +188,75 @@ const settings = $('#settings');
 function openSettings() {
   $$<HTMLInputElement>('input[name=theme]').forEach((r) => (r.checked = r.value === themePref()));
   $$<HTMLInputElement>('input[name=motion]').forEach((r) => (r.checked = r.value === motion()));
-  if (gpsLog) showGpsLogCount();
+  void showGpsLog();
   openDialog(settings, $('#settings-close'));
 }
-// ?gpslog: the GPS recording's two buttons (src/gpslog.ts); hidden otherwise
-const gpsLog = gpsLogOn();
-const gpsDelete = $('#gpslog-delete');
-function showGpsLogCount() {
+// The GPS recording (src/gpslog.ts). ?gpslog in the address only asks; it records after "Record on
+// this device" and says so on the map. Settings shows the log's buttons while it records, and for
+// as long as this device holds a recording, so whoever has one can always download or delete it.
+let gpsLog = gpsLogOn();
+const gpsDelete = $('#gpslog-delete'), gpsChip = $('#gpslog-chip'), gpsAsk = $('#gpslog-ask');
+async function showGpsLog() {
   gpsDelete.textContent = 'Delete log';
   delete gpsDelete.dataset.armed;
-  readGpsLog().then((l) => { $('#gpslog-count').textContent = `${l.length} readings recorded on this device only. Nothing is sent anywhere.`; }, () => {});
+  const n = await gpsLogCount();
+  $('#gpslog-set').hidden = !gpsLog && !n;
+  $('#gpslog-stop').hidden = !gpsLog;
+  gpsDelete.hidden = !n;
+  gpsChip.hidden = !gpsLog;
+  const readings = `${n} reading${n === 1 ? '' : 's'}`;
+  $('#gpslog-count').textContent = gpsLog
+    ? `Recording. ${readings} stored on this device only. Nothing is sent anywhere.`
+    : `${readings} from a GPS recording, stored on this device. Nothing was sent anywhere.`;
 }
-if (gpsLog) {
-  $('#gpslog-set').hidden = false;
-  $('#gpslog-download').addEventListener('click', async () => {
-    const log = await readGpsLog();
-    if (!log.length) { toast('The GPS log is empty. Use Find me and walk a little first.'); return; }
-    const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
-    const save = (text: string, type: string, name: string) => {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([text], { type }));
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-    };
-    save(toGpx(log), 'application/gpx+xml', `roam-gps-${stamp}.gpx`);
-    save(JSON.stringify({ app: 'Roam', version: 1, recorded: log.length, entries: log }, null, 1), 'application/json', `roam-gps-${stamp}.json`);
-  });
-  // two taps: the first asks
-  gpsDelete.addEventListener('click', async () => {
-    if (!gpsDelete.dataset.armed) { gpsDelete.dataset.armed = '1'; gpsDelete.textContent = 'Tap again to delete the log'; return; }
-    await clearGpsLog();
-    showGpsLogCount();
-    toast('GPS log deleted.');
-  });
+void showGpsLog();
+gpsChip.addEventListener('click', openSettings);
+$('#gpslog-download').addEventListener('click', async () => {
+  const log = await readGpsLog();
+  if (!log.length) { toast('The GPS log is empty. Use Find me and walk a little first.'); return; }
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+  const save = (text: string, type: string, name: string) => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type }));
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  };
+  save(toGpx(log), 'application/gpx+xml', `roam-gps-${stamp}.gpx`);
+  save(JSON.stringify({ app: 'Roam', version: 1, recorded: log.length, entries: log }, null, 1), 'application/json', `roam-gps-${stamp}.json`);
+});
+$('#gpslog-stop').addEventListener('click', () => {
+  answerGpsLog(false);
+  gpsLog = false;
+  void showGpsLog();
+  toast('GPS recording stopped. The log stays on this device until you delete it.');
+});
+// two taps: the first asks
+gpsDelete.addEventListener('click', async () => {
+  if (!gpsDelete.dataset.armed) { gpsDelete.dataset.armed = '1'; gpsDelete.textContent = 'Tap again to delete the log'; return; }
+  await clearGpsLog();
+  await showGpsLog();
+  toast('GPS log deleted.');
+});
+// "No thanks" (or Esc) also takes ?gpslog out of the address, so a reload doesn't ask again
+function answerGpsAsk(record: boolean) {
+  answerGpsLog(record);
+  gpsLog = record && gpsLogOn();
+  closeDialog(gpsAsk);
+  if (!record) {
+    const u = new URL(location.href);
+    u.searchParams.delete('gpslog');
+    history.replaceState(history.state, '', u.pathname + u.search.replace(/=(?=&|$)/g, '') + u.hash);
+  }
+  void showGpsLog();
+  if (gpsLog) toast('GPS log on. Use Find me and walk; download it in Settings.', 7000);
 }
+$('#gpslog-yes').addEventListener('click', () => answerGpsAsk(true));
+$('#gpslog-no').addEventListener('click', () => answerGpsAsk(false));
+gpsAsk.addEventListener('click', (e) => { if (e.target === gpsAsk) answerGpsAsk(false); });
+if (gpsLogAsks()) openDialog(gpsAsk, $('#gpslog-no'));
 settings.addEventListener('change', (e) => {
   const r = e.target as HTMLInputElement;
   if (r.name === 'theme') { store.set('roam.theme', r.value); applyThemeChoice(); }
@@ -2726,7 +2758,8 @@ async function main() {
   // ---------- keyboard: Esc closes the top-most layer ----------
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!about.hidden) closeDialog(about);
+    if (!gpsAsk.hidden) answerGpsAsk(false); // Esc is "No thanks"
+    else if (!about.hidden) closeDialog(about);
     else if (!settings.hidden) closeDialog(settings);
     else if (!welcome.hidden) dismissWelcome(); // same as X: remembered on this device
     else if (navigating) endNavigation();

@@ -21,6 +21,7 @@
     "check:gps": "node scripts/check-gps.mjs",
     "check:paths": "node scripts/check-paths.mjs",
     "check:bus": "node scripts/check-bus.mjs",
+    "check:security": "node scripts/check-security.mjs",
     "gps:report": "node scripts/gps-report.mjs",
     "test:smoke": "node scripts/smoke.mjs http://localhost:5173",
     "test:webkit": "BROWSER=webkit node scripts/smoke-engine.mjs http://localhost:4173"

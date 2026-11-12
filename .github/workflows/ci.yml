@@ -26,6 +26,7 @@ jobs:
       - run: npm run check:gps
       - run: npm run check:paths
       - run: npm run check:bus
+      - run: npm run check:security
       - run: npx playwright-core install --with-deps chromium
       - name: Smoke tests
         run: |
@@ -34,6 +35,26 @@ jobs:
           npm run test:smoke
       - if: failure()
         run: cat dev.log || true
+
+  # The analytics script is served from this site as a pinned copy (public/vendor/umami.js). This says
+  # when Umami has published a newer one, and keeps it as an artifact to read and copy in. It needs
+  # the network and is news, not an error: it never blocks.
+  umami:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-security.mjs --live
+      - uses: actions/upload-artifact@v4
+        if: hashFiles('tmp/umami-live.js') != ''
+        with:
+          name: umami-live
+          path: tmp/umami-live.js
+          retention-days: 14
 
   # Safari's engine (every iPhone): the built app comes up, searches, opens cards and plans a walk
   # with no errors (scripts/smoke-engine.mjs). New, so it reports without blocking for now.

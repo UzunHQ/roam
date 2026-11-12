@@ -347,6 +347,68 @@ const layout = () => {
   await ctx.close();
 }
 
+// ---------- the GPS log (?gpslog): a link alone can't start it ----------
+{
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true, permissions: ['geolocation'], geolocation: { latitude: 51.458225, longitude: -0.244758, accuracy: 8 } });
+  await ctx.addInitScript(() => { try { localStorage.setItem('roam.welcomed', '1'); localStorage.setItem('roam.locationAsked', '1'); } catch { /* */ } });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text()); });
+  const state = () => page.evaluate(async () => ({
+    flag: sessionStorage.getItem('roam.gpslog'),
+    db: (await indexedDB.databases()).some((d) => d.name === 'roam-gpslog'),
+    chip: !document.querySelector('#gpslog-chip').hidden,
+    ask: !document.querySelector('#gpslog-ask').hidden,
+  }));
+  const go = async (path) => { await page.goto(BASE + path); await page.waitForSelector('#loading', { state: 'hidden', timeout: 90_000 }); await page.waitForTimeout(800); };
+  await go('/?gpslog&notrack');
+  let st = await state();
+  check('gps log: the link asks first, and nothing is recording', st.ask && st.flag === null && !st.db && !st.chip, JSON.stringify(st));
+  // the question is in the way of everything else (Find me can't be reached), and nothing records behind it
+  const blocked = await page.click('#findme', { timeout: 1500 }).then(() => false, () => true);
+  await page.waitForTimeout(1500);
+  st = await state();
+  check('gps log: with the question unanswered, nothing can record', blocked && !st.db && st.flag === null, JSON.stringify({ blocked, ...st }));
+  await page.click('#gpslog-no');
+  st = await state();
+  check('gps log: "No thanks" closes it and takes ?gpslog out of the address', !st.ask && !st.chip && st.flag === '0' && !/gpslog/.test(page.url()), `${JSON.stringify(st)} ${page.url()}`);
+  await page.click('#settings-btn');
+  check('gps log: Settings has no GPS log section then', await page.locator('#gpslog-set').isHidden());
+  await page.click('#settings-close');
+  // the link again, and this time yes
+  await go('/?gpslog&notrack');
+  check('gps log: the link asks again', (await state()).ask);
+  await page.click('#gpslog-yes');
+  st = await state();
+  check('gps log: after "Record on this device" the map says it is on', !st.ask && st.chip && st.flag === '1', JSON.stringify(st));
+  await page.click('#findme');
+  await page.waitForFunction(async () => {
+    if (!(await indexedDB.databases()).some((d) => d.name === 'roam-gpslog')) return false;
+    return new Promise((res) => { const r = indexedDB.open('roam-gpslog'); r.onsuccess = () => { const q = r.result.transaction('fixes').objectStore('fixes').count(); q.onsuccess = () => res(q.result > 0); q.onerror = () => res(false); }; r.onerror = () => res(false); });
+  }, null, { timeout: 15_000 }).catch(() => {});
+  await page.click('#gpslog-chip');
+  await page.waitForFunction(() => /Recording\. [1-9]/.test(document.querySelector('#gpslog-count').textContent), null, { timeout: 5000 }).catch(() => {});
+  const text = await page.locator('#gpslog-count').innerText();
+  check('gps log: readings are recorded, and Settings counts them', /^Recording\. [1-9]\d* readings? stored/.test(text) && await page.locator('#gpslog-stop').isVisible(), text);
+  // a later visit without the link (a new tab): not recording, but the log can still be downloaded or deleted
+  const later = await ctx.newPage();
+  await later.goto(BASE + '/?notrack');
+  await later.waitForSelector('#loading', { state: 'hidden', timeout: 90_000 });
+  await later.waitForTimeout(800);
+  await later.click('#settings-btn');
+  await later.waitForFunction(() => /from a GPS recording/.test(document.querySelector('#gpslog-count').textContent), null, { timeout: 5000 }).catch(() => {});
+  const kept = await later.locator('#gpslog-count').innerText().catch(() => '');
+  check('gps log: a later visit is not recording, and still offers download and delete',
+    await later.locator('#gpslog-chip').isHidden() && await later.locator('#gpslog-download').isVisible() && await later.locator('#gpslog-delete').isVisible() && await later.locator('#gpslog-stop').isHidden() && /from a GPS recording/.test(kept), kept);
+  await later.click('#gpslog-delete');
+  await later.click('#gpslog-delete');
+  await later.waitForTimeout(500);
+  check('gps log: deleting it takes the section away', await later.locator('#gpslog-set').isHidden());
+  check('gps log: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+
 await browser.close();
 console.log(failed ? `${failed} failed` : 'all passed');
 process.exit(failed ? 1 : 0);

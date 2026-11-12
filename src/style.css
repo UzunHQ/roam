@@ -276,6 +276,16 @@ html[data-motion="reduced"] #map::before, html[data-motion="off"] #map::before {
   background: var(--text); color: var(--surface); font-size: 14px; font-weight: 650;
   box-shadow: var(--shadow); animation: pop 0.18s var(--ease);
 }
+/* the GPS log is recording: a pill under the search bar for as long as it does */
+.rec-chip {
+  display: flex; align-items: center; gap: 8px; margin: 4px auto 0; min-height: 36px; padding: 0 14px;
+  border: 0; border-radius: 999px; background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+  font: inherit; font-size: 14px; font-weight: 750; cursor: pointer;
+}
+.rec-chip[hidden] { display: none; }
+.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: #e5484d; }
+.ask-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.ask-actions .btn { flex: 1 1 150px; }
 .toast-action {
   margin-left: 6px; padding: 4px 10px; border: 0; border-radius: 999px; font: inherit;
   background: var(--surface); color: var(--text); cursor: pointer; pointer-events: auto;
@@ -964,7 +974,7 @@ body.hello-open .key-btn, body.hello-open .find-label { display: none; }
 /* ---------- walking: Start folds the directions into a slim bar; the map gets the screen ---------- */
 .route-go { display: flex; margin: 0 0 12px; }
 .route-go .btn { flex: 1; min-height: 52px; font-size: 17px; }
-body.navigating .top > :not(.toast), body.navigating .key-btn, body.navigating .key, body.navigating .find-label { display: none; }
+body.navigating .top > :not(.toast, .rec-chip), body.navigating .key-btn, body.navigating .key, body.navigating .find-label { display: none; }
 .panel.nav { padding-top: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
 .panel.nav .handle { display: none; }
 .nav-bar { display: flex; align-items: center; gap: 10px; }

@@ -60,6 +60,8 @@ New students at Roehampton get lost, and the tools they have don't help much:
 - No accounts, no cookies, no backend, no API keys in the code.
 - A strict Content Security Policy lets the page talk only to itself, the library hours feed and Umami.
 - You can turn analytics off: open [roam-roehampton.vercel.app/?notrack](https://roam-roehampton.vercel.app/?notrack).
+- A testing tool can record your location readings on your own phone (`?gpslog`, for measuring the GPS). It never starts from a link alone: Roam asks first, shows a "GPS log on" pill while it records, and Settings can always delete the log.
+- Found a security or privacy problem? See [security.txt](https://roam-roehampton.vercel.app/.well-known/security.txt).
 
 ## Measuring it
 

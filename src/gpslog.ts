@@ -1,7 +1,9 @@
-// GPS recording, for measuring how well the location works on campus (docs/GPS.md). Only with
-// ?gpslog in the address (remembered for the tab): every raw reading from the phone, and where the
-// app showed you, go into this device's IndexedDB. Nothing is sent anywhere. Settings then has
-// "Download GPS log (GPX + JSON)" and "Delete log".
+// GPS recording, for measuring how well the location works on campus (docs/GPS.md). ?gpslog in the
+// address only asks: nothing is recorded until the person agrees (the answer is remembered for the
+// tab), so a link alone can't start it. Then every raw reading from the phone,
+// and where the app showed you, go into this device's IndexedDB. Nothing is sent anywhere. While
+// it records, the map says so; Settings has "Download GPS log (GPX + JSON)", "Stop recording" and
+// "Delete log", and keeps the first and last of these for as long as the device holds a recording.
 import type { LngLat } from './types';
 
 export interface GpsLogEntry {
@@ -19,12 +21,28 @@ export interface GpsLogEntry {
 }
 
 const DB = 'roam-gpslog', STORE = 'fixes';
+const FLAG = 'roam.gpslog'; // this tab's answer: '1' record, '0' don't
+const HAS = 'roam.gpslog.has'; // this device has recorded (for browsers that can't list their databases)
 
+/** is the recording on in this tab? Only after the person agreed. */
 export function gpsLogOn(): boolean {
+  try { return sessionStorage.getItem(FLAG) === '1'; } catch { return false; }
+}
+/** ?gpslog is in the address and this tab isn't recording: ask before recording anything */
+export function gpsLogAsks(): boolean {
+  try { return new URLSearchParams(location.search).has('gpslog') && sessionStorage.getItem(FLAG) !== '1'; } catch { return false; }
+}
+export function answerGpsLog(record: boolean) {
+  try { sessionStorage.setItem(FLAG, record ? '1' : '0'); } catch { /* private mode: nothing is recorded */ }
+}
+/** how many readings this device holds, without creating the database on a device that never recorded */
+export async function gpsLogCount(): Promise<number> {
   try {
-    if (new URLSearchParams(location.search).has('gpslog')) sessionStorage.setItem('roam.gpslog', '1');
-    return sessionStorage.getItem('roam.gpslog') === '1';
-  } catch { return false; }
+    if (typeof indexedDB.databases === 'function') {
+      if (!(await indexedDB.databases()).some((d) => d.name === DB)) return 0;
+    } else if (localStorage.getItem(HAS) !== '1') return 0;
+    return (await readGpsLog()).length;
+  } catch { return 0; }
 }
 
 let dbp: Promise<IDBDatabase> | null = null;
@@ -43,6 +61,7 @@ export async function logGps(e: GpsLogEntry) {
     const t = (await db()).transaction(STORE, 'readwrite');
     t.objectStore(STORE).add(e);
     await done(t);
+    try { localStorage.setItem(HAS, '1'); } catch { /* ignore */ }
   } catch (err) { console.warn('gps log', err); }
 }
 
@@ -57,6 +76,7 @@ export async function clearGpsLog() {
   const t = (await db()).transaction(STORE, 'readwrite');
   t.objectStore(STORE).clear();
   await done(t);
+  try { localStorage.removeItem(HAS); } catch { /* ignore */ }
 }
 
 const iso = (ms: number) => new Date(ms).toISOString();

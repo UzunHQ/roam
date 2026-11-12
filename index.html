@@ -51,6 +51,8 @@
         </span>
         <div id="open-empty" class="open-empty" hidden></div>
       </div>
+      <!-- shown for as long as the GPS log records (asked for with ?gpslog, agreed to in the dialog below) -->
+      <button type="button" id="gpslog-chip" class="rec-chip" aria-haspopup="dialog" hidden><span class="rec-dot" aria-hidden="true"></span>GPS log on</button>
       <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     </header>
 
@@ -151,12 +153,26 @@
         </fieldset>
         <fieldset class="motion-set" id="gpslog-set" hidden>
           <legend>GPS log</legend>
-          <p class="small" id="gpslog-count">Recording your location on this device only.</p>
+          <p class="small" id="gpslog-count">Location readings stored on this device only.</p>
           <button type="button" class="btn ghost" id="gpslog-download">Download GPS log (GPX + JSON)</button>
+          <button type="button" class="btn ghost" id="gpslog-stop" hidden>Stop recording</button>
           <button type="button" class="btn ghost" id="gpslog-delete">Delete log</button>
         </fieldset>
         <button type="button" class="btn ghost welcome-again" id="welcome-again">Show welcome again</button>
         <p class="small">Your choices are saved on this device only.</p>
+      </div>
+    </div>
+
+    <!-- ?gpslog in the address: nothing is recorded unless the person agrees here -->
+    <div id="gpslog-ask" class="about" role="dialog" aria-modal="true" aria-labelledby="gpslog-ask-title" hidden>
+      <div class="about-card">
+        <h2 id="gpslog-ask-title">Record a GPS log?</h2>
+        <p>This link turns on a testing tool. If you agree, Roam stores every location reading on this device while this tab is open, to measure how well the location works on campus.</p>
+        <p>Nothing is sent anywhere. You can stop, download or delete the log in Settings.</p>
+        <div class="ask-actions">
+          <button type="button" class="btn primary" id="gpslog-yes">Record on this device</button>
+          <button type="button" class="btn ghost" id="gpslog-no">No thanks</button>
+        </div>
       </div>
     </div>
 
