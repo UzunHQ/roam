@@ -58,7 +58,8 @@ New students at Roehampton get lost, and the tools they have don't help much:
 
 - **Your location never leaves your phone.** Roam only uses it to draw you on the map and plan a route.
 - No accounts, no cookies, no backend, no API keys in the code.
-- A strict Content Security Policy lets the page talk only to itself, the library hours feed and Umami.
+- A strict Content Security Policy lets the page talk only to itself, the library hours feed, TfL's bus times and Umami.
+- No code from another site runs in Roam: even the analytics script is a pinned copy served from this site (`npm run check:security` keeps that true and says when Umami publishes a newer one).
 - You can turn analytics off: open [roam-roehampton.vercel.app/?notrack](https://roam-roehampton.vercel.app/?notrack).
 - A testing tool can record your location readings on your own phone (`?gpslog`, for measuring the GPS). It never starts from a link alone: Roam asks first, shows a "GPS log on" pill while it records, and Settings can always delete the log.
 - Found a security or privacy problem? See [security.txt](https://roam-roehampton.vercel.app/.well-known/security.txt).

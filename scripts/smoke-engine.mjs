@@ -70,6 +70,22 @@ async function open(path) {
   await ctx.close();
 }
 
+// the analytics script (built app only): it is this site's own copy, and it runs
+// (opened with ?notrack as everywhere here, so it sends nothing)
+{
+  const { page, ctx, errors } = await open('/');
+  await page.waitForFunction(() => typeof window.umami?.track === 'function', null, { timeout: 10_000 }).catch(() => {});
+  const a = await page.evaluate(() => ({
+    scripts: [...document.scripts].map((s) => s.src).filter((src) => /umami/.test(src)),
+    ready: typeof window.umami?.track === 'function',
+    off: localStorage.getItem('umami.disabled'),
+  }));
+  check('analytics: the script comes from this site', a.scripts.length === 1 && a.scripts[0] === `${BASE}/vendor/umami.js`, a.scripts.join(', '));
+  check('analytics: it runs, and a test visit is not counted', a.ready && a.off === '1', JSON.stringify(a));
+  check('analytics: no errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await ctx.close();
+}
+
 await browser.close();
 console.log(failed ? `${NAME}: ${failed} failed` : `${NAME}: all passed`);
 process.exit(failed ? 1 : 0);

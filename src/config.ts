@@ -15,9 +15,11 @@ export const config = {
   reportEmail: '',
 
   // Cookieless analytics (Umami). Leave websiteId empty to turn analytics off.
-  // Umami Cloud: https://cloud.umami.is/script.js
+  // The script is a copy of Umami Cloud's (https://cloud.umami.is/script.js) served from this site,
+  // so no code from another site runs in Roam; it sends to Umami's gateway by itself. Refreshing
+  // the copy, and what must stay in step with it (vercel.json): scripts/check-security.mjs.
   analytics: {
-    umamiScript: 'https://cloud.umami.is/script.js',
+    umamiScript: '/vendor/umami.js',
     umamiWebsiteId: '86225c01-6aeb-4f62-8c81-fca0638d6e1b',
   },
 
