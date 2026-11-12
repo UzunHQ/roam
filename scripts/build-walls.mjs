@@ -15,7 +15,7 @@
 // the building's outer side, against its walls. Piers stiffen it every ~17 m and at corners.
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { CHADWICK_GATES } from './chadwick.mjs';
+import { CHADWICK_GATES, CHADWICK_WALL } from './chadwick.mjs';
 
 const ROOT = new URL('..', import.meta.url);
 const OUT = new URL('data/walls.geojson', ROOT);
@@ -336,8 +336,12 @@ for (const c of cuts.filter((c) => c.named)) {
 }
 
 // ---------- 5. Chadwick Hall's plot ----------
-// A wall all round the halls' plot (OSM way/393563937), as a resident describes it (9 Nov 2026),
-// open where its drive, its pedestrian gate and its car gate pass (scripts/chadwick.mjs).
+// A wall round the halls' plot (OSM way/393563937), as a resident describes it (9 and 12 Nov 2026,
+// scripts/chadwick.mjs): open where its drive and its car gate pass. The forecourt in front of
+// Downshire House is open to Roehampton Lane, so the wall doesn't run along it: on either side it
+// turns in to the buildings (North's corner, South's corner). A wall between North and Downshire
+// House closes the gardens behind, with one of the two ways in to the halls where the path
+// passes; the other way in is the gap between Downshire House and South (two posts).
 const CAMPUS_CACHE = new URL('scripts/.overpass-cache.json', ROOT);
 let chadwick = null;
 if (existsSync(CAMPUS_CACHE)) {
@@ -348,12 +352,35 @@ if (existsSync(CAMPUS_CACHE)) {
     // start (and end) at the south-west corner, away from every opening
     const k = r.reduce((b, p, i) => (p[0] + p[1] < r[b][0] + r[b][1] ? i : b), 0);
     const C = measure([...r.slice(k), ...r.slice(0, k), r[k]]);
-    const ccuts = CHADWICK_GATES.map((g) => {
-      const pr = C.project(xy(g.at));
-      if (pr.dist > 3) console.warn(`! Chadwick ${g.name} is ${r1(pr.dist)} m off the plot's edge`);
-      return { from: pr.along - g.width / 2, to: pr.along + g.width / 2, named: false, why: `Chadwick Hall: ${g.name}` };
-    }).sort((a, b) => a.from - b.from);
-    chadwick = { L: C.L, pieces: wallPieces(C, ccuts), cuts: ccuts };
+    const W = CHADWICK_WALL;
+    const [o0, o1] = [W.open.north, W.open.south].map((p) => C.project(xy(p)));
+    for (const o of [o0, o1]) if (o.dist > 3) console.warn(`! Chadwick: an end of the open forecourt is ${r1(o.dist)} m off the plot's edge`);
+    if (o0.along > o1.along) throw new Error('Chadwick: the open forecourt runs the wrong way round the plot');
+    // three lines: round the plot to the forecourt and in to North; from South out to the lane and
+    // on round the plot; and the wall between North and Downshire House
+    const lines = [
+      measure([...C.slice(0, o0.along), xy(W.toNorth)]),
+      measure([xy(W.toSouth), ...C.slice(o1.along, C.L)]),
+      measure(W.inner.map(xy)),
+    ];
+    const openings = [...CHADWICK_GATES, ...W.entrances.filter((e) => e.at)];
+    const cutsOf = lines.map(() => []);
+    for (const g of openings) {
+      // each opening is cut in the line it lies on
+      const pr = lines.map((L) => L.project(xy(g.at)));
+      const n = pr.reduce((b, q, i) => (q.dist < pr[b].dist ? i : b), 0);
+      if (pr[n].dist > 3) console.warn(`! Chadwick ${g.name} is ${r1(pr[n].dist)} m off the wall`);
+      cutsOf[n].push({ from: pr[n].along - g.width / 2, to: pr[n].along + g.width / 2, named: false, why: `Chadwick Hall: ${g.name}` });
+    }
+    const cpieces = lines.flatMap((L, n) => wallPieces(L, cutsOf[n].sort((a, b) => a.from - b.from)));
+    // a way in between two buildings has no wall to end: a post on each side
+    const posts = W.entrances.filter((e) => e.posts);
+    for (const e of posts) {
+      const [a, b] = e.posts.map(xy), dir = unit(sub(b, a));
+      point('pillar', a, dir);
+      point('pillar', b, dir);
+    }
+    chadwick = { L: lines.reduce((t, L) => t + L.L, 0), pieces: cpieces, cuts: cutsOf.flat(), posts };
   }
 }
 if (!chadwick) console.warn('! No Chadwick Hall plot (run build:campus first): its wall is left out');
@@ -367,8 +394,9 @@ for (const p of places.places.filter((p) => p.category === 'entrance')) {
   console.log(`${g ? 'ok  ' : 'MISS'} ${p.name}: ${g ? 'garden gate' : 'no gate!'}`);
 }
 if (chadwick) {
-  console.log(`Chadwick Hall wall: ${Math.round(chadwick.L)} m round the plot, ${chadwick.pieces.length} pieces`);
+  console.log(`Chadwick Hall wall: ${Math.round(chadwick.L)} m in three lines, ${chadwick.pieces.length} pieces; the forecourt is open to the lane`);
   for (const c of chadwick.cuts) console.log(`  door  ${r1(c.to - c.from)} m wide  ${c.why}`);
+  for (const e of chadwick.posts) console.log(`  posts  Chadwick Hall: ${e.name}`);
 }
 const short = pieces.filter(([d0, d1]) => d1 - d0 < MIN_PIECE);
 if (short.length) console.warn(`! ${short.length} pieces shorter than ${MIN_PIECE} m`);
@@ -377,7 +405,7 @@ await writeFile(OUT, JSON.stringify({
   type: 'FeatureCollection',
   generated: new Date().toISOString().slice(0, 10),
   attribution: '© OpenStreetMap contributors (ODbL)',
-  source: `OSM ways ${CLARENCE_WALLS.join(', ')} (barrier=wall), relation ${UNIVERSITY} (university boundary), gates and entrances; Chadwick Hall: plot way/393563937, its wall and gates from a resident (9 Nov 2026)`,
+  source: `OSM ways ${CLARENCE_WALLS.join(', ')} (barrier=wall), relation ${UNIVERSITY} (university boundary), gates and entrances; Chadwick Hall: plot way/393563937, its wall, gates and ways in from a resident (9 and 12 Nov 2026)`,
   features: out,
 }));
 const count = (part) => out.filter((f) => f.properties.part === part).length;

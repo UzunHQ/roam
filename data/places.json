@@ -3092,13 +3092,13 @@
       "category": "building",
       "kind": "parking",
       "college": "froebel",
-      "description": "An open car park at Chadwick Hall, by South and Downshire House on the Roehampton Lane side, reached through the vehicle gate. Its outline is not on OpenStreetMap, so the pin is approximate.",
+      "description": "A small car park at Chadwick Hall: three bays along the wall on the south side of South, reached through the vehicle gate. Drawn from a resident's sketch (November 2026): it is not on OpenStreetMap, so the position is approximate.",
       "position": [
-        -0.244104,
-        51.452877
+        -0.244453,
+        51.45259
       ],
       "positionSource": "estimate",
-      "positionAccuracyM": 25,
+      "positionAccuracyM": 10,
       "footprintId": null,
       "services": [],
       "sources": [
@@ -4806,7 +4806,7 @@
       "category": "entrance",
       "kind": "entrance",
       "college": null,
-      "description": "The pedestrian gate into Chadwick Hall from Roehampton Lane, by bus stop S. Not verified: the position is approximate.",
+      "description": "The way into Chadwick Hall from Roehampton Lane, by bus stop S. The forecourt in front of Downshire House is open to the lane here; the halls' own ways in are between the buildings, beside North and beside South (a resident's sketch, November 2026). Not verified: the position is approximate.",
       "position": [
         -0.243944,
         51.453124

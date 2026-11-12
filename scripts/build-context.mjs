@@ -222,7 +222,7 @@ const inZone = (p) => inKeep(p) || inCampus(p) || inPlot(p) || inSite(p) || inPa
 
 // ---------- what was there, outside the zone, goes ----------
 const removed = { building: 0, tree: 0, path: 0, other: 0 };
-const firstPoint = (g) => (g.type === 'Point' ? g.coordinates : g.type === 'LineString' ? g.coordinates[0] : g.type === 'Polygon' ? g.coordinates[0][0] : g.coordinates[0][0][0]);
+const firstPoint = (g) => (g.type === 'Point' ? g.coordinates : g.type === 'LineString' ? g.coordinates[0] : g.type === 'Polygon' || g.type === 'MultiLineString' ? g.coordinates[0][0] : g.coordinates[0][0][0]);
 const KEEP = new Set(['mapedge', 'green', 'golf', 'water', 'waterway', 'golfflag']); // ground: under the frame anyway, cut in build-campus
 features = features.filter((f) => {
   const { layer } = f.properties;
@@ -630,13 +630,15 @@ features.push({ type: 'Feature', properties: { layer: 'contextzone', context: tr
 // closed round the map's west and north edge; Chadwick Hall: the wall round its plot; Whitelands:
 // its OSM outline. The wall and the green edge share the same line, so the colour change is crisp.
 const wallLines = walls.features.filter((f) => f.properties?.part === 'wall' && !f.properties?.whitelands && f.geometry.type === 'LineString').map((f) => f.geometry.coordinates.map(toM));
-const isChadwickWall = (l) => PLOT.length > 0 && l.every((q) => distToSegs(q, plotSegs) < 15);
+// Chadwick's walls: on its plot's edge, or inside it (the wall between North and Downshire House)
+const isChadwickWall = (l) => PLOT.length > 0 && l.every((q) => pointInRing(q, PLOT) || distToSegs(q, plotSegs) < 15);
 const chain = (lines) => lines.reduce((acc, l) => [...acc, ...l], []);
 const mainWall = chain(wallLines.filter((l) => !isChadwickWall(l)));
 const MAIN_CLOSE = [[-386, -67], [-360, 98], [-304, 244], [-244, 378], [-177, 497], [166, 559]]; // the map's edge (build-campus MAP_EDGE), west and north
 const focusRings = [
   { name: 'campus', ring: [...mainWall, ...MAIN_CLOSE] },
-  { name: 'chadwick', ring: chain(wallLines.filter(isChadwickWall)) },
+  // the halls' own ground is their plot, whatever line the wall takes (it leaves the forecourt open)
+  { name: 'chadwick', ring: PLOT.length && wallLines.some(isChadwickWall) ? PLOT.slice(0, -1) : [] },
   { name: 'whitelands', ring: WL.slice(0, -1) },
 ].filter((r) => r.ring.length > 3).map((r) => ({ ...r, ring: [...r.ring, r.ring[0]] }));
 const inFocus = (p) => focusRings.some((r) => pointInRing(p, r.ring));

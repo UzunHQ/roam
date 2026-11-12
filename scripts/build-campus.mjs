@@ -4,7 +4,7 @@
 // Flags: --cache  reuse scripts/.overpass-cache.json instead of downloading
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { CHADWICK_PATHS, CHADWICK_CAR_AREA, CHADWICK_EDGE_EXTRA } from './chadwick.mjs';
+import { CHADWICK_PATHS, CHADWICK_CAR_AREA, CHADWICK_CAR_PARK, CHADWICK_EDGE_EXTRA } from './chadwick.mjs';
 
 const ROOT = new URL('..', import.meta.url);
 const PLACES = new URL('data/places.json', ROOT);
@@ -445,9 +445,13 @@ const PARKING = [
     place: 'south-car-park', aisles: [293959905], seed: 5, // (seed: which bays are taken, about 60%)
     area: [[-107.7, 9.1], [-139.4, 13.2], [-138.6, 19.4], [-106.9, 15.2]],
   },
+  { // Chadwick Hall: the narrow strip between South's south face and the plot's south wall, in from
+    // the car gate; three bays nose to tail along the wall, a car in each (a resident, 12 Nov 2026)
+    place: 'chadwick-hall-car-park', aisles: [], seed: 12, area: CHADWICK_CAR_PARK.area, kerb: CHADWICK_CAR_PARK.kerb, bays: CHADWICK_CAR_PARK.bays,
+  },
 ];
 // parked cars: low-poly boxes drawn in the app (map.ts); about 60% of the bays are taken
-const CAR = { long: 4.3, wide: 1.8, pitch: 2.6, aisleHalf: 3, colours: 6 };
+const CAR = { long: 4.3, wide: 1.8, pitch: 2.6, aisleHalf: 3, colours: 6, along: 5.4, kerbWide: 2.2 }; // (along, kerbWide: a bay beside a kerb)
 // do two parked cars (corner lists) overlap? separating-axis test on their edges
 const overlap = (a, b) => [a, b].every((poly) => poly.every((p, i) => {
   const q = poly[(i + 1) % poly.length], ax = [q[1] - p[1], p[0] - q[0]];
@@ -513,6 +517,24 @@ PARKING.forEach((lot, i) => {
           cars++;
         }
       }
+    }
+  }
+  // bays nose to tail beside a kerb: `lot.bays` of them, centred on the kerb line and lying to its
+  // left, a car in each. Painted like the rest: a line across each end of a bay, one along the open side.
+  if (lot.kerb) {
+    const [[kx, ky], [lx, ly]] = lot.kerb, klen = Math.hypot(lx - kx, ly - ky);
+    const u = [(lx - kx) / klen, (ly - ky) / klen], nrm = [-u[1], u[0]];
+    const d0 = (klen - lot.bays * CAR.along) / 2;
+    const at = (d, o) => [kx + u[0] * d + nrm[0] * o, ky + u[1] * d + nrm[1] * o];
+    const paint = (s0, s1) => { const line = lineInLot(s0, s1, lot.area); if (line) bayLines.set(line.flat().map((v) => v.toFixed(1)).join(','), line.map(fromM)); };
+    for (let b = 0; b <= lot.bays; b++) paint(at(d0 + b * CAR.along, 0), at(d0 + b * CAR.along, CAR.kerbWide));
+    paint(at(d0, CAR.kerbWide), at(d0 + lot.bays * CAR.along, CAR.kerbWide));
+    for (let b = 0; b < lot.bays; b++) {
+      const c = at(d0 + (b + 0.5) * CAR.along, CAR.kerbWide / 2), k = b + 1;
+      bays.push(c);
+      const a = Math.round((Math.atan2(-u[1], -u[0]) + (hash(li, k, 2) - 0.5) * 0.08) * 1000) / 1000;
+      features.push({ type: 'Feature', properties: { layer: 'car', a, c: Math.floor(hash(li, k, 3) * CAR.colours) }, geometry: { type: 'Point', coordinates: fromM(c) } });
+      cars++;
     }
   }
   // one feature for the lot's painted lines (small file); drawn like the courts' lines, in the bays' own colour
