@@ -77,6 +77,12 @@ if (args.has('--live') || args.has('--update')) {
       await writeFile(new URL('tmp/umami-live.js', ROOT), live);
       const msg = copy === null ? 'there is no copy yet' : 'Umami has published a newer script than the copy';
       console.log(`${process.env.GITHUB_ACTIONS ? '::warning::' : '!    '}analytics: ${msg}. Saved to tmp/umami-live.js (npm run check:security -- --update copies it in).`);
+      if (process.env.GITHUB_ACTIONS) {
+        // also in the log, for whoever can read the log but not download the artifact: base64 -d gives the script
+        console.log("::group::Umami's current script, base64");
+        console.log(`UMAMI-B64-BEGIN\n${Buffer.from(live).toString('base64').match(/.{1,76}/g).join('\n')}\nUMAMI-B64-END`);
+        console.log('::endgroup::');
+      }
     }
   } catch (e) {
     console.log(`--   analytics: couldn't reach ${LIVE_URL} (${e.message}); the copy wasn't compared`);
