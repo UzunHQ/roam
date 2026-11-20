@@ -106,3 +106,7 @@ npm run test:smoke                     # in another
 
 Made by **Hüseyin Uzun** · [LinkedIn](https://www.linkedin.com/in/huseyinuzun-data) · [GitHub](https://github.com/UzunHQ)<br>
 <sub>Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL).</sub>
+
+## Licence
+
+© 2026 Huseyin Uzun. All rights reserved. The code is public so it can be read and reviewed (for example for privacy and security), but it is **not** open source: copying or reusing it needs written permission. See [LICENSE](LICENSE). What Roam collects is described at [roam-roehampton.vercel.app/privacy.html](https://roam-roehampton.vercel.app/privacy.html).

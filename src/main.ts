@@ -2570,12 +2570,12 @@ async function main() {
     input.setAttribute('aria-expanded', 'true');
     const n = options.filter((o) => o.kind === 'place').length;
     announce(n ? plural(n, 'result') : 'No results');
-    // a search that finds nothing tells us what's missing: counted (anonymously, like every search)
+    // a search that finds nothing is counted (only that it happened, never what was typed)
     // once the person stops typing, once per query
     clearTimeout(missTimer);
     if (!options.length && q.length >= 3) {
       const key = q.toLowerCase().slice(0, 40);
-      missTimer = window.setTimeout(() => { if (input.value.trim().toLowerCase().slice(0, 40) === key && key !== lastMiss) { lastMiss = key; track('search-miss', { q: key }); } }, 1500);
+      missTimer = window.setTimeout(() => { if (input.value.trim().toLowerCase().slice(0, 40) === key && key !== lastMiss) { lastMiss = key; track('search-miss'); } }, 1500);
     }
   }
   let missTimer = 0;
@@ -2583,7 +2583,6 @@ async function main() {
   function pick(i: number) {
     const o = options[i];
     if (!o) return;
-    const q = input.value.trim().toLowerCase().slice(0, 40);
     input.value = '';
     clearBtn.hidden = true;
     hideResults();
@@ -2592,7 +2591,7 @@ async function main() {
       showWholeCampus(500, 'main');
       return;
     }
-    track('search', { q, id: o.place.id });
+    track('search', { id: o.place.id }); // the chosen place only: typed text never leaves the phone
     hideList();
     select(o.place, { source: 'search', room: o.room });
   }

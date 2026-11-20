@@ -545,6 +545,7 @@ html[data-motion="reduced"] #map::before, html[data-motion="off"] #map::before {
 .btn.ghost:active { transform: scale(0.97); }
 .btn.big { min-height: 54px; padding: 0 26px; font-size: 18px; }
 .link-btn { min-height: 44px; padding: 0 8px; border: 0; background: none; font-weight: 700; text-decoration: underline; font-size: 13px; }
+a.link-btn { display: inline-flex; align-items: center; color: inherit; }
 
 /* ---------- panel: bottom sheet on phones ---------- */
 .panel {

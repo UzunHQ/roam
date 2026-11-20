@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy and data · Roam</title>
+  <meta name="description" content="What Roam collects, what it never collects, and how you can check.">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/privacy.css">
+</head>
+<body>
+  <main>
+    <p class="back"><a href="/">← Back to Roam</a></p>
+    <h1>Privacy and data</h1>
+    <p class="lead">Short version: Roam does not know who you are, and your location never leaves your phone.</p>
+    <p class="updated">Last updated: 20 November 2026</p>
+
+    <h2>What Roam never collects</h2>
+    <ul>
+      <li><strong>Your location.</strong> GPS is used only inside your browser to draw the map and the route. It is never sent to any server, including ours.</li>
+      <li><strong>Who you are.</strong> No accounts, no logins, no names, no student numbers, no email addresses.</li>
+      <li><strong>What you type.</strong> The text you type in search stays on your phone.</li>
+      <li><strong>Cookies or tracking across sites.</strong> Roam sets no cookies and has no adverts.</li>
+    </ul>
+
+    <h2>What Roam counts</h2>
+    <p>Roam uses <a href="https://umami.is/privacy" target="_blank" rel="noopener">Umami Cloud</a> (EU servers) to count, anonymously:</p>
+    <ul>
+      <li>visits and pages opened,</li>
+      <li>which place was opened (for example "Library"),</li>
+      <li>that a search or a route was started (not what was typed),</li>
+      <li>device type and country, as reported by the browser.</li>
+    </ul>
+    <p>Umami does not use cookies and does not store IP addresses. These numbers only show which parts of the map are useful.</p>
+    <p><a href="/?notrack">Turn counting off on this device</a> · <a href="/?track">Turn it back on</a></p>
+
+    <h2>Requests your phone makes for live information</h2>
+    <ul>
+      <li><strong>Bus times:</strong> when you open a bus stop, your phone asks Transport for London (api.tfl.gov.uk) directly.</li>
+      <li><strong>Library hours:</strong> your phone asks the university's own LibCal page (roehampton.libcal.com).</li>
+    </ul>
+    <p>Like any website, these services see a normal web request. Roam adds nothing about you to them.</p>
+
+    <h2>Stored on your phone only</h2>
+    <p>Roam keeps a few settings in your browser (for example whether you closed the welcome card, and cached opening hours). You can clear them by clearing this site's data in your browser.</p>
+
+    <h2>Security</h2>
+    <ul>
+      <li>HTTPS only, with a strict Content Security Policy: the browser is only allowed to talk to Roam, TfL, the university's LibCal and Umami.</li>
+      <li>No code from other websites runs in Roam. The analytics script is a pinned copy served from Roam itself.</li>
+      <li>The source code can be reviewed at <a href="https://github.com/UzunHQ/roam" target="_blank" rel="noopener">github.com/UzunHQ/roam</a>.</li>
+    </ul>
+
+    <h2>Who runs Roam</h2>
+    <p>Roam is an independent student project by Huseyin Uzun, a Business Analytics student at the University of Roehampton. It is not affiliated with, or endorsed by, the University of Roehampton.</p>
+    <p>Questions or a data request: <a href="mailto:uzunh@roehampton.ac.uk">uzunh@roehampton.ac.uk</a></p>
+
+    <p class="small">© 2026 Huseyin Uzun. All rights reserved. Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
+  </main>
+</body>
+</html>
