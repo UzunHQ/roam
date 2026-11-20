@@ -1,0 +1,30 @@
+Copyright (c) 2026 Huseyin Uzun. All rights reserved.
+
+Roam (the source code, design, place data, illustrations, name and logo in this
+repository, and the website at roam-roehampton.vercel.app) is the work of
+Huseyin Uzun.
+
+The source code is published so that people can read it, review it and check
+how Roam handles data. Publishing it does not grant a licence to use it.
+
+You may:
+  - view and read the code on GitHub;
+  - review it for security and privacy, and report what you find.
+
+You may not, without written permission from the copyright holder:
+  - copy, modify, merge or publish the code or data, in whole or in part;
+  - use it, or a work derived from it, in another product or service,
+    commercial or not;
+  - distribute, sublicense or sell copies of it;
+  - use the name "Roam" or its logo for a campus map or navigation product
+    derived from this work.
+
+Third-party material keeps its own licence:
+  - Map data © OpenStreetMap contributors, available under the Open Database
+    License (ODbL), https://www.openstreetmap.org/copyright
+  - MapLibre GL JS and other npm dependencies, under their own licences.
+  - Bus data: Powered by TfL Open Data.
+
+For permission or licensing, contact: uzunh@roehampton.ac.uk
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
